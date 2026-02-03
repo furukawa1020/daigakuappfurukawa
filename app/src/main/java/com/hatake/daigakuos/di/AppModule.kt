@@ -56,8 +56,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideStatsRepository(eventDao: EventDao, dailyMetricDao: DailyMetricDao): com.hatake.daigakuos.domain.repository.StatsRepository {
-        return com.hatake.daigakuos.data.repository.StatsRepositoryImpl(eventDao, dailyMetricDao)
+    fun provideStatsRepository(
+        eventDao: EventDao, 
+        dailyMetricDao: DailyMetricDao,
+        userContextRepository: UserContextRepository
+    ): com.hatake.daigakuos.domain.repository.StatsRepository {
+        return com.hatake.daigakuos.data.repository.StatsRepositoryImpl(eventDao, dailyMetricDao, userContextRepository)
     }
     
     // Note: NodeRepository and StatsRepository need implementations too.
