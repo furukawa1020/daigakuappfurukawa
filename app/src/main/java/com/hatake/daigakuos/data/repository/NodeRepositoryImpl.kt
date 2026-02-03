@@ -1,27 +1,32 @@
 package com.hatake.daigakuos.data.repository
 
-import com.hatake.daigakuos.data.local.dao.EventDao
 import com.hatake.daigakuos.data.local.dao.NodeDao
-import com.hatake.daigakuos.data.local.entity.*
+import com.hatake.daigakuos.data.local.entity.NodeEntity
+import com.hatake.daigakuos.data.local.entity.NodeStatus
 import com.hatake.daigakuos.domain.repository.NodeRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class NodeRepositoryImpl @Inject constructor(
-    private val nodeDao: NodeDao,
-    private val eventDao: EventDao
+    private val nodeDao: NodeDao
 ) : NodeRepository {
 
     override fun getActiveNodes(): Flow<List<NodeEntity>> {
         return nodeDao.getActiveNodes()
     }
 
-    override suspend fun getTodoNodes(): List<NodeEntity> {
-        return nodeDao.getAllTodoNodes()
+    override fun getNodesByParent(projectId: Long, parentId: Long?): Flow<List<NodeEntity>> {
+        return nodeDao.getNodesByParent(projectId, parentId)
     }
 
-    override suspend fun createNode(node: NodeEntity): Long {
+    override suspend fun insertNode(node: NodeEntity): Long {
         return nodeDao.insertNode(node)
+    }
+
+    override suspend fun updateNode(node: NodeEntity) {
+        nodeDao.updateNode(node)
     }
 
     override suspend fun completeNode(
@@ -31,25 +36,13 @@ class NodeRepositoryImpl @Inject constructor(
         isOnCampus: Boolean,
         streakDays: Int
     ) {
-        val now = System.currentTimeMillis()
+        // Business Logic for completion
+        // 1. Calculate points (Simplified for now, real logic in UseCase or here)
+        val timestamp = System.currentTimeMillis()
         
-        // 1. Mark Node Done
-        nodeDao.markAsDone(nodeId, now)
+        // 2. Mark as done in DB
+        nodeDao.markAsDone(nodeId, timestamp)
         
-        // 2. Log Event (simplified, real points should come from Calculator, passed in)
-        // For MVP, we'll just log it. Point calculation logic is in UseCase but we didn't update Entity to store it from there.
-        // Let's assume we log it for now.
-        
-        val event = NodeEventEntity(
-            nodeId = nodeId,
-            timestamp = now,
-            actualMinutes = actualMinutes,
-            focusLevel = focusLevel,
-            isOnCampus = isOnCampus,
-            diversityScore = 1.0f, // Placeholder
-            recoveryMultiplier = 1.0f, // Placeholder
-            finalPoints = 100f // Placeholder
-        )
-        eventDao.insertNodeEvent(event)
+        // 3. (Optional) Create Event log here or via EventRepository
     }
 }

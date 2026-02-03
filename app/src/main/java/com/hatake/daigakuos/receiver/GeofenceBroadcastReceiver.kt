@@ -13,11 +13,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@AndroidEntryPoint
+import dagger.hilt.EntryPoint
+import dagger.hilt.InstallIn
+import dagger.hilt.android.EntryPointAccessors
+import dagger.hilt.components.SingletonComponent
+
 class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
-    @Inject
-    lateinit var userContextRepository: UserContextRepository
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface ReceiverEntryPoint {
+        fun getUserContextRepository(): UserContextRepository
+    }
 
     override fun onReceive(context: Context, intent: Intent) {
         val geofencingEvent = GeofencingEvent.fromIntent(intent) ?: return
@@ -28,13 +35,18 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
 
         val geofenceTransition = geofencingEvent.geofenceTransition
+        
+        // Inject manually
+        val appContext = context.applicationContext
+        val entryPoint = EntryPointAccessors.fromApplication(appContext, ReceiverEntryPoint::class.java)
+        val repository = entryPoint.getUserContextRepository()
 
         when (geofenceTransition) {
             Geofence.GEOFENCE_TRANSITION_ENTER -> {
-                updateLocationState(true)
+                updateLocationState(repository, true)
             }
             Geofence.GEOFENCE_TRANSITION_EXIT -> {
-                updateLocationState(false)
+                updateLocationState(repository, false)
             }
             else -> {
                 // Unknown transition
@@ -42,11 +54,10 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun updateLocationState(isOnCampus: Boolean) {
-        // We need to launch a coroutine because onReceive is on main thread (usually) 
-        // and repository might be suspect or main-safe.
+    private fun updateLocationState(repository: UserContextRepository, isOnCampus: Boolean) {
         CoroutineScope(Dispatchers.IO).launch {
-            userContextRepository.setCampusState(isOnCampus)
+            repository.setCampusState(isOnCampus)
+            Log.d("Geofence", "State updated: $isOnCampus")
         }
     }
 }

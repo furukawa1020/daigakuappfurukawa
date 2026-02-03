@@ -1,0 +1,21 @@
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk.dir, etc.)
+local.properties
+
+# Android Studio generated files
+.idea/
+*.iml
+*.ide
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# VS Code
+.vscode/
+
+# Google Services
+google-services.json

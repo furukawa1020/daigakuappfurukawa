@@ -1,70 +1,47 @@
 package com.hatake.daigakuos.domain.usecase
 
-import com.hatake.daigakuos.data.local.entity.Mode
 import com.hatake.daigakuos.data.local.entity.NodeEntity
-import com.hatake.daigakuos.data.local.entity.ProjectType
+import com.hatake.daigakuos.domain.logic.RecommendationEngine
 import com.hatake.daigakuos.domain.repository.NodeRepository
+import com.hatake.daigakuos.domain.repository.StatsRepository
+import com.hatake.daigakuos.domain.repository.UserContextRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class GetRecommendationUseCase @Inject constructor(
-    private val nodeRepository: NodeRepository
+    private val nodeRepository: NodeRepository,
+    private val statsRepository: StatsRepository,
+    private val userContextRepository: UserContextRepository,
+    private val recommendationEngine: RecommendationEngine
 ) {
-    /**
-     * @param currentMode User's current mode (Default / Creative / Recovery)
-     */
-    suspend operator fun invoke(currentMode: Mode): List<NodeEntity> {
-        val allTodos = nodeRepository.getTodoNodes()
+    suspend operator fun invoke(): NodeEntity? {
+        // 1. Get Context
+        val isOnCampus = userContextRepository.isOnCampus.first()
+        val recentRecovery = statsRepository.getRecentRecoveryCount()
+        val streak = statsRepository.getStreak()
+        val todayTypes = statsRepository.getTodayCompletedTypes()
+
+        // 2. Get Candidates (Use Flow or suspending function depending on Repo)
+        // Since getActiveNodes returns Flow, we take the first emission
+        val candidates = nodeRepository.getActiveNodes().first()
         
-        if (allTodos.isEmpty()) return emptyList()
+        if (candidates.isEmpty()) return null
 
-        // Filter and Sort Logic
-        // 9.2 Recommendation Output Specification
-        // - Always 2-3 items max.
-        // - Default: At least 2 STUDY.
-        // - Creative Mode: RESEARCH/MAKE prioritized.
-        
-        val studyNodes = allTodos.filter { it.type == ProjectType.STUDY }
-        val researchNodes = allTodos.filter { it.type == ProjectType.RESEARCH }
-        val makeNodes = allTodos.filter { it.type == ProjectType.MAKE }
-        val adminNodes = allTodos.filter { it.type == ProjectType.ADMIN } // Usually low priority unless deadline
+        // 3. Rank
+        // RecommendationEngine expects a List, so we pass it directly
+        val ranked = recommendationEngine.rankNodes(
+            nodes = candidates,
+            context = RecommendationEngine.Context(
+                isOnCampus = isOnCampus,
+                recentRecoveryCount = recentRecovery,
+                currentStreakDays = streak,
+                completedNodeTypesToday = todayTypes
+            )
+        )
 
-        val recommended = mutableListOf<NodeEntity>()
-
-        when (currentMode) {
-            Mode.DEFAULT -> {
-                // Pick 2 STUDY
-                recommended.addAll(studyNodes.take(2))
-                
-                // Maybe pick 1 other (Research or Make) if available
-                if (recommended.size < 3) {
-                    val others = (researchNodes + makeNodes).shuffled()
-                    others.firstOrNull()?.let { recommended.add(it) }
-                }
-            }
-            Mode.CREATIVE -> {
-                // Pick Research/Make first
-                val creative = (researchNodes + makeNodes).shuffled()
-                recommended.addAll(creative.take(2))
-                
-                // Add one Study if space
-                if (recommended.size < 3) {
-                    studyNodes.firstOrNull()?.let { recommended.add(it) }
-                }
-            }
-            Mode.RECOVERY -> {
-                // Recovery Mode Logic
-                // Suggest light tasks or breakdown tasks?
-                // For now, maybe just Admin or very short tasks
-                val shortTasks = allTodos.filter { it.estimateMinutes <= 15 }
-                recommended.addAll(shortTasks.take(3))
-            }
-        }
-
-        // Fallback: If empty, fill with whatever is available
-        if (recommended.isEmpty()) {
-            recommended.addAll(allTodos.take(3))
-        }
-
-        return recommended.take(3)
+        return ranked.firstOrNull()
     }
 }

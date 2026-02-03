@@ -39,7 +39,7 @@ fun NowScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Now Focusing", style = MaterialTheme.typography.labelLarge)
+        Text(text = "現在集中タスク", style = MaterialTheme.typography.labelLarge)
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
@@ -66,7 +66,7 @@ fun NowScreen(
                 onClick = { isRunning = !isRunning },
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)
             ) {
-                Text(if (isRunning) "Pause" else "Resume")
+                Text(if (isRunning) "一時停止" else "再開")
             }
             
             Button(
@@ -76,7 +76,7 @@ fun NowScreen(
                     onComplete() 
                 }
             ) {
-                Text("Complete")
+                Text("完了")
             }
         }
     }

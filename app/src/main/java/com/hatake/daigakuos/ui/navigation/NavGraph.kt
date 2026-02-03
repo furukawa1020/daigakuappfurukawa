@@ -4,7 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.hatake.daigakuos.ui.home.HomeScreen
+import com.hatake.daigakuos.ui.home.HomeViewModel
 import com.hatake.daigakuos.ui.now.NowScreen
 import com.hatake.daigakuos.ui.tree.TreeScreen
 import com.hatake.daigakuos.ui.stats.StatsScreen
@@ -22,10 +25,13 @@ sealed class Screen(val route: String) {
 fun UniversityNavGraph(navController: NavHostController) {
     NavHost(navController = navController, startDestination = Screen.Home.route) {
         composable(Screen.Home.route) {
+            val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
+                uiState = viewModel.uiState.collectAsState().value,
                 onNavigateToNow = { nodeId -> navController.navigate(Screen.Now.createRoute(nodeId)) },
                 onNavigateToTree = { navController.navigate(Screen.Tree.route) },
-                onNavigateToStats = { navController.navigate(Screen.Stats.route) }
+                onNavigateToStats = { navController.navigate(Screen.Stats.route) },
+                onModeChange = viewModel::setMode
             )
         }
         

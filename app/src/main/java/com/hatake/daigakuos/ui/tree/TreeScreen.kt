@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,18 +21,18 @@ fun TreeScreen(
     // Dummy Data
     val projects = remember {
         listOf(
-            "Project A: Statistics" to ProjectType.STUDY,
-            "Project B: Android App" to ProjectType.MAKE
+            "プロジェクトA: 統計学" to ProjectType.STUDY,
+            "プロジェクトB: Androidアプリ" to ProjectType.MAKE
         )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tree (Goal Management)") },
+                title = { Text("ツリー (目標管理)") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Text("Back") // Use Icon in real app
+                        Text("戻る") // Use Icon in real app
                     }
                 }
             )
@@ -97,11 +97,11 @@ fun NodeItem(node: NodeEntity) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = node.title, style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    text = "${node.estimateMinutes} min",
+                    text = "${node.estimateMinutes} 分",
                     style = MaterialTheme.typography.labelSmall
                 )
             }
-            Icon(Icons.Default.ChevronRight, contentDescription = "Detail")
+            Icon(Icons.Default.ArrowForward, contentDescription = "Detail")
         }
     }
 }

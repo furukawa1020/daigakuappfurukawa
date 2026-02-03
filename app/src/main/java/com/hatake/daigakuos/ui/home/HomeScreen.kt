@@ -18,20 +18,15 @@ import com.hatake.daigakuos.data.local.entity.NodeEntity
 
 @Composable
 fun HomeScreen(
+    uiState: com.hatake.daigakuos.ui.home.HomeUiState,
     onNavigateToNow: (Long) -> Unit,
     onNavigateToTree: () -> Unit,
-    onNavigateToStats: () -> Unit
+    onNavigateToStats: () -> Unit,
+    onModeChange: (com.hatake.daigakuos.data.local.entity.Mode) -> Unit
 ) {
-    // These would normally come from a ViewModel
-    val currentPoints by remember { mutableFloatStateOf(1250f) } // Dummy Tank Level
-    val isOnCampus by remember { mutableStateOf(true) } // Dummy State
-    val recommendations = remember {
-        listOf(
-            // Dummy Data
-            NodeEntity(id = 1, projectId = 1, title = "DataStruct Lec 5", type = com.hatake.daigakuos.data.local.entity.ProjectType.STUDY, estimateMinutes = 25),
-            NodeEntity(id = 2, projectId = 2, title = "Read Vaswani 2017", type = com.hatake.daigakuos.data.local.entity.ProjectType.RESEARCH, estimateMinutes = 50)
-        )
-    }
+    val currentPoints = uiState.currentPoints
+    val isOnCampus = uiState.isOnCampus
+    val recommendations = uiState.recommendations
 
     Scaffold(
         floatingActionButton = {
@@ -54,7 +49,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (isOnCampus) "Location: CAMPUS (x1.5)" else "Location: HOME (x1.0)",
+                    text = if (isOnCampus) "場所: 大学 (x1.5)" else "場所: 自宅 (x1.0)",
                     color = if (isOnCampus) MaterialTheme.colorScheme.primary else Color.Gray,
                     fontWeight = FontWeight.Bold
                 )
@@ -99,7 +94,7 @@ fun HomeScreen(
 
             // Bottom: Recommendations
             Text(
-                text = "Next Action",
+                text = "次やるべきこと",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.Start)
             )
@@ -117,7 +112,7 @@ fun HomeScreen(
                 onClick = { /* Activate Recovery Mode */ },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("今日は無理 (Recovery Mode)")
+                Text("今日は無理 (回復モード)")
             }
         }
     }
@@ -147,13 +142,13 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "${node.estimateMinutes} min • ${node.type.name}",
+                    text = "${node.estimateMinutes} 分 • ${node.type.name}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
             }
             Text(
-                text = "GO",
+                text = "開始",
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )

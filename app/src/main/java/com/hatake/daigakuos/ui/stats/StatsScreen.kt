@@ -14,10 +14,10 @@ fun StatsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Garden & Biology") },
+                title = { Text("箱庭 & 生物") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Text("Back")
+                        Text("戻る")
                     }
                 }
             )
@@ -37,14 +37,14 @@ fun StatsScreen(
                     .padding(8.dp)
             ) {
                 Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Text("Biological Organism\n(Evolving...)")
+                    Text("謎の生物\n(進化中...)")
                 }
             }
             
             Spacer(modifier = Modifier.height(24.dp))
             
             // 2. Grass (Contribution Graph)
-            Text("Activity Chain", style = MaterialTheme.typography.titleMedium)
+            Text("活動記録", style = MaterialTheme.typography.titleMedium)
             
             // Placeholder for Grass Grid
             // In real app, use a Canvas or LazyVerticalGrid
@@ -62,7 +62,7 @@ fun StatsScreen(
             
             // 3. Stats Breakdown
             Text(
-                "Total Points: 1250", 
+                "合計ポイント: 1250", 
                 style = MaterialTheme.typography.headlineSmall
             )
         }

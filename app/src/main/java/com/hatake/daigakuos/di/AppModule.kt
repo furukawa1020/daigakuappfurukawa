@@ -47,6 +47,18 @@ object AppModule {
     fun provideUserContextRepository(): UserContextRepository {
         return UserContextRepositoryImpl()
     }
+
+    @Provides
+    @Singleton
+    fun provideNodeRepository(nodeDao: NodeDao): com.hatake.daigakuos.domain.repository.NodeRepository {
+        return com.hatake.daigakuos.data.repository.NodeRepositoryImpl(nodeDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideStatsRepository(eventDao: EventDao, dailyMetricDao: DailyMetricDao): com.hatake.daigakuos.domain.repository.StatsRepository {
+        return com.hatake.daigakuos.data.repository.StatsRepositoryImpl(eventDao, dailyMetricDao)
+    }
     
     // Note: NodeRepository and StatsRepository need implementations too.
     // Since we only defined interfaces in domain, we need Impls.
