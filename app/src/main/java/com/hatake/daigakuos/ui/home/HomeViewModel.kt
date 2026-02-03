@@ -24,20 +24,19 @@ data class HomeUiState(
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getRecommendationUseCase: GetRecommendationUseCase,
+    private val getRecommendedNodesUseCase: com.hatake.daigakuos.domain.usecase.GetRecommendedNodesUseCase,
     private val userContextRepository: UserContextRepository,
-    private val statsRepository: com.hatake.daigakuos.domain.repository.StatsRepository
+    private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao
 ) : ViewModel() {
 
     private val _recommendedNodes = MutableStateFlow<List<NodeEntity>>(emptyList())
-    // val recommendedNodes: StateFlow<List<NodeEntity>> = _recommendedNodes.asStateFlow()
 
     // Combined UI State
     val uiState: StateFlow<HomeUiState> = combine(
         _recommendedNodes,
-        userContextRepository.isOnCampus, // Property access
-        userContextRepository.currentMode,   // Property access
-        statsRepository.getTotalPoints()
+        userContextRepository.isOnCampus,
+        userContextRepository.currentMode,
+        sessionDao.getTotalPointsFlow().map { it?.toFloat() ?: 0f }
     ) { nodes, onCampus, mode, points ->
         HomeUiState(
             currentPoints = points,
@@ -56,18 +55,12 @@ class HomeViewModel @Inject constructor(
 
     fun refreshRecommendations() {
         viewModelScope.launch {
-            // New UseCase fetches context internally and returns single best node (or null)
-            val result = getRecommendationUseCase()
-            
-            _recommendedNodes.value = if (result != null) {
-                listOf(result)
-            } else {
-                emptyList()
-            }
+            val isOnCampus = userContextRepository.isOnCampus.value
+            _recommendedNodes.value = getRecommendedNodesUseCase(isOnCampus)
         }
     }
     
-    fun setMode(mode: Mode) {
+    fun setMode(mode: com.hatake.daigakuos.data.local.entity.Mode) {
         viewModelScope.launch {
             userContextRepository.setMode(mode)
         }
