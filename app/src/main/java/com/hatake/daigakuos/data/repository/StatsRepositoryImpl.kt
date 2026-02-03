@@ -12,13 +12,11 @@ import kotlinx.coroutines.flow.map
 @Singleton
 class StatsRepositoryImpl @Inject constructor(
     private val eventDao: EventDao,
-    private val dailyMetricDao: DailyMetricDao
+    private val dailyMetricDao: DailyMetricDao,
+    private val userContextRepository: com.hatake.daigakuos.domain.repository.UserContextRepository
 ) : StatsRepository {
 
     override suspend fun getTodayCompletedTypes(): List<ProjectType> {
-       // Simplified: retrieving just types is hard without joining nodes, 
-       // so returning empty list for MVP or implementing a complex query later.
-       // The DB schema needs a join between NodeEvent and Node to get types.
        return emptyList() 
     }
 
@@ -28,7 +26,6 @@ class StatsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getStreak(): Int {
-        // Mock implementation for MVP
         return 0
     }
 
@@ -37,11 +34,18 @@ class StatsRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logSession(nodeId: Long, durationMillis: Long, points: Float) {
+        val isOnCampus = userContextRepository.isOnCampus.value
+        val actualMinutes = (durationMillis / 1000 / 60).toInt().coerceAtLeast(1)
+        
         val event = com.hatake.daigakuos.data.local.entity.NodeEventEntity(
             nodeId = nodeId,
-            startTime = System.currentTimeMillis() - durationMillis,
-            endTime = System.currentTimeMillis(),
-            pointsEarned = points
+            timestamp = System.currentTimeMillis(),
+            actualMinutes = actualMinutes,
+            focusLevel = 3, // Default normal focus
+            isOnCampus = isOnCampus,
+            diversityScore = 1.0f, // MVP default
+            recoveryMultiplier = 1.0f, // MVP default
+            finalPoints = points
         )
         try {
             eventDao.insertNodeEvent(event)
