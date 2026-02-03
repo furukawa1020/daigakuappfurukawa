@@ -178,7 +178,7 @@ fun NodeItem(node: NodeEntity) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = node.title, style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    text = "${node.estimateMinutes} 分",
+                    text = "${node.estimateMin} 分",
                     style = MaterialTheme.typography.labelSmall
                 )
             }

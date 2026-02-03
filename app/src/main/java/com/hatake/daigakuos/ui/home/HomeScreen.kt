@@ -22,7 +22,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 
 @Composable
-@Composable
 fun HomeScreen(
     uiState: com.hatake.daigakuos.ui.home.HomeUiState,
     onNavigateToNow: (String) -> Unit,
@@ -204,7 +203,7 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "${node.estimateMinutes ?: 25} 分",
+                    text = "${node.estimateMin ?: 25} 分",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )

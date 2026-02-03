@@ -2,7 +2,6 @@ package com.hatake.daigakuos.ui.now
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hatake.daigakuos.domain.repository.StatsRepository
 import com.hatake.daigakuos.domain.repository.UserContextRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

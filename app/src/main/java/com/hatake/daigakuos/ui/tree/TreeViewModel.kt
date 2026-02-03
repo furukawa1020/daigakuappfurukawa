@@ -2,15 +2,14 @@ package com.hatake.daigakuos.ui.tree
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// import androidx.lifecycle.viewmodel.compose.viewModel // Not needed if Hilt
 import com.hatake.daigakuos.data.local.entity.NodeEntity
 import com.hatake.daigakuos.data.local.entity.ProjectEntity
-import com.hatake.daigakuos.data.local.entity.ProjectType
-import com.hatake.daigakuos.domain.repository.NodeRepository
+import com.hatake.daigakuos.data.local.entity.NodeType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -30,7 +29,7 @@ class TreeViewModel @Inject constructor(
             if (project != null) {
                 getTreeUseCase(project.id)
             } else {
-                kotlinx.coroutines.flow.flowOf(emptyList())
+                flowOf(emptyList())
             }
         }
         .stateIn(
@@ -45,14 +44,12 @@ class TreeViewModel @Inject constructor(
 
     private fun checkAndSeed() {
         viewModelScope.launch {
-            // Get first project or create default
             projectDao.getAllProjects().collect { projects ->
                 if (projects.isNotEmpty()) {
                     _currentProject.value = projects.first()
                 } else {
                     val defaultProject = ProjectEntity(title = "メインプロジェクト")
                     projectDao.insertProject(defaultProject)
-                    // Flow will emit again with the new list
                 }
             }
         }
