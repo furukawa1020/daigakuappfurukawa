@@ -11,8 +11,10 @@ import androidx.navigation.compose.rememberNavController
 import com.hatake.daigakuos.ui.navigation.UniversityNavGraph
 import com.hatake.daigakuos.ui.theme.DaigakuOSTheme
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 
-@AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -81,9 +83,8 @@ class MainActivity : ComponentActivity() {
                         val isInside = distanceInMeters <= GEOFENCE_RADIUS
                         
                         // Update Repository
-                        // Since this is Activity, we use a coroutine scope or runBlocking? 
-                        // Better to use lifecycleScope
-                        androidx.lifecycle.lifecycleScope.launchWhenStarted {
+                        // Use lifecycleScope.launch
+                        lifecycleScope.launch {
                             userContextRepository.setCampusState(isInside)
                         }
                         android.util.Log.d("LocationCheck", "Distance: $distanceInMeters m, IsInside: $isInside")
