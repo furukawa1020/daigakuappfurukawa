@@ -2,10 +2,15 @@ package com.hatake.daigakuos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Sophisticated Academic Palette
+val Navy80 = Color(0xFF536DFE)
+val Navy40 = Color(0xFF1A237E) // Primary Dark
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val Gold80 = Color(0xFFFFD740)
+val Gold40 = Color(0xFFFFAB00) // Secondary
+
+val Slate80 = Color(0xFFB0BEC5)
+val Slate40 = Color(0xFF455A64) // Tertiary
+
+val NeutralBg = Color(0xFFF5F7FA) // Light Background
+val NeutralSurface = Color(0xFFFFFFFF)
