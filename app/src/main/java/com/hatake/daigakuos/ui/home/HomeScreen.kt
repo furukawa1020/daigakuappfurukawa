@@ -180,8 +180,14 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                val typeName = when(node.type) {
+                    com.hatake.daigakuos.data.local.entity.ProjectType.STUDY -> "学習"
+                    com.hatake.daigakuos.data.local.entity.ProjectType.RESEARCH -> "研究"
+                    com.hatake.daigakuos.data.local.entity.ProjectType.MAKER -> "制作"
+                    com.hatake.daigakuos.data.local.entity.ProjectType.ADMIN -> "事務/運営"
+                }
                 Text(
-                    text = node.type.name.uppercase(),
+                    text = typeName,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary,
                     letterSpacing = 1.sp

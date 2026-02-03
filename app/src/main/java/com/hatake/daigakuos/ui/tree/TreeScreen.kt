@@ -58,9 +58,15 @@ fun TreeScreen(
                 }
 
                 grouped.forEach { (type, typeNodes) ->
+                    val sectionName = when(type) {
+                        ProjectType.STUDY -> "学習"
+                        ProjectType.RESEARCH -> "研究"
+                        ProjectType.MAKER -> "制作"
+                        ProjectType.ADMIN -> "事務/運営"
+                    }
                     item {
                          Text(
-                            text = type.name, // e.g. "STUDY", "RESEARCH"
+                            text = sectionName,
                             style = MaterialTheme.typography.titleLarge,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
@@ -115,13 +121,19 @@ fun AddNodeDialog(
                 // Simple Type Selector
                 Row {
                     ProjectType.values().forEach { type ->
+                        val label = when(type) {
+                            ProjectType.STUDY -> "学"
+                            ProjectType.RESEARCH -> "研"
+                            ProjectType.MAKER -> "作"
+                            ProjectType.ADMIN -> "営"
+                        }
                         TextButton(
                             onClick = { selectedType = type },
                             colors = ButtonDefaults.textButtonColors(
                                 contentColor = if(selectedType == type) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Gray
                             )
                         ) {
-                            Text(type.name.take(3))
+                            Text(label)
                         }
                     }
                 }
