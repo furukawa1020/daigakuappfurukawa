@@ -1,3 +1,188 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package com.hatake.daigakuos.ui.home
 
 import androidx.compose.foundation.Canvas
@@ -27,6 +212,7 @@ fun HomeScreen(
     onNavigateToNow: (String) -> Unit,
     onNavigateToTree: () -> Unit,
     onNavigateToStats: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     onModeChange: (com.hatake.daigakuos.data.local.entity.Mode) -> Unit
 ) {
     val currentPoints = uiState.currentPoints
@@ -53,7 +239,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(24.dp), // Increased padding
+                .padding(24.dp), 
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header: Status Area
@@ -78,13 +264,22 @@ fun HomeScreen(
                     )
                 }
                 
-                // Help Button
-                IconButton(onClick = { showTutorial = true }) {
-                    Icon(
-                        imageVector = Icons.Filled.Info,
-                        contentDescription = "Help",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
+                // Actions: Help & Settings
+                Row {
+                    IconButton(onClick = { showTutorial = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Info,
+                            contentDescription = "Help",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                 }
             }
 
@@ -114,7 +309,7 @@ fun HomeScreen(
                     Text(
                         text = "${currentPoints.toInt()}",
                         style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.Light, // Sophisticated Thin Font
+                        fontWeight = FontWeight.Light,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
