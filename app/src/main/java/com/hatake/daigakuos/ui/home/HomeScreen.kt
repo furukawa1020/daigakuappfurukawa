@@ -140,7 +140,7 @@ fun HomeScreen(
             
             // Recovery Mode (Minimalist Text Button)
             TextButton(
-                onClick = { /* Activate Recovery Mode */ },
+                onClick = { onModeChange(com.hatake.daigakuos.data.local.entity.Mode.RECOVERY) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("REST MODE", color = MaterialTheme.colorScheme.tertiary)
