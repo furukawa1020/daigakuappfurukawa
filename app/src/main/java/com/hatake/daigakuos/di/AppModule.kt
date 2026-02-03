@@ -34,14 +34,19 @@ object AppModule {
     fun provideNodeDao(db: AppDatabase): NodeDao = db.nodeDao()
 
     @Provides
-    fun provideEventDao(db: AppDatabase): EventDao = db.eventDao()
+    fun provideSessionDao(db: AppDatabase): SessionDao = db.sessionDao()
     
     @Provides
-    fun provideDailyMetricDao(db: AppDatabase): DailyMetricDao = db.dailyMetricDao()
+    fun provideAggDao(db: AppDatabase): AggDao = db.aggDao()
 
-    // Repositories
-    // Ideally we bind interface to impl using @Binds, but for quick setup:
-    
+    @Provides
+    fun provideSettingsDao(db: AppDatabase): SettingsDao = db.settingsDao()
+
+    @Provides
+    fun provideCampusVisitDao(db: AppDatabase): CampusVisitDao = db.campusVisitDao()
+
+    // Repositories - Commented out during refactor until impls are ready
+    /*
     @Provides
     @Singleton
     fun provideUserContextRepository(): UserContextRepository {
@@ -63,9 +68,5 @@ object AppModule {
     ): com.hatake.daigakuos.domain.repository.StatsRepository {
         return com.hatake.daigakuos.data.repository.StatsRepositoryImpl(eventDao, dailyMetricDao, userContextRepository)
     }
-    
-    // Note: NodeRepository and StatsRepository need implementations too.
-    // Since we only defined interfaces in domain, we need Impls.
-    // I will assume for MVP we might just use the DAOs directly in UseCases OR I need to write the Impl files quickly.
-    // Let's rely on standard Hilt pattern: If UseCase needs NodeRepository, we must provide NodeRepository.
+    */
 }

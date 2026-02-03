@@ -9,17 +9,21 @@ import com.hatake.daigakuos.data.local.entity.*
     entities = [
         ProjectEntity::class,
         NodeEntity::class, 
-        NodeEventEntity::class, 
+        SessionEntity::class, 
         RecoveryEventEntity::class, 
-        DailyMetricEntity::class
+        DailyMetricEntity::class,
+        SettingsEntity::class,
+        CampusVisitEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
-@androidx.room.TypeConverters(Converters::class)
+// @androidx.room.TypeConverters(Converters::class) // Removed, using primitive types (String, Long)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun projectDao(): ProjectDao
     abstract fun nodeDao(): NodeDao
-    abstract fun eventDao(): EventDao
-    abstract fun dailyMetricDao(): DailyMetricDao
+    abstract fun sessionDao(): SessionDao
+    abstract fun aggDao(): AggDao
+    abstract fun settingsDao(): SettingsDao
+    abstract fun campusVisitDao(): CampusVisitDao
 }
