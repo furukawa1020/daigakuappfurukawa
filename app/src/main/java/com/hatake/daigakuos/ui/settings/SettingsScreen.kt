@@ -1,3 +1,5 @@
+package com.hatake.daigakuos.ui.settings
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -84,7 +86,7 @@ fun SettingsScreen(
             )
             
             Spacer(modifier = Modifier.height(24.dp))
-            HorizontalDivider()
+            Divider()
             Spacer(modifier = Modifier.height(24.dp))
             
             Text("目標設定", style = MaterialTheme.typography.titleMedium)
