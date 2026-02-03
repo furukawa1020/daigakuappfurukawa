@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import com.hatake.daigakuos.data.local.entity.NodeEntity
-import com.hatake.daigakuos.data.local.entity.ProjectType
+import com.hatake.daigakuos.data.local.entity.NodeType
 
 @Composable
 fun TreeScreen(
@@ -48,7 +48,6 @@ fun TreeScreen(
                     .padding(16.dp)
             ) {
                 // Group by Project (Simulated for MVP: Group by Type)
-                // In real app we use ProjectEntity join.
                 val grouped = nodes.groupBy { it.type }
                 
                 if (nodes.isEmpty()) {
@@ -57,22 +56,26 @@ fun TreeScreen(
                     }
                 }
 
-                grouped.forEach { (type, typeNodes) ->
-                    val sectionName = when(type) {
-                        ProjectType.STUDY -> "学習"
-                        ProjectType.RESEARCH -> "研究"
-                        ProjectType.MAKE -> "制作"
-                        ProjectType.ADMIN -> "事務/運営"
-                    }
-                    item {
-                         Text(
-                            text = sectionName,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                    items(typeNodes) { node ->
-                        NodeItem(node = node)
+                NodeType.values().forEach { enumType ->
+                    val typeNodes = grouped[enumType.name] ?: emptyList()
+                    
+                    if (typeNodes.isNotEmpty()) {
+                        val sectionName = when(enumType) {
+                            NodeType.STUDY -> "学習"
+                            NodeType.RESEARCH -> "研究"
+                            NodeType.MAKE -> "制作"
+                            NodeType.ADMIN -> "事務/運営"
+                        }
+                        item {
+                             Text(
+                                text = sectionName,
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        items(typeNodes) { node ->
+                            NodeItem(node = node)
+                        }
                     }
                 }
                 
@@ -97,11 +100,11 @@ fun TreeScreen(
 @Composable
 fun AddNodeDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, Int, ProjectType) -> Unit
+    onConfirm: (String, Int, NodeType) -> Unit
 ) {
     var title by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("30") }
-    var selectedType by remember { mutableStateOf(ProjectType.STUDY) }
+    var selectedType by remember { mutableStateOf(NodeType.STUDY) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -120,12 +123,12 @@ fun AddNodeDialog(
                 )
                 // Simple Type Selector
                 Row {
-                    ProjectType.values().forEach { type ->
+                    NodeType.values().forEach { type ->
                         val label = when(type) {
-                            ProjectType.STUDY -> "学習"
-                            ProjectType.RESEARCH -> "研究"
-                            ProjectType.MAKE -> "制作"
-                            ProjectType.ADMIN -> "事務"
+                            NodeType.STUDY -> "学習"
+                            NodeType.RESEARCH -> "研究"
+                            NodeType.MAKE -> "制作"
+                            NodeType.ADMIN -> "事務"
                         }
                         TextButton(
                             onClick = { selectedType = type },
