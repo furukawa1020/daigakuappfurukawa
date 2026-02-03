@@ -183,7 +183,7 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
                 val typeName = when(node.type) {
                     com.hatake.daigakuos.data.local.entity.ProjectType.STUDY -> "学習"
                     com.hatake.daigakuos.data.local.entity.ProjectType.RESEARCH -> "研究"
-                    com.hatake.daigakuos.data.local.entity.ProjectType.MAKER -> "制作"
+                    com.hatake.daigakuos.data.local.entity.ProjectType.MAKE -> "制作"
                     com.hatake.daigakuos.data.local.entity.ProjectType.ADMIN -> "事務/運営"
                 }
                 Text(

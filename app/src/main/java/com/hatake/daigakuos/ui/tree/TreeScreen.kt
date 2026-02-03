@@ -61,7 +61,7 @@ fun TreeScreen(
                     val sectionName = when(type) {
                         ProjectType.STUDY -> "学習"
                         ProjectType.RESEARCH -> "研究"
-                        ProjectType.MAKER -> "制作"
+                        ProjectType.MAKE -> "制作"
                         ProjectType.ADMIN -> "事務/運営"
                     }
                     item {
@@ -124,7 +124,7 @@ fun AddNodeDialog(
                         val label = when(type) {
                             ProjectType.STUDY -> "学"
                             ProjectType.RESEARCH -> "研"
-                            ProjectType.MAKER -> "作"
+                            ProjectType.MAKE -> "作"
                             ProjectType.ADMIN -> "営"
                         }
                         TextButton(
