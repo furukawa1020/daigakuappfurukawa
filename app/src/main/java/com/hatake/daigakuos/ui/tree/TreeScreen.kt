@@ -122,10 +122,10 @@ fun AddNodeDialog(
                 Row {
                     ProjectType.values().forEach { type ->
                         val label = when(type) {
-                            ProjectType.STUDY -> "学"
-                            ProjectType.RESEARCH -> "研"
-                            ProjectType.MAKE -> "作"
-                            ProjectType.ADMIN -> "営"
+                            ProjectType.STUDY -> "学習"
+                            ProjectType.RESEARCH -> "研究"
+                            ProjectType.MAKE -> "制作"
+                            ProjectType.ADMIN -> "事務"
                         }
                         TextButton(
                             onClick = { selectedType = type },
