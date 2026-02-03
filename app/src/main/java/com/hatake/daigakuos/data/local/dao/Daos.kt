@@ -6,11 +6,11 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProjectDao {
-    @Query("SELECT * FROM projects")
+    @Query("SELECT * FROM projects ORDER BY orderIndex ASC")
     fun getAllProjects(): Flow<List<ProjectEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertProject(project: ProjectEntity): Long
+    suspend fun insertProject(project: ProjectEntity)
 
     @Delete
     suspend fun deleteProject(project: ProjectEntity)
@@ -18,58 +18,74 @@ interface ProjectDao {
 
 @Dao
 interface NodeDao {
-    @Query("SELECT * FROM nodes WHERE status = 'TODO' ORDER BY deadline ASC, createdAt DESC")
-    fun getActiveNodes(): Flow<List<NodeEntity>>
+    @Query("SELECT * FROM nodes WHERE projectId = :projectId ORDER BY createdAt DESC")
+    fun getTree(projectId: String): Flow<List<NodeEntity>>
 
-    @Query("SELECT * FROM nodes WHERE projectId = :projectId AND parentId = :parentId")
-    fun getNodesByParent(projectId: Long, parentId: Long?): Flow<List<NodeEntity>>
+    @Query("SELECT * FROM nodes WHERE type = :type AND status = 'TODO' ORDER BY priority DESC")
+    fun getPendingNodes(type: String): Flow<List<NodeEntity>>
     
-    // Get recommendations: Todo items, prioritized
-    // In a real app, this query would be more complex or handled in Domain layer
-    @Query("SELECT * FROM nodes WHERE status = 'TODO'") 
+    @Query("SELECT * FROM nodes WHERE status = 'TODO' ORDER BY priority DESC")
     suspend fun getAllTodoNodes(): List<NodeEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertNode(node: NodeEntity): Long
+    suspend fun insertNode(node: NodeEntity)
 
-    @Update
-    suspend fun updateNode(node: NodeEntity)
-    
-    @Query("UPDATE nodes SET status = 'DONE', completedAt = :timestamp WHERE id = :id")
-    suspend fun markAsDone(id: Long, timestamp: Long)
+    @Query("UPDATE nodes SET status = 'DONE', updatedAt = :timestamp WHERE id = :nodeId")
+    suspend fun markDone(nodeId: String, timestamp: Long = System.currentTimeMillis())
+
+    @Query("SELECT * FROM nodes WHERE id = :nodeId")
+    suspend fun getNodeById(nodeId: String): NodeEntity?
 }
 
 @Dao
-interface EventDao {
+interface SessionDao {
     @Insert
-    suspend fun insertNodeEvent(event: NodeEventEntity)
+    suspend fun insertSession(session: SessionEntity)
+
+    @Query("UPDATE sessions SET endAt = :endAt, selfReportMin = :selfReportMin, focus = :focus, points = :points WHERE id = :sessionId")
+    suspend fun endSession(sessionId: String, endAt: Long, selfReportMin: Int, focus: Int, points: Double)
+
+    @Query("SELECT * FROM sessions WHERE startAt BETWEEN :start AND :end")
+    suspend fun getSessionsInRange(start: Long, end: Long): List<SessionEntity>
+
+    // Helper for "Today" (Caller provides startOfDay timestamp)
+    @Query("SELECT * FROM sessions WHERE startAt >= :startOfDay")
+    suspend fun getSessionsSince(startOfDay: Long): List<SessionEntity>
 
     @Insert
     suspend fun insertRecoveryEvent(event: RecoveryEventEntity)
-
-    // Check for recovery events in last X hours
-    @Query("SELECT COUNT(*) FROM recovery_events WHERE timestamp > :sinceTimestamp")
-    suspend fun getRecentRecoveryCount(sinceTimestamp: Long): Int
-
-    // Get today's node events for Diversity calculation
-    @Query("SELECT * FROM node_events WHERE timestamp >= :startOfDay")
-    suspend fun getTodayEvents(startOfDay: Long): List<NodeEventEntity>
     
-    @Query("SELECT * FROM node_events ORDER BY timestamp DESC LIMIT 100")
-    fun getRecentEvents(): Flow<List<NodeEventEntity>>
-
-    @Query("SELECT SUM(finalPoints) FROM node_events")
-    fun getTotalPoints(): Flow<Float?>
+    // For Stats/Tank flow
+    @Query("SELECT SUM(points) FROM sessions")
+    fun getTotalPointsFlow(): Flow<Double?>
 }
 
 @Dao
-interface DailyMetricDao {
-    @Query("SELECT * FROM daily_metrics WHERE dateKey = :date")
-    suspend fun getMetric(date: String): DailyMetricEntity?
+interface AggDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertDailyAgg(agg: DailyAggEntity)
+
+    @Query("SELECT * FROM daily_agg WHERE yyyymmdd = :yyyymmdd")
+    suspend fun getAgg(yyyymmdd: Int): DailyAggEntity?
+    
+    @Query("SELECT * FROM daily_agg ORDER BY yyyymmdd DESC LIMIT :limit")
+    fun getAggRange(limit: Int): Flow<List<DailyAggEntity>>
+}
+
+@Dao
+interface SettingsDao {
+    @Query("SELECT * FROM settings WHERE `key` = 'singleton'")
+    suspend fun getSettings(): SettingsEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertOrUpdate(metric: DailyMetricEntity)
-    
-    @Query("SELECT * FROM daily_metrics ORDER BY dateKey DESC LIMIT 365")
-    fun getGrassData(): Flow<List<DailyMetricEntity>>
+    suspend fun insertSettings(settings: SettingsEntity)
+}
+
+@Dao
+interface CampusVisitDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun recordVisit(visit: CampusVisitEntity)
+
+    @Query("SELECT * FROM campus_visits ORDER BY yyyymmdd DESC")
+    suspend fun getAllVisits(): List<CampusVisitEntity>
 }
