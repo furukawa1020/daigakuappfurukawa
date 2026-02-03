@@ -2,46 +2,29 @@ package com.hatake.daigakuos.ui.now
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.hatake.daigakuos.data.local.entity.NodeEntity
-import com.hatake.daigakuos.domain.repository.NodeRepository
+import com.hatake.daigakuos.domain.repository.StatsRepository
 import com.hatake.daigakuos.domain.repository.UserContextRepository
-import com.hatake.daigakuos.domain.usecase.CompleteNodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NowViewModel @Inject constructor(
-    private val completeNodeUseCase: CompleteNodeUseCase,
-    private val nodeRepository: NodeRepository,
+    private val statsRepository: StatsRepository,
     private val userContextRepository: UserContextRepository
 ) : ViewModel() {
 
-    // Ideally we fetch the Node details
-    private val _currentNode = MutableStateFlow<NodeEntity?>(null)
-    val currentNode = _currentNode.asStateFlow()
-
-    fun loadNode(nodeId: Long) {
+    fun completeSession(nodeId: Long, durationMillis: Long, onComplete: () -> Unit) {
         viewModelScope.launch {
-            // Mock fetching node
-            // _currentNode.value = nodeRepository.getNode(nodeId)
-        }
-    }
-
-    fun completeTask(actualMinutes: Int, focusLevel: Int) {
-        val node = _currentNode.value ?: return
-        val isOnCampus = userContextRepository.isOnCampus.value
-
-        viewModelScope.launch {
-            completeNodeUseCase(
-                node = node,
-                actualMinutes = actualMinutes,
-                focusLevel = focusLevel,
-                isOnCampus = isOnCampus
-            )
-            // Trigger navigation back or show success in UI
+            val isOnCampus = userContextRepository.isOnCampus.value
+            val multiplier = if (isOnCampus) 1.5f else 1.0f
+            
+            // 1 min = 10 pts (MVP base rate)
+            val minutes = (durationMillis / 1000 / 60).coerceAtLeast(1)
+            val points = minutes * 10 * multiplier
+            
+            statsRepository.logSession(nodeId, durationMillis, points)
+            onComplete()
         }
     }
 }

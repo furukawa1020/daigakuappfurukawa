@@ -10,13 +10,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 
+import androidx.hilt.navigation.compose.hiltViewModel
+
 @Composable
 fun NowScreen(
     nodeId: Long?,
-    onComplete: () -> Unit
+    onComplete: () -> Unit,
+    viewModel: NowViewModel = hiltViewModel()
 ) {
-    // In real app, fetch Node by ID
-    val nodeTitle = "DataStruct Lec 5"
+    // In real app, fetch Node by ID (simplified for now)
+    val nodeTitle = "集中セッション" 
     
     var timeElapsed by remember { mutableLongStateOf(0L) }
     var isRunning by remember { mutableStateOf(true) }
@@ -72,8 +75,11 @@ fun NowScreen(
             Button(
                 onClick = { 
                     isRunning = false
-                    // Show confirmation/feedback dialog here
-                    onComplete() 
+                    if (nodeId != null) {
+                        viewModel.completeSession(nodeId, timeElapsed, onComplete)
+                    } else {
+                        onComplete()
+                    }
                 }
             ) {
                 Text("完了")
