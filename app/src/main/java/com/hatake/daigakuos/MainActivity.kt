@@ -24,7 +24,7 @@ class MainActivity : ComponentActivity() {
     // Kanazawa University Natural Science and Technology Hall 2
     private val GEOFENCE_LAT = 36.5447
     private val GEOFENCE_LNG = 136.6963
-    private val GEOFENCE_RADIUS = 500f // Increased to 500m for better detection
+    private val GEOFENCE_RADIUS = 1000f // Increased to 1000m to cover 7th floor/drift
     private val GEOFENCE_ID = "KANAZAWA_UNIVERSITY"
 
     private lateinit var geofencingClient: com.google.android.gms.location.GeofencingClient
