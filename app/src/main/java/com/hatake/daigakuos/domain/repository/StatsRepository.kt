@@ -7,4 +7,5 @@ interface StatsRepository {
     suspend fun getRecentRecoveryCount(): Int
     suspend fun getStreak(): Int
     fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float>
+    suspend fun logSession(nodeId: Long, durationMillis: Long, points: Float)
 }

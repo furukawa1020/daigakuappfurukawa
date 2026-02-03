@@ -35,4 +35,18 @@ class StatsRepositoryImpl @Inject constructor(
     override fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float> {
         return eventDao.getTotalPoints().map { it ?: 0f }
     }
+
+    override suspend fun logSession(nodeId: Long, durationMillis: Long, points: Float) {
+        val event = com.hatake.daigakuos.data.local.entity.NodeEventEntity(
+            nodeId = nodeId,
+            startTime = System.currentTimeMillis() - durationMillis,
+            endTime = System.currentTimeMillis(),
+            pointsEarned = points
+        )
+        try {
+            eventDao.insertNodeEvent(event)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }
