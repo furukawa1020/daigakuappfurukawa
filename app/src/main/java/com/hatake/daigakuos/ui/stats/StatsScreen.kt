@@ -1,23 +1,42 @@
 package com.hatake.daigakuos.ui.stats
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.hatake.daigakuos.data.local.entity.DailyAggEntity
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: StatsViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("箱庭 & 生物") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Text("戻る")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "戻る")
                     }
                 }
             )
@@ -30,40 +49,82 @@ fun StatsScreen(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Organism Visualization (Placeholder)
-            Card(
-                modifier = Modifier
-                    .size(200.dp)
-                    .padding(8.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Text("謎の生物\n(進化中...)")
-                }
-            }
+            // 1. Organism Visualization
+            CreatureCard(uiState.creatureStage, uiState.totalPoints)
             
             Spacer(modifier = Modifier.height(24.dp))
             
             // 2. Grass (Contribution Graph)
-            Text("活動記録", style = MaterialTheme.typography.titleMedium)
-            
-            // Placeholder for Grass Grid
-            // In real app, use a Canvas or LazyVerticalGrid
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                repeat(7) {
-                    Surface(
-                        modifier = Modifier.size(20.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                        shape = MaterialTheme.shapes.small
-                    ) { }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // 3. Stats Breakdown
             Text(
-                "合計ポイント: 1250", 
-                style = MaterialTheme.typography.headlineSmall
+                "活動記録 (過去365日)", 
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            GrassGrid(uiState.dailyAggs)
+        }
+    }
+}
+
+@Composable
+fun CreatureCard(stage: CreatureStage, points: Double) {
+    Card(
+        modifier = Modifier
+            .size(240.dp)
+            .padding(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Placeholder Emoji/Icon based on Stage
+                val icon = when(stage) {
+                    CreatureStage.EGG -> "🥚"
+                    CreatureStage.BABY -> "🐣"
+                    CreatureStage.CHILD -> "🐥"
+                    CreatureStage.ADULT -> "🦅"
+                    CreatureStage.MASTER -> "🐲"
+                }
+                Text(text = icon, style = MaterialTheme.typography.displayLarge)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stage.name, 
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Total: ${points.toInt()} pts",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun GrassGrid(aggs: List<DailyAggEntity>) {
+    // Determine color intensity based on totalPoints in day
+    // Simple 7x(Weeks) grid or just linear for MVP?
+    // Let's do a simple grid of boxes.
+    
+    // Sort logic handled in Dao usually, but list is mostly ordered.
+    // For MVP, just display last 100 days as boxes
+    
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 20.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier.height(300.dp)
+    ) {
+        items(aggs) { agg ->
+            val intensity = (agg.totalPoints / 100.0).coerceIn(0.1, 1.0).toFloat()
+            Box(
+                modifier = Modifier
+                    .size(20.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = intensity),
+                        shape = RoundedCornerShape(4.dp)
+                    )
             )
         }
     }
