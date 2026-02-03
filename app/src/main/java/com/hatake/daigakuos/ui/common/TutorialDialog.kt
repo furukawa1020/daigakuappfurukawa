@@ -30,17 +30,17 @@ fun TutorialDialog(onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Welcome to University App",
+                    text = "大学アプリへようこそ",
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                TutorialItem("📍", "Check In", "Go to University to get x1.5 Point Multiplier.")
-                TutorialItem("🌲", "Grow", "Add tasks relative to your goals in the Tree tab.")
-                TutorialItem("💧", "Collect", "Complete tasks to fill your Knowledge Tank.")
-                TutorialItem("🛌", "Rest", "Use Rest Mode if you are burnt out.")
+                TutorialItem("📍", "チェックイン", "大学に行くと、ポイント倍率が1.5倍になります。")
+                TutorialItem("🌲", "成長", "ツリータブで目標に関連するタスクを追加しましょう。")
+                TutorialItem("💧", "蓄積", "タスクを完了して、知識タンクを満たしましょう。")
+                TutorialItem("🛌", "休息", "疲れた時は、回復モードを使って休みましょう。")
 
                 Spacer(modifier = Modifier.height(24.dp))
                 
@@ -49,7 +49,7 @@ fun TutorialDialog(onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Got it!")
+                    Text("わかった！")
                 }
             }
         }

@@ -71,7 +71,14 @@ class MainActivity : ComponentActivity() {
     private fun forceCheckLocation() {
         if (checkForegroundPermissions()) {
             try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                // Show toast that we are checking
+                android.widget.Toast.makeText(this, "現在地を確認中...", android.widget.Toast.LENGTH_SHORT).show()
+
+                // Use getCurrentLocation for fresh highly accurate location (requires CancellationToken or null)
+                fusedLocationClient.getCurrentLocation(
+                    com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                    null
+                ).addOnSuccessListener { location ->
                     if (location != null) {
                         val results = FloatArray(1)
                         android.location.Location.distanceBetween(
@@ -82,19 +89,24 @@ class MainActivity : ComponentActivity() {
                         val distanceInMeters = results[0]
                         val isInside = distanceInMeters <= GEOFENCE_RADIUS
                         
-                        // Update Repository
-                        // Use lifecycleScope.launch
                         lifecycleScope.launch {
                             userContextRepository.setCampusState(isInside)
                         }
+                        
+                        val status = if (isInside) "大学内 (距離: ${distanceInMeters.toInt()}m)" else "大学外 (距離: ${distanceInMeters.toInt()}m)"
+                        android.widget.Toast.makeText(this, status, android.widget.Toast.LENGTH_LONG).show()
                         android.util.Log.d("LocationCheck", "Distance: $distanceInMeters m, IsInside: $isInside")
                     } else {
-                         // Request new location if null (omitted for brevity, assume simple check)
+                        android.widget.Toast.makeText(this, "位置情報を取得できませんでした", android.widget.Toast.LENGTH_SHORT).show()
                     }
+                }.addOnFailureListener {
+                     android.widget.Toast.makeText(this, "位置情報エラー: ${it.message}", android.widget.Toast.LENGTH_SHORT).show()
                 }
             } catch (e: SecurityException) {
                 // Handle exception
             }
+        } else {
+             android.widget.Toast.makeText(this, "位置情報権限がありません", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 // ... rest of checking permissions and geofence adding ...

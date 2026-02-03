@@ -17,6 +17,8 @@ import androidx.compose.ui.unit.sp
 import com.hatake.daigakuos.data.local.entity.NodeEntity
 
 import androidx.compose.material.icons.Icons
+import com.hatake.daigakuos.ui.common.TutorialDialog
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 
 @Composable
@@ -30,6 +32,11 @@ fun HomeScreen(
     val currentPoints = uiState.currentPoints
     val isOnCampus = uiState.isOnCampus
     val recommendations = uiState.recommendations
+    var showTutorial by remember { mutableStateOf(false) }
+
+    if (showTutorial) {
+        TutorialDialog(onDismiss = { showTutorial = false })
+    }
 
     Scaffold(
         floatingActionButton = {
@@ -62,12 +69,21 @@ fun HomeScreen(
                     tonalElevation = 2.dp
                 ) {
                     Text(
-                        text = if (isOnCampus) "📍 UNIVERSITY (x1.5)" else "🏠 HOME (x1.0)",
+                        text = if (isOnCampus) "📍 大学 (x1.5)" else "🏠 自宅 (x1.0)",
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         color = if (isOnCampus) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
+                    )
+                }
+                
+                // Help Button
+                IconButton(onClick = { showTutorial = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Help",
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -102,7 +118,7 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "POINTS",
+                        text = "ポイント",
                         style = MaterialTheme.typography.labelMedium,
                         letterSpacing = 2.sp,
                         color = MaterialTheme.colorScheme.secondary
@@ -114,7 +130,7 @@ fun HomeScreen(
 
             // Bottom: Recommendations
             Text(
-                text = "NEXT ACTION",
+                text = "次のアクション",
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.align(Alignment.Start),
@@ -124,7 +140,7 @@ fun HomeScreen(
 
             if (recommendations.isEmpty()) {
                 Text(
-                    text = "No tasks available. Add one +",
+                    text = "タスクがありません。+ボタンで追加してください",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray,
                     modifier = Modifier.align(Alignment.Start)
@@ -143,7 +159,7 @@ fun HomeScreen(
                 onClick = { onModeChange(com.hatake.daigakuos.data.local.entity.Mode.RECOVERY) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("REST MODE", color = MaterialTheme.colorScheme.tertiary)
+                Text("回復モード", color = MaterialTheme.colorScheme.tertiary)
             }
         }
     }
@@ -177,7 +193,7 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "${node.estimateMinutes} MIN",
+                    text = "${node.estimateMinutes} 分",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
