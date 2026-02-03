@@ -117,7 +117,7 @@ fun GrassGrid(aggs: List<DailyAggEntity>) {
         modifier = Modifier.height(300.dp)
     ) {
         items(aggs) { agg ->
-            val intensity = (agg.totalPoints / 100.0).coerceIn(0.1, 1.0).toFloat()
+            val intensity = (agg.pointsTotal / 100.0).coerceIn(0.1, 1.0).toFloat()
             Box(
                 modifier = Modifier
                     .size(20.dp)
