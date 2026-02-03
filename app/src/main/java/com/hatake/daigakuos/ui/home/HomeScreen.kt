@@ -22,9 +22,10 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 
 @Composable
+@Composable
 fun HomeScreen(
     uiState: com.hatake.daigakuos.ui.home.HomeUiState,
-    onNavigateToNow: (Long) -> Unit,
+    onNavigateToNow: (String) -> Unit,
     onNavigateToTree: () -> Unit,
     onNavigateToStats: () -> Unit,
     onModeChange: (com.hatake.daigakuos.data.local.entity.Mode) -> Unit
@@ -180,11 +181,15 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                val typeName = when(node.type) {
-                    com.hatake.daigakuos.data.local.entity.ProjectType.STUDY -> "学習"
-                    com.hatake.daigakuos.data.local.entity.ProjectType.RESEARCH -> "研究"
-                    com.hatake.daigakuos.data.local.entity.ProjectType.MAKE -> "制作"
-                    com.hatake.daigakuos.data.local.entity.ProjectType.ADMIN -> "事務/運営"
+                val typeName = try {
+                    when(com.hatake.daigakuos.data.local.entity.NodeType.valueOf(node.type)) {
+                        com.hatake.daigakuos.data.local.entity.NodeType.STUDY -> "学習"
+                        com.hatake.daigakuos.data.local.entity.NodeType.RESEARCH -> "研究"
+                        com.hatake.daigakuos.data.local.entity.NodeType.MAKE -> "制作"
+                        com.hatake.daigakuos.data.local.entity.NodeType.ADMIN -> "事務/運営"
+                    }
+                } catch (e: Exception) {
+                    node.type // Fallback to raw string
                 }
                 Text(
                     text = typeName,
@@ -199,7 +204,7 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "${node.estimateMinutes} 分",
+                    text = "${node.estimateMinutes ?: 25} 分",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
