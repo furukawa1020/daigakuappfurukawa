@@ -57,6 +57,9 @@ interface EventDao {
     
     @Query("SELECT * FROM node_events ORDER BY timestamp DESC LIMIT 100")
     fun getRecentEvents(): Flow<List<NodeEventEntity>>
+
+    @Query("SELECT SUM(finalPoints) FROM node_events")
+    fun getTotalPoints(): Flow<Float?>
 }
 
 @Dao

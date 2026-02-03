@@ -25,7 +25,8 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getRecommendationUseCase: GetRecommendationUseCase,
-    private val userContextRepository: UserContextRepository
+    private val userContextRepository: UserContextRepository,
+    private val statsRepository: com.hatake.daigakuos.domain.repository.StatsRepository
 ) : ViewModel() {
 
     private val _recommendedNodes = MutableStateFlow<List<NodeEntity>>(emptyList())
@@ -35,10 +36,11 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = combine(
         _recommendedNodes,
         userContextRepository.isOnCampus, // Property access
-        userContextRepository.currentMode   // Property access
-    ) { nodes, onCampus, mode ->
+        userContextRepository.currentMode,   // Property access
+        statsRepository.getTotalPoints()
+    ) { nodes, onCampus, mode, points ->
         HomeUiState(
-            currentPoints = 1250f, // Still dummy for now, connect to Points later
+            currentPoints = points,
             isOnCampus = onCampus,
             recommendations = nodes
         )

@@ -7,6 +7,7 @@ import com.hatake.daigakuos.domain.repository.StatsRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 import java.util.Calendar
+import kotlinx.coroutines.flow.map
 
 @Singleton
 class StatsRepositoryImpl @Inject constructor(
@@ -29,5 +30,9 @@ class StatsRepositoryImpl @Inject constructor(
     override suspend fun getStreak(): Int {
         // Mock implementation for MVP
         return 0
+    }
+
+    override fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float> {
+        return kotlinx.coroutines.flow.map(eventDao.getTotalPoints()) { it ?: 0f }
     }
 }

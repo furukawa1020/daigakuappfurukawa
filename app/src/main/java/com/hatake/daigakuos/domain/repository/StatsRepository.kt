@@ -6,4 +6,5 @@ interface StatsRepository {
     suspend fun getTodayCompletedTypes(): List<ProjectType>
     suspend fun getRecentRecoveryCount(): Int
     suspend fun getStreak(): Int
+    fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float>
 }
