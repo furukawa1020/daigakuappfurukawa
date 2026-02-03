@@ -276,7 +276,7 @@ fun HomeScreen(
                     }
                     IconButton(onClick = onNavigateToSettings) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            imageVector = Icons.Filled.Settings,
                             contentDescription = "Settings",
                             tint = MaterialTheme.colorScheme.onBackground
                         )
