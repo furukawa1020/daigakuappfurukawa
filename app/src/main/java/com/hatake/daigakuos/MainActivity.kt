@@ -16,11 +16,11 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     // Hardcoded for MVP: Update with real coordinates
-    // Generic Tokyo University area placeholder
-    private val GEOFENCE_LAT = 35.7127
-    private val GEOFENCE_LNG = 139.758
-    private val GEOFENCE_RADIUS = 500f // meters
-    private val GEOFENCE_ID = "UNIVERSITY_CAMPUS"
+    // Kanazawa University Natural Science and Technology Hall 2
+    private val GEOFENCE_LAT = 36.5447
+    private val GEOFENCE_LNG = 136.6963
+    private val GEOFENCE_RADIUS = 300f // meters (Adjusted for building specific)
+    private val GEOFENCE_ID = "KANAZAWA_UNIVERSITY"
 
     private lateinit var geofencingClient: com.google.android.gms.location.GeofencingClient
     
