@@ -33,6 +33,6 @@ class StatsRepositoryImpl @Inject constructor(
     }
 
     override fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float> {
-        return kotlinx.coroutines.flow.map(eventDao.getTotalPoints()) { it ?: 0f }
+        return eventDao.getTotalPoints().map { it ?: 0f }
     }
 }
