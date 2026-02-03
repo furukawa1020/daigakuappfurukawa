@@ -17,12 +17,22 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TreeViewModel @Inject constructor(
-    private val nodeRepository: NodeRepository
+    private val getTreeUseCase: com.hatake.daigakuos.domain.usecase.GetTreeUseCase,
+    private val upsertNodeUseCase: com.hatake.daigakuos.domain.usecase.UpsertNodeUseCase,
+    private val projectDao: com.hatake.daigakuos.data.local.dao.ProjectDao
 ) : ViewModel() {
 
-    // Expose nodes directly from Flow
-    // We can filter/sort here if needed
-    val nodes: StateFlow<List<NodeEntity>> = nodeRepository.getActiveNodes()
+    private val _currentProject = MutableStateFlow<ProjectEntity?>(null)
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val nodes: StateFlow<List<NodeEntity>> = _currentProject
+        .flatMapLatest { project ->
+            if (project != null) {
+                getTreeUseCase(project.id)
+            } else {
+                kotlinx.coroutines.flow.flowOf(emptyList())
+            }
+        }
         .stateIn(
             scope = viewModelScope,
             started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5000),
@@ -35,22 +45,29 @@ class TreeViewModel @Inject constructor(
 
     private fun checkAndSeed() {
         viewModelScope.launch {
-            // Simple check: If flow emits empty list initially, maybe seed?
-            // Note: This is a bit racy with Flow, but fine for MVP.
-            // Better to use a dedicated "getCount" in Repo, but sticking to valid methods:
-            // Let's just provide a manual "Seed" if empty?
-            // actually, let's just wait for user input.
+            // Get first project or create default
+            projectDao.getAllProjects().collect { projects ->
+                if (projects.isNotEmpty()) {
+                    _currentProject.value = projects.first()
+                } else {
+                    val defaultProject = ProjectEntity(title = "メインプロジェクト")
+                    projectDao.insertProject(defaultProject)
+                    // Flow will emit again with the new list
+                }
+            }
         }
     }
 
-    fun addNode(title: String, minutes: Int, type: ProjectType) {
+    fun addNode(title: String, minutes: Int, type: NodeType) {
+        val project = _currentProject.value ?: return
+        
         viewModelScope.launch {
-            nodeRepository.insertNode(NodeEntity(
-                projectId = 1, // Default project for specific MVP
+            upsertNodeUseCase(
+                projectId = project.id,
                 title = title,
                 type = type,
-                estimateMinutes = minutes
-            ))
+                minutes = minutes
+            )
         }
     }
 }

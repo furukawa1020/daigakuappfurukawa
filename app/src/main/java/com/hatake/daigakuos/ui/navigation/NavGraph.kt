@@ -15,7 +15,7 @@ import com.hatake.daigakuos.ui.stats.StatsScreen
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object Now : Screen("now/{nodeId}") {
-        fun createRoute(nodeId: Long) = "now/$nodeId"
+        fun createRoute(nodeId: String) = "now/$nodeId"
     }
     object Tree : Screen("tree")
     object Stats : Screen("stats")
@@ -36,7 +36,7 @@ fun UniversityNavGraph(navController: NavHostController) {
         }
         
         composable(Screen.Now.route) { backStackEntry ->
-            val nodeId = backStackEntry.arguments?.getString("nodeId")?.toLongOrNull()
+            val nodeId = backStackEntry.arguments?.getString("nodeId")
             NowScreen(
                 nodeId = nodeId,
                 onComplete = { navController.popBackStack() } // Return to Home after completion
