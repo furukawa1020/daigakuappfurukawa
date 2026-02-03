@@ -11,7 +11,7 @@ import com.hatake.daigakuos.data.local.entity.*
         NodeEntity::class, 
         SessionEntity::class, 
         RecoveryEventEntity::class, 
-        DailyMetricEntity::class,
+        DailyAggEntity::class,
         SettingsEntity::class,
         CampusVisitEntity::class
     ],
