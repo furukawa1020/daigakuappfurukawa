@@ -55,25 +55,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun checkPermissionsAndAddGeofence() {
-        val fineLocation = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-        val backgroundLocation = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        } else {
-            android.content.pm.PackageManager.PERMISSION_GRANTED
-        }
-
-        if (fineLocation == android.content.pm.PackageManager.PERMISSION_GRANTED &&
-            backgroundLocation == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+    private val requestBackgroundPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
             addGeofence()
         } else {
-            // Request permissions
-            val permissions = mutableListOf(android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                permissions.add(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-            }
-            
-            requestPermissionLauncher.launch(permissions.toTypedArray())
+            // Background permission denied. Geofencing won't work optimally.
+            // We could show a toast or dialog here explaining why.
+            android.util.Log.w("Geofence", "Background location permission denied.")
         }
     }
 
@@ -81,14 +71,56 @@ class MainActivity : ComponentActivity() {
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineLocationGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val backgroundLocationGranted = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            permissions[android.Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
-        } else true
-
-        if (fineLocationGranted && backgroundLocationGranted) {
-            addGeofence()
+        
+        if (fineLocationGranted) {
+            // Foreground granted. Now check/request Background if needed (Android 10+)
+            checkAndRequestBackgroundPermission()
         } else {
-            // Show rationale or fail nicely
+            // Foreground denied.
+        }
+    }
+
+    private fun checkPermissionsAndAddGeofence() {
+        if (checkForegroundPermissions()) {
+             checkAndRequestBackgroundPermission()
+        } else {
+            requestForegroundPermissions()
+        }
+    }
+
+    private fun checkForegroundPermissions(): Boolean {
+        return androidx.core.content.ContextCompat.checkSelfPermission(
+            this, 
+            android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestForegroundPermissions() {
+        requestPermissionLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+
+    private fun checkAndRequestBackgroundPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val backgroundLocation = androidx.core.content.ContextCompat.checkSelfPermission(
+                this, 
+                android.Manifest.permission.ACCESS_BACKGROUND_LOCATION
+            )
+            
+            if (backgroundLocation == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                addGeofence()
+            } else {
+                // Request Background Permission
+                // Note: On Android 11+, this must be requested INDEPENDENTLY after foreground is granted.
+                requestBackgroundPermissionLauncher.launch(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            }
+        } else {
+            // Android 9 or lower, background is included in fine
+            addGeofence()
         }
     }
 

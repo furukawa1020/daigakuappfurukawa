@@ -11,20 +11,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
 import com.hatake.daigakuos.data.local.entity.NodeEntity
 import com.hatake.daigakuos.data.local.entity.ProjectType
 
 @Composable
 fun TreeScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: TreeViewModel = hiltViewModel()
 ) {
-    // Dummy Data
-    val projects = remember {
-        listOf(
-            "プロジェクトA: 統計学" to ProjectType.STUDY,
-            "プロジェクトB: Androidアプリ" to ProjectType.MAKE
-        )
-    }
+    val nodes by viewModel.nodes.collectAsState()
+    var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -38,44 +36,112 @@ fun TreeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* Add Node Dialog */ }) {
+            FloatingActionButton(onClick = { showDialog = true }) {
                 Icon(Icons.Default.Add, contentDescription = "Add")
             }
         }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-        ) {
-            projects.forEach { (name, type) ->
-                item {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
+        Box(modifier = Modifier.padding(padding)) {
+             LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Group by Project (Simulated for MVP: Group by Type)
+                // In real app we use ProjectEntity join.
+                val grouped = nodes.groupBy { it.type }
+                
+                if (nodes.isEmpty()) {
+                    item {
+                        Text("タスクがありません。「+」ボタンで追加してください。")
+                    }
+                }
+
+                grouped.forEach { (type, typeNodes) ->
+                    item {
+                         Text(
+                            text = type.name, // e.g. "STUDY", "RESEARCH"
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    items(typeNodes) { node ->
+                        NodeItem(node = node)
+                    }
                 }
                 
-                // Dummy Nodes for each project
-                items(3) { index ->
-                    NodeItem(
-                        node = NodeEntity(
-                            id = index.toLong(),
-                            projectId = 0, // Mock
-                            title = "Task ${index + 1} for $name",
-                            type = type
-                        )
-                    )
+                item {
+                    Spacer(modifier = Modifier.height(64.dp))
                 }
             }
-            
-            item {
-                Spacer(modifier = Modifier.height(64.dp))
-            }
+        }
+        
+        if (showDialog) {
+            AddNodeDialog(
+                onDismiss = { showDialog = false },
+                onConfirm = { title, minutes, type ->
+                    viewModel.addNode(title, minutes, type)
+                    showDialog = false
+                }
+            )
         }
     }
+}
+
+@Composable
+fun AddNodeDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, Int, ProjectType) -> Unit
+) {
+    var title by remember { mutableStateOf("") }
+    var minutes by remember { mutableStateOf("30") }
+    var selectedType by remember { mutableStateOf(ProjectType.STUDY) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("タスク追加") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("タイトル") }
+                )
+                OutlinedTextField(
+                    value = minutes,
+                    onValueChange = { minutes = it },
+                    label = { Text("見積もり時間 (分)") }
+                )
+                // Simple Type Selector
+                Row {
+                    ProjectType.values().forEach { type ->
+                        TextButton(
+                            onClick = { selectedType = type },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = if(selectedType == type) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Gray
+                            )
+                        ) {
+                            Text(type.name.take(3))
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                if (title.isNotBlank()) {
+                    onConfirm(title, minutes.toIntOrNull() ?: 25, selectedType)
+                }
+            }) {
+                Text("追加")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("キャンセル")
+            }
+        }
+    )
 }
 
 @Composable
