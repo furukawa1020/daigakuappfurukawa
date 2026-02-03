@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hatake.daigakuos.data.local.entity.NodeEntity
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+
 @Composable
 fun HomeScreen(
     uiState: com.hatake.daigakuos.ui.home.HomeUiState,
@@ -30,8 +33,12 @@ fun HomeScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onNavigateToTree) {
-                Text("+")
+            FloatingActionButton(
+                onClick = onNavigateToTree,
+                containerColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSecondary
+            ) {
+                Text("+", fontSize = 24.sp)
             }
         }
     ) { padding ->
@@ -39,7 +46,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(24.dp), // Increased padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Header: Status Area
@@ -48,71 +55,95 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (isOnCampus) "場所: 大学 (x1.5)" else "場所: 自宅 (x1.0)",
-                    color = if (isOnCampus) MaterialTheme.colorScheme.primary else Color.Gray,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Lvl. 12",
-                    fontSize = 18.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Center: The TANK
-            // "貯まる" Visualization
-            Box(
-                modifier = Modifier
-                    .size(240.dp)
-                    .clickable { onNavigateToStats() }, // Tap tank to see stats/organism
-                contentAlignment = Alignment.Center
-            ) {
-                // Placeholder Canvas for Liquid
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    drawCircle(
-                        color = Color.LightGray.copy(alpha = 0.2f),
-                        radius = size.minDimension / 2
-                    )
-                    // Draw liquid level (simplified)
-                    val liquidHeight = size.height * 0.6f // 60% full
-                    drawRect(
-                        color = Color(0xFF42A5F5).copy(alpha = 0.8f),
-                        topLeft = Offset(size.width * 0.2f, size.height - liquidHeight),
-                        size = androidx.compose.ui.geometry.Size(size.width * 0.6f, liquidHeight)
+                // Location Badge
+                Surface(
+                    shape = RoundedCornerShape(50),
+                    color = if (isOnCampus) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    tonalElevation = 2.dp
+                ) {
+                    Text(
+                        text = if (isOnCampus) "📍 UNIVERSITY (x1.5)" else "🏠 HOME (x1.0)",
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        color = if (isOnCampus) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
                 }
-                Text(
-                    text = "${currentPoints.toInt()} pts",
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.ExtraBold
-                )
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Center: The TANK (Minimalist Circle)
+            Box(
+                modifier = Modifier
+                    .size(260.dp)
+                    .clickable { onNavigateToStats() },
+                contentAlignment = Alignment.Center
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    // Outer Ring
+                    drawCircle(
+                        color = Color.LightGray.copy(alpha = 0.2f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
+                    )
+                    // Inner Progress (Simulated)
+                    drawCircle(
+                        color = Color(0xFF1A237E), // Navy logic color
+                        radius = size.minDimension / 2 * 0.8f,
+                        alpha = 0.1f
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "${currentPoints.toInt()}",
+                        style = MaterialTheme.typography.displayLarge,
+                        fontWeight = FontWeight.Light, // Sophisticated Thin Font
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "POINTS",
+                        style = MaterialTheme.typography.labelMedium,
+                        letterSpacing = 2.sp,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
             // Bottom: Recommendations
             Text(
-                text = "次やるべきこと",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.align(Alignment.Start)
+                text = "NEXT ACTION",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.align(Alignment.Start),
+                letterSpacing = 1.5.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (recommendations.isEmpty()) {
+                Text(
+                    text = "No tasks available. Add one +",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+            }
 
             recommendations.forEach { node ->
                 RecommendationCard(node = node, onClick = { onNavigateToNow(node.id) })
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             
-            // "Today is Impossible" Button (Recovery Mode)
-            OutlinedButton(
+            // Recovery Mode (Minimalist Text Button)
+            TextButton(
                 onClick = { /* Activate Recovery Mode */ },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("今日は無理 (回復モード)")
+                Text("REST MODE", color = MaterialTheme.colorScheme.tertiary)
             }
         }
     }
@@ -120,37 +151,41 @@ fun HomeScreen(
 
 @Composable
 fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
-    Card(
+    ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = when(node.type) {
-                com.hatake.daigakuos.data.local.entity.ProjectType.STUDY -> Color(0xFFE3F2FD) // Blueish
-                com.hatake.daigakuos.data.local.entity.ProjectType.RESEARCH -> Color(0xFFF3E5F5) // Purpleish
-                else -> Color.White
-            }
-        )
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
+                    text = node.type.name.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
                     text = node.title,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "${node.estimateMinutes} 分 • ${node.type.name}",
+                    text = "${node.estimateMinutes} MIN",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
             }
-            Text(
-                text = "開始",
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+            Icon(
+                imageVector = Icons.Filled.PlayArrow,
+                contentDescription = "Start",
+                tint = MaterialTheme.colorScheme.primary
             )
         }
     }
