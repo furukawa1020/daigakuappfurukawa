@@ -18,7 +18,7 @@ interface ProjectDao {
 
 @Dao
 interface NodeDao {
-    @Query("SELECT * FROM nodes WHERE status = 'TODO' ORDER BY priority_score DESC, createdAt DESC")
+    @Query("SELECT * FROM nodes WHERE status = 'TODO' ORDER BY deadline ASC, createdAt DESC")
     fun getActiveNodes(): Flow<List<NodeEntity>>
 
     @Query("SELECT * FROM nodes WHERE projectId = :projectId AND parentId = :parentId")

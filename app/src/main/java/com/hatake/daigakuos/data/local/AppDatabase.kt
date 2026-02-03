@@ -16,6 +16,7 @@ import com.hatake.daigakuos.data.local.entity.*
     version = 1,
     exportSchema = false
 )
+@androidx.room.TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun projectDao(): ProjectDao
     abstract fun nodeDao(): NodeDao
