@@ -205,6 +205,7 @@ import androidx.compose.material.icons.Icons
 import com.hatake.daigakuos.ui.common.TutorialDialog
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 
 @Composable
 fun HomeScreen(
