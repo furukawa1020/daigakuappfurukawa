@@ -106,39 +106,84 @@ class DaigakuOSApp extends StatelessWidget {
   }
 }
 
+import 'package:fl_chart/fl_chart.dart'; // Added
+
+// ... (Existing Imports)
+
+// ...
+
+final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  try {
+    final response = await http.get(Uri.parse('http://localhost:8080/api/aggs/weekly'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    }
+  } catch(e) { print("Weekly Error: $e"); }
+  return [];
+});
+
+// ...
+
 // --- Screens ---
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  Future<void> _toggleCampus(bool isOn, WidgetRef ref) async {
-    try {
-       await http.post(
-         Uri.parse('http://localhost:8080/api/context'),
-         body: jsonEncode({"isOnCampus": isOn})
-       );
-       ref.refresh(dailyAggProvider); // Refresh stats just in case
-    } catch(e) { print(e); }
-  }
+  // ... (Toggle Campus)
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final aggAsync = ref.watch(dailyAggProvider);
+    final weeklyAsync = ref.watch(weeklyAggProvider);
     
     return Scaffold(
       appBar: AppBar(title: const Text('DaigakuOS v2')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           ref.refresh(dailyAggProvider);
+          ref.refresh(weeklyAggProvider);
           ref.refresh(historyProvider);
         },
         child: const Icon(Icons.refresh),
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Stats Card
+             const SizedBox(height: 16),
+             // Weekly Chart
+             SizedBox(
+               height: 150,
+               padding: const EdgeInsets.symmetric(horizontal: 16),
+               child: weeklyAsync.when(
+                 data: (data) => BarChart(
+                   BarChartData(
+                     titlesData: FlTitlesData(
+                       leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                       topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                       bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (val, meta) {
+                          if (val.toInt() >= 0 && val.toInt() < data.length) {
+                            return Text(data[val.toInt()]['day'].toString().substring(8), style: const TextStyle(fontSize: 10)); // return DD
+                          }
+                          return const Text("");
+                       })),
+                     ),
+                     borderData: FlBorderData(show: false),
+                     gridData: FlGridData(show: false),
+                     barGroups: data.asMap().entries.map((e) {
+                       final idx = e.key;
+                       final item = e.value;
+                       final pts = (item['points'] as num).toDouble();
+                       return BarChartGroupData(x: idx, barRods: [BarChartRodData(toY: pts, color: Theme.of(context).primaryColor, width: 16)]);
+                     }).toList(),
+                   )
+                 ),
+                 loading: () => const Center(child: Text("Loading Chart...")),
+                 error: (_,__) => const SizedBox(),
+               )
+             ),
+             
+             // Stats Card (Today)
             Card(
               margin: const EdgeInsets.all(16),
               child: Padding(
