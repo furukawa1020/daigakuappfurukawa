@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
