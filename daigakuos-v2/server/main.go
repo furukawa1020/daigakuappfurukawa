@@ -92,12 +92,12 @@ func main() {
 	initDB()
 	fmt.Println("DaigakuOS v2 Server Starting on :8080...")
 
-	http.HandleFunc("/api/health", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/health", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-	})
+	}))
 
 	// POST /api/sessions - Save Session
-	http.HandleFunc("/api/sessions", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/sessions", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -159,10 +159,10 @@ func main() {
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]string{"result": "saved", "id": s.ID})
-	})
+	}))
 
 	// GET /api/aggs/daily - Get Stats for Today
-	http.HandleFunc("/api/aggs/daily", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/aggs/daily", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		today := time.Now().Format("2006-01-02")
@@ -189,10 +189,10 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(agg)
-	})
+	}))
 
 	// GET /api/aggs/weekly - Last 7 Days
-	http.HandleFunc("/api/aggs/weekly", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/aggs/weekly", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		rows, err := db.Query(`
@@ -222,10 +222,10 @@ func main() {
 			}
 		}
 		json.NewEncoder(w).Encode(stats)
-	})
+	}))
 
 	// GET /api/nodes/suggestions - Get Recent Nodes (Smart: Time-of-Day Aware)
-	http.HandleFunc("/api/nodes/suggestions", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/nodes/suggestions", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		// Smart Logic (Prototype): Prioritize recently updated nodes.
@@ -249,20 +249,10 @@ func main() {
 			}
 		}
 		json.NewEncoder(w).Encode(nodes)
-	})
+	}))
 
 	// PUT /api/sessions/{id} - Edit Session
-	http.HandleFunc("/api/sessions/", func(w http.ResponseWriter, r *http.Request) {
-		// CORS
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
+	http.HandleFunc("/api/sessions/", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		// Extract ID
 		id := r.URL.Path[len("/api/sessions/"):]
 
@@ -306,7 +296,7 @@ func main() {
 		}
 
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	})
+	}))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

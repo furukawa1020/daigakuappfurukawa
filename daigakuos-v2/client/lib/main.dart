@@ -36,11 +36,20 @@ class DailyAgg {
 }
 
 // Global Providers
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+
+String get baseUrl {
+  if (kIsWeb) return 'http://localhost:8080';
+  if (Platform.isAndroid) return 'http://10.0.2.2:8080';
+  return 'http://localhost:8080';
+}
+
 final sessionProvider = StateProvider<Session?>((ref) => null);
 
 final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
   try {
-    final response = await http.get(Uri.parse('http://localhost:8080/api/aggs/daily'));
+    final response = await http.get(Uri.parse('$baseUrl/api/aggs/daily'));
     if (response.statusCode == 200) {
       return DailyAgg.fromJson(jsonDecode(response.body));
     }
@@ -52,7 +61,7 @@ final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
 
 final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
-    final response = await http.get(Uri.parse('http://localhost:8080/api/sessions'));
+    final response = await http.get(Uri.parse('$baseUrl/api/sessions'));
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.cast<Map<String, dynamic>>();
@@ -111,7 +120,7 @@ class DaigakuOSApp extends StatelessWidget {
 
 final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
-    final response = await http.get(Uri.parse('http://localhost:8080/api/aggs/weekly'));
+    final response = await http.get(Uri.parse('$baseUrl/api/aggs/weekly'));
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       return data.cast<Map<String, dynamic>>();
