@@ -8,12 +8,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:daigaku_os_client/main.dart';
+import 'package:daigaku_app_client/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const DaigakuOSApp());
+    await tester.pumpWidget(const DaigakuAPPApp());
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

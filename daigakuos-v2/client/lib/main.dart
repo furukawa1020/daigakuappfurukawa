@@ -308,7 +308,7 @@ class HomeScreen extends ConsumerWidget {
     final weeklyAsync = ref.watch(weeklyAggProvider);
     
     return Scaffold(
-      appBar: AppBar(title: const Text('DaigakuOS v2')),
+      appBar: AppBar(title: const Text('DaigakuAPP v2')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           ref.refresh(userStatsProvider);
