@@ -139,7 +139,7 @@ class HomeScreen extends ConsumerWidget {
   Future<void> _toggleCampus(bool isOn, WidgetRef ref) async {
     try {
        await http.post(
-         Uri.parse('http://localhost:8080/api/context'),
+         Uri.parse('$baseUrl/api/context'),
          body: jsonEncode({"isOnCampus": isOn})
        );
        ref.refresh(dailyAggProvider); // Refresh stats just in case
@@ -175,7 +175,7 @@ class HomeScreen extends ConsumerWidget {
                );
                if (confirm == true) {
                   try {
-                    final res = await http.delete(Uri.parse('http://localhost:8080/api/sessions/${session['id']}'));
+                    final res = await http.delete(Uri.parse('$baseUrl/api/sessions/${session['id']}'));
                     if (res.statusCode != 200) throw "Status ${res.statusCode}";
                     
                     ref.refresh(historyProvider);
@@ -194,7 +194,7 @@ class HomeScreen extends ConsumerWidget {
               // Edit Logic
               try {
                 final res = await http.put(
-                  Uri.parse('http://localhost:8080/api/sessions/${session['id']}'),
+                  Uri.parse('$baseUrl/api/sessions/${session['id']}'),
                   body: jsonEncode({"draftTitle": titleCtrl.text})
                 );
                 if (res.statusCode != 200) throw "Status ${res.statusCode}";
@@ -502,7 +502,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
 
   Future<void> _fetchSuggestions() async {
     try {
-      final response = await http.get(Uri.parse('http://localhost:8080/api/nodes/suggestions'));
+      final response = await http.get(Uri.parse('$baseUrl/api/nodes/suggestions'));
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
@@ -519,7 +519,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final url = Uri.parse('http://localhost:8080/api/sessions'); 
+      final url = Uri.parse('$baseUrl/api/sessions'); 
       final response = await http.post(
         url,
         body: jsonEncode({
