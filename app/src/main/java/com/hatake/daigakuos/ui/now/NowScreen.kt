@@ -58,31 +58,6 @@ fun NowScreen(
         }
     }
 
-// Removed CompletionDialog
-                
-            // Finish (Outlined)
-            OutlinedButton(
-                onClick = { 
-                    isRunning = false
-                    val minutes = (timeElapsed / 1000 / 60).toInt().coerceAtLeast(1)
-                    val sessionId = viewModel.currentSessionId ?: "" // Should expose this
-                    onComplete(sessionId, minutes)
-                },
-                modifier = Modifier.height(72.dp),
-                shape = CircleShape,
-                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Check, contentDescription = null)
-                    Text("完了", style = MaterialTheme.typography.labelSmall)
-                }
-            }
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
     // Colors
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
