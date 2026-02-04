@@ -294,10 +294,15 @@ class HomeScreen extends ConsumerWidget {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverAppBar.large(
               title: const Text("DaigakuAPP", style: TextStyle(fontWeight: FontWeight.w800)),
               centerTitle: false,
               backgroundColor: Colors.transparent,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings),
+                  onPressed: () => context.push('/settings'),
+                )
+              ],
             ),
             
             SliverToBoxAdapter(
