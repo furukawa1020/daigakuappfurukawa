@@ -513,10 +513,14 @@ class HomeScreen extends ConsumerWidget {
             ),
 
             FilledButton.icon(
-              onPressed: () {
+              onPressed: () async {
+                // Check GPS location first
+                bool onCampus = await checkIfOnCampus();
+                ref.read(isOnCampusProvider.notifier).state = onCampus;
+                
                 // Start Unspecified Session
                 ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
-                context.push('/now');
+                if (context.mounted) context.push('/now');
               },
               icon: const Icon(Icons.play_arrow),
               label: const Text("DO NOW"),
@@ -665,18 +669,19 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      final minutes = DateTime.now().difference(session.startAt).inMinutes;
+      final isOnCampus = ref.read(isOnCampusProvider);
+      
       final url = Uri.parse('$baseUrl/api/sessions'); 
       final response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
         body: jsonEncode({
-          "nodeId": selectedNodeId,
-          "draftTitle": _titleController.text, // If creating new
-          "minutes": session.durationMinutes,
           "startAt": session.startAt.toIso8601String(),
-          "endAt": DateTime.now().toIso8601String(),
-          // Points calculated by Server
-          "focus": 3 
+          "minutes": minutes,
+          "draftTitle": _titleController.text.isEmpty ? "(No Title)" : _titleController.text,
+          "nodeId": selectedNodeId,
+          "isOnCampus": isOnCampus,
         }),
       );
       

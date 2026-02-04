@@ -137,20 +137,34 @@ func main() {
 		}
 
 		type SessionRequest struct {
-			Session
-			NodeID string `json:"nodeId"`
+			ID         string    `json:"id"`
+			DraftTitle string    `json:"draftTitle"`
+			StartAt    time.Time `json:"startAt"`
+			Minutes    int       `json:"minutes"`
+			Focus      int       `json:"focus"`
+			NodeID     string    `json:"nodeId"`
+			IsOnCampus bool      `json:"isOnCampus"`
 		}
 
 		var req SessionRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "Invalid JSON", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		s := req.Session
+		// Calculate Points (Focus * 10 * Minutes)
+		basePoints := float64(req.Focus*10) * float64(req.Minutes)
+
+		// Apply Campus Multiplier (1.5x for on-campus work)
+		campusMultiplier := 1.0
+		if req.IsOnCampus {
+			campusMultiplier = 1.5
+		}
+		finalPoints := basePoints * campusMultiplier
+
 		// ID Gen
-		if s.ID == "" {
-			s.ID = fmt.Sprintf("%d", time.Now().UnixNano())
+		if req.ID == "" {
+			req.ID = fmt.Sprintf("%d", time.Now().UnixNano())
 		}
 
 		// Node Handling
