@@ -55,9 +55,14 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     }
 
     private fun updateLocationState(repository: UserContextRepository, isOnCampus: Boolean) {
+        val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
-            repository.setCampusState(isOnCampus)
-            Log.d("Geofence", "State updated: $isOnCampus")
+            try {
+                repository.setCampusState(isOnCampus)
+                Log.d("Geofence", "State updated: $isOnCampus")
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 }

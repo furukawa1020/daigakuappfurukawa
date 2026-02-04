@@ -52,18 +52,18 @@ class GeofenceManager(private val context: Context) {
 
         try {
             geofencingClient.addGeofences(request, geofencePendingIntent).await()
-            // Log success
+            android.util.Log.d("GeofenceManager", "Geofence added successfully")
         } catch (e: Exception) {
-            // Log failure
-            e.printStackTrace()
+            android.util.Log.e("GeofenceManager", "Failed to add geofence", e)
         }
     }
 
     suspend fun removeGeofence() {
         try {
             geofencingClient.removeGeofences(geofencePendingIntent).await()
+            android.util.Log.d("GeofenceManager", "Geofence removed successfully")
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("GeofenceManager", "Failed to remove geofence", e)
         }
     }
 }
