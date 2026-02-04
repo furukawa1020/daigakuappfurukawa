@@ -47,19 +47,29 @@ func initDB() {
 
 	// Create Tables
 	schema := `
+	CREATE TABLE IF NOT EXISTS nodes (
+		id TEXT PRIMARY KEY,
+		title TEXT,
+		updated_at DATETIME
+	);
 	CREATE TABLE IF NOT EXISTS sessions (
 		id TEXT PRIMARY KEY,
+		node_id TEXT,
 		draft_title TEXT,
 		start_at DATETIME,
 		minutes INTEGER,
 		points REAL,
-		focus INTEGER
+		focus INTEGER,
+		FOREIGN KEY(node_id) REFERENCES nodes(id)
 	);
 	`
 	_, err = db.Exec(schema)
 	if err != nil {
 		log.Fatal("Failed to create schema:", err)
 	}
+	// Migration for existing DB (idempotent-ish)
+	db.Exec("ALTER TABLE sessions ADD COLUMN node_id TEXT")
+
 	fmt.Println("Database initialized.")
 }
 
@@ -77,21 +87,57 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		var s Session
-		// Basic ID generation if missing (real app should use UUID lib)
-		if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
+
+		type SessionRequest struct {
+			Session
+			NodeID string `json:"nodeId"`
+		}
+
+		var req SessionRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 			return
 		}
+
+		s := req.Session
+		// ID Gen
 		if s.ID == "" {
 			s.ID = fmt.Sprintf("%d", time.Now().UnixNano())
 		}
 
+		// Node Handling
+		var finalNodeID sql.NullString
+
+		if req.NodeID != "" {
+			finalNodeID.String = req.NodeID
+			finalNodeID.Valid = true
+			// Update Node Timestamp
+			db.Exec("UPDATE nodes SET updated_at = ? WHERE id = ?", time.Now(), req.NodeID)
+		} else if s.DraftTitle != "" {
+			// Auto-create/find node from Title
+			var existingID string
+			err := db.QueryRow("SELECT id FROM nodes WHERE title = ?", s.DraftTitle).Scan(&existingID)
+			if err == nil {
+				finalNodeID.String = existingID
+				finalNodeID.Valid = true
+				db.Exec("UPDATE nodes SET updated_at = ? WHERE id = ?", time.Now(), existingID)
+			} else {
+				// Create New Node
+				newNodeID := fmt.Sprintf("node_%d", time.Now().UnixNano())
+				_, err := db.Exec("INSERT INTO nodes (id, title, updated_at) VALUES (?, ?, ?)", newNodeID, s.DraftTitle, time.Now())
+				if err == nil {
+					finalNodeID.String = newNodeID
+					finalNodeID.Valid = true
+				}
+			}
+		}
+
 		_, err := db.Exec(
-			"INSERT INTO sessions (id, draft_title, start_at, minutes, points, focus) VALUES (?, ?, ?, ?, ?, ?)",
-			s.ID, s.DraftTitle, s.StartAt, s.Minutes, s.Points, s.Focus,
+			"INSERT INTO sessions (id, node_id, draft_title, start_at, minutes, points, focus) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			s.ID, finalNodeID, s.DraftTitle, s.StartAt, s.Minutes, s.Points, s.Focus,
 		)
 		if err != nil {
+			log.Println("Save error:", err)
 			http.Error(w, "Database save failed: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
