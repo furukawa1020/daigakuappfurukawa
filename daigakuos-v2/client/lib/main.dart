@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import 'dart:ui';
+import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:confetti/confetti.dart';
 import 'database_helper.dart';
 
 // -----------------------------------------------------------------------------
@@ -18,81 +23,6 @@ class Session {
 
   Session({this.id, required this.startAt, this.durationMinutes});
 }
-
-// Models
-class DailyAgg {
-  final double totalPoints;
-  final int totalMinutes;
-  final int sessionCount;
-  
-  DailyAgg({required this.totalPoints, required this.totalMinutes, required this.sessionCount});
-  
-  factory DailyAgg.fromJson(Map<String, dynamic> json) {
-    return DailyAgg(
-      totalPoints: (json['totalPoints'] as num?)?.toDouble() ?? 0.0,
-      totalMinutes: (json['totalMinutes'] as num?)?.toInt() ?? 0,
-      sessionCount: (json['sessionCount'] as num?)?.toInt() ?? 0,
-    );
-  }
-}
-
-// Global Providers
-
-// -----------------------------------------------------------------------------
-// Global Constants
-// -----------------------------------------------------------------------------
-
-// Geofencing Configuration (Kanazawa University Natural Science Building No. 2)
-const double CAMPUS_LAT = 36.5639;
-const double CAMPUS_LON = 136.6845;
-const double CAMPUS_RADIUS_METERS = 500.0; // 500m radius
-
-final sessionProvider = StateProvider<Session?>((ref) => null);
-final isOnCampusProvider = StateProvider<bool>((ref) => false);
-
-Future<bool> checkIfOnCampus() async {
-  try {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return false;
-    
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return false;
-    }
-    if (permission == LocationPermission.deniedForever) return false;
-
-    Position position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
-    );
-
-    double distanceInMeters = Geolocator.distanceBetween(
-      CAMPUS_LAT,
-      CAMPUS_LON,
-      position.latitude,
-      position.longitude,
-    );
-
-    return distanceInMeters <= CAMPUS_RADIUS_METERS;
-  } catch (e) {
-    print("Geolocation Error: $e");
-    return false;
-  }
-}
-
-final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
-  try {
-    final data = await DatabaseHelper().getDailyAgg();
-    return DailyAgg(
-      totalPoints: (data['totalPoints'] as num?)?.toDouble() ?? 0.0,
-      totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
-      sessionCount: 0
-    );
-  } catch (e) {
-    print("Fetch Stats Error: $e");
-  }
-  return DailyAgg(totalPoints: 0, totalMinutes: 0, sessionCount: 0);
-});
 
 class UserStats {
   final double totalPoints;
@@ -126,46 +56,88 @@ class UserStats {
   }
 }
 
+class DailyAgg {
+  final double totalPoints;
+  final int totalMinutes;
+  final int sessionCount;
+  
+  DailyAgg({required this.totalPoints, required this.totalMinutes, required this.sessionCount});
+}
+
+// Global Providers
+
+const double CAMPUS_LAT = 36.5639;
+const double CAMPUS_LON = 136.6845;
+const double CAMPUS_RADIUS_METERS = 500.0;
+
+final sessionProvider = StateProvider<Session?>((ref) => null);
+final isOnCampusProvider = StateProvider<bool>((ref) => false);
+
 final userStatsProvider = FutureProvider<UserStats>((ref) async {
   try {
     final data = await DatabaseHelper().getUserStats();
     return UserStats.fromJson(data);
-  } catch (e) { print("UserStats Error: $e"); }
-  return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0, currentStreak: 0);
+  } catch (e) {
+    print("Stats Error: $e");
+    return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0, currentStreak: 0);
+  }
+});
+
+final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
+  try {
+    final data = await DatabaseHelper().getDailyAgg();
+    return DailyAgg(
+      totalPoints: (data['totalPoints'] as num?)?.toDouble() ?? 0.0,
+      totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
+      sessionCount: 0
+    );
+  } catch (e) { return DailyAgg(totalPoints: 0, totalMinutes: 0, sessionCount: 0); }
 });
 
 final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  try {
-    return await DatabaseHelper().getSessions();
-  } catch(e) { print("History Error: $e"); }
-  return [];
+  return await DatabaseHelper().getSessions();
 });
 
+final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  return await DatabaseHelper().getWeeklyAgg();
+});
+
+Future<bool> checkIfOnCampus() async {
+  try {
+    // Check permission
+    final permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+       await Geolocator.requestPermission();
+    }
+    
+    // Quick check with timeout
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+      timeLimit: const Duration(seconds: 5)
+    );
+
+    double distanceInMeters = Geolocator.distanceBetween(
+      CAMPUS_LAT, CAMPUS_LON, position.latitude, position.longitude,
+    );
+    return distanceInMeters <= CAMPUS_RADIUS_METERS;
+  } catch (e) {
+    print("Geo Error: $e");
+    return false;
+  }
+}
+
 // -----------------------------------------------------------------------------
-// 2. Navigation
+// 2. Navigation & Theme
 // -----------------------------------------------------------------------------
 
 final _router = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeScreen(),
-    ),
-    GoRoute(
-      path: '/now',
-      builder: (context, state) => const NowScreen(),
-    ),
-    GoRoute(
-      path: '/finish',
-      builder: (context, state) => const FinishScreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
+    GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
   ],
 );
-
-// -----------------------------------------------------------------------------
-// 3. UI
-// -----------------------------------------------------------------------------
 
 void main() {
   runApp(const ProviderScope(child: DaigakuAPPApp()));
@@ -179,298 +151,395 @@ class DaigakuAPPApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'DaigakuAPP v2',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF6366F1), // Indigo
+          brightness: Brightness.light,
+          primary: const Color(0xFF4F46E5),
+          secondary: const Color(0xFFEC4899), // Pink
+        ),
+        textTheme: GoogleFonts.outfitTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
       ),
       routerConfig: _router,
     );
   }
 }
 
-// ...
+// -----------------------------------------------------------------------------
+// 3. Reusable UI Components (Glassmorphism)
+// -----------------------------------------------------------------------------
 
-final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  try {
-    return await DatabaseHelper().getWeeklyAgg();
-  } catch(e) { print("Weekly Error: $e"); }
-  return [];
-});
+class GlassCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsets? padding;
+  final double? height;
 
-// ...
-
-// --- Screens ---
-
-class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
-
-  // _toggleCampus removed as it's no longer needed for local-first (logic is in _submit)
-
-  Future<void> _editSession(BuildContext context, Map<String, dynamic> session, WidgetRef ref) async {
-    final titleCtrl = TextEditingController(text: session['title']);
-    if (!context.mounted) return;
-    
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Edit Session"),
-        content: TextField(
-          controller: titleCtrl,
-          decoration: const InputDecoration(labelText: "Task Name"),
-          autofocus: true,
-        ),
-        actions: [
-            child: const Text("Delete", style: TextStyle(color: Colors.red))
-          ),
-            FilledButton(
-            onPressed: () async {
-              // Edit Logic
-              try {
-                await DatabaseHelper().updateSessionTitle(session['id'], titleCtrl.text);
-                
-                ref.refresh(historyProvider);
-                if (ctx.mounted) {
-                   Navigator.pop(ctx);
-                   ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("Updated successfully!")));
-                }
-              } catch(e) { 
-                print(e); 
-                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Edit Failed: $e"), backgroundColor: Colors.red));
-              }
-            }, 
-            child: const Text("Save")
-          ),
-        ],
-      )
-    );
-  }
+  const GlassCard({super.key, required this.child, this.padding, this.height});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(userStatsProvider);
-    final weeklyAsync = ref.watch(weeklyAggProvider);
-    
-    return Scaffold(
-      appBar: AppBar(title: const Text('DaigakuAPP v2')),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ref.refresh(userStatsProvider);
-          ref.refresh(weeklyAggProvider);
-          ref.refresh(historyProvider);
-        },
-        child: const Icon(Icons.refresh),
-      ),
-      body: Center(
-        child: Column(
-          children: [
-             const SizedBox(height: 16),
-             // Weekly Chart
-             Container(
-               height: 150,
-               padding: const EdgeInsets.symmetric(horizontal: 16),
-               child: weeklyAsync.when(
-                 data: (data) => BarChart(
-                   BarChartData(
-                     titlesData: FlTitlesData(
-                       leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                       topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                       bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (val, meta) {
-                          if (val.toInt() >= 0 && val.toInt() < data.length) {
-                            return Text(data[val.toInt()]['day'].toString().substring(8), style: const TextStyle(fontSize: 10)); // return DD
-                          }
-                          return const Text("");
-                       })),
-                     ),
-                     borderData: FlBorderData(show: false),
-                     gridData: FlGridData(show: false),
-                     barGroups: data.asMap().entries.map((e) {
-                       final idx = e.key;
-                       final item = e.value;
-                       final pts = (item['points'] as num).toDouble();
-                       return BarChartGroupData(x: idx, barRods: [BarChartRodData(toY: pts, color: Theme.of(context).primaryColor, width: 16)]);
-                     }).toList(),
-                   )
-                 ),
-                 loading: () => const Center(child: Text("Loading Chart...")),
-                 error: (_,__) => const SizedBox(),
-               )
-             ),
-             
-             // Stats Card (Today)
-             // Stats Card (Gamification)
-            Card(
-              margin: const EdgeInsets.all(16),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: statsAsync.when(
-                  data: (stats) => Column(
-                    children: [
-                       // Streak Badge
-                       if (stats.currentStreak > 0)
-                         Container(
-                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                           decoration: BoxDecoration(
-                             gradient: LinearGradient(
-                               colors: [Colors.orange.shade400, Colors.red.shade400],
-                               begin: Alignment.centerLeft,
-                               end: Alignment.centerRight,
-                             ),
-                             borderRadius: BorderRadius.circular(20),
-                           ),
-                           child: Row(
-                             mainAxisSize: MainAxisSize.min,
-                             children: [
-                               const Text("🔥", style: TextStyle(fontSize: 20)),
-                               const SizedBox(width: 8),
-                               Text(
-                                 "${stats.currentStreak} Day Streak", 
-                                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
-                               ),
-                             ],
-                           ),
-                         ),
-                       SizedBox(height: stats.currentStreak > 0 ? 16 : 0),
-                       Text("LEVEL ${stats.level}", style: Theme.of(context).textTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
-                       const SizedBox(height: 16),
-                       LinearProgressIndicator(
-                         value: stats.progress, 
-                         minHeight: 12, 
-                         borderRadius: BorderRadius.circular(6),
-                         backgroundColor: Colors.grey[200],
-                       ),
-                       const SizedBox(height: 8),
-                       Text("${stats.pointsToNext.toStringAsFixed(0)} XP to Next Level", style: Theme.of(context).textTheme.bodySmall),
-                       const SizedBox(height: 24),
-                       Row(
-                         mainAxisAlignment: MainAxisAlignment.spaceAround,
-                         children: [
-                           Column(children: [
-                             Text("${stats.dailyPoints.toStringAsFixed(0)}", style: Theme.of(context).textTheme.titleLarge),
-                             const Text("Today's Pts", style: TextStyle(fontSize: 10, color: Colors.grey))
-                           ]),
-                           Column(children: [
-                             Text("${stats.dailyMinutes}", style: Theme.of(context).textTheme.titleLarge),
-                             const Text("Minutes", style: TextStyle(fontSize: 10, color: Colors.grey))
-                           ]),
-                           Column(children: [
-                             Text("${stats.totalPoints.toStringAsFixed(0)}", style: Theme.of(context).textTheme.titleLarge),
-                             const Text("Total Pts", style: TextStyle(fontSize: 10, color: Colors.grey))
-                           ]),
-                         ],
-                       )
-                    ],
-                  ),
-                  loading: () => const CircularProgressIndicator(),
-                  error: (e, _) => const Text("Failed to load stats"),
-                ),
-              ),
-            ),
-            
-            
-            // Real Location Status
-            Consumer(builder: (context, ref, _) {
-              final isOnCampus = ref.watch(isOnCampusProvider);
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: isOnCampus ? Colors.green.shade50 : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isOnCampus ? Colors.green : Colors.grey),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isOnCampus ? Icons.school : Icons.home,
-                      color: isOnCampus ? Colors.green : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      isOnCampus ? "📍 On Campus (Kakuma)" : "📍 Off Campus",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: isOnCampus ? Colors.green.shade700 : Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-            
-            const Divider(),
-            
-            // History List
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text("Recent History", style: TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            Expanded(
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final historyAsync = ref.watch(historyProvider);
-                  return historyAsync.when(
-                    data: (sessions) => ListView.builder(
-                      itemCount: sessions.length,
-                      itemBuilder: (ctx, i) {
-                        final s = sessions[i];
-                        return ListTile(
-                          title: Text(s['title']),
-                          subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
-                        leading: const Icon(Icons.check_circle_outline),
-                        onTap: () => _editSession(context, s, ref),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                               DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
-                               style: const TextStyle(fontSize: 12, color: Colors.grey)
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.blueGrey),
-                              onPressed: () async {
-                                  // Delete
-                                  try {
-                                    await DatabaseHelper().deleteSession(s['id']);
-                                    ref.refresh(historyProvider);
-                                    ref.refresh(dailyAggProvider);
-                                    ref.refresh(userStatsProvider);
-                                  } catch (e) { print(e); }
-                              },
-                            )
-                          ],
-                        ),
-                      );
-                      },
-                    ),
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => const SizedBox(),
-                  );
-                },
-              ),
-            ),
-
-            FilledButton.icon(
-              onPressed: () async {
-                // Check GPS location first
-                bool onCampus = await checkIfOnCampus();
-                ref.read(isOnCampusProvider.notifier).state = onCampus;
-                
-                // Start Unspecified Session
-                ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
-                if (context.mounted) context.push('/now');
-              },
-              icon: const Icon(Icons.play_arrow),
-              label: const Text("DO NOW"),
-              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16)),
-            ),
-            const SizedBox(height: 16),
-          ],
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          height: height,
+          padding: padding ?? const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              )
+            ],
+          ),
+          child: child,
         ),
       ),
     );
   }
 }
+
+class PremiumBackground extends StatelessWidget {
+  final Widget child;
+  const PremiumBackground({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // Gradient Mesh
+        Positioned(
+          top: -100,
+          right: -100,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF818CF8).withOpacity(0.3),
+              boxShadow: [BoxShadow(blurRadius: 100, color: const Color(0xFF818CF8).withOpacity(0.3))],
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 100,
+          left: -50,
+          child: Container(
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFF472B6).withOpacity(0.2),
+              boxShadow: [BoxShadow(blurRadius: 100, color: const Color(0xFFF472B6).withOpacity(0.2))],
+            ),
+          ),
+        ),
+        // Content
+        Positioned.fill(child: child),
+      ],
+    );
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. Screens
+// -----------------------------------------------------------------------------
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statsAsync = ref.watch(userStatsProvider);
+    final historyAsync = ref.watch(historyProvider);
+    final weeklyAsync = ref.watch(weeklyAggProvider);
+    final isOnCampus = ref.watch(isOnCampusProvider);
+
+    return Scaffold(
+      body: PremiumBackground(
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar.large(
+              title: const Text("DaigakuAPP", style: TextStyle(fontWeight: FontWeight.w800)),
+              centerTitle: false,
+              backgroundColor: Colors.transparent,
+            ),
+            
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Location Status Badge (Pill)
+                    Consumer(builder: (context, ref, _) {
+                        return GestureDetector(
+                          onTap: () async {
+                              bool on = await checkIfOnCampus();
+                              ref.read(isOnCampusProvider.notifier).state = on;
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(on ? "You are on Campus!" : "Geolocation checked.")));
+                          },
+                          child: AnimatedContainer(
+                            duration: 500.ms,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isOnCampus ? Colors.green.shade100 : Colors.white.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(30),
+                              border: Border.all(color: isOnCampus ? Colors.green.withOpacity(0.3) : Colors.white),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.location_on, size: 16, color: isOnCampus ? Colors.green[700] : Colors.grey),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isOnCampus ? "On Campus (1.5x Boost)" : "Off Campus",
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isOnCampus ? Colors.green[800] : Colors.grey[700]),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                    }),
+                    
+                    const SizedBox(height: 24),
+
+                    // Main Stats Card
+                    statsAsync.when(
+                      data: (stats) => GlassCard(
+                        child: Column(
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("LEVEL ${stats.level}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.blueAccent)),
+                                    const SizedBox(height: 4),
+                                    Text("${stats.totalPoints.toInt()} XP", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+                                  ],
+                                ),
+                                // Streak Ring
+                                Container(
+                                  width: 60, height: 60,
+                                  decoration: BoxDecoration(shape: BoxShape.circle, gradient: LinearGradient(colors: [Colors.orange.shade300, Colors.red.shade400], begin: Alignment.topLeft, end: Alignment.bottomRight)),
+                                  child: Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Text("🔥", style: TextStyle(fontSize: 16)),
+                                        Text("${stats.currentStreak}", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                                      ],
+                                    ),
+                                  ),
+                                ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            // Progress Bar
+                            ClipRRect(
+                               borderRadius: BorderRadius.circular(10),
+                               child: LinearProgressIndicator(value: stats.progress, minHeight: 8, backgroundColor: Colors.grey.withOpacity(0.1), color: const Color(0xFF4F46E5)),
+                            ),
+                            const SizedBox(height: 8),
+                            Align(alignment: Alignment.centerRight, child: Text("Next Lvl in ${stats.pointsToNext.toInt()} XP", style: TextStyle(fontSize: 12, color: Colors.grey[600]))),
+                            
+                            const Divider(height: 32),
+                            
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                 _Metric(label: "Today's Pts", value: "${stats.dailyPoints.toInt()}"),
+                                 _Metric(label: "Minutes", value: "${stats.dailyMinutes}"),
+                              ],
+                            )
+                          ],
+                        ),
+                      ),
+                      loading: () => const GlassCard(child: SizedBox(height: 150, child: Center(child: CircularProgressIndicator()))),
+                      error: (e, _) => const SizedBox(),
+                    ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+
+                    const SizedBox(height: 16),
+                    
+                    // Weekly Chart
+                    GlassCard(
+                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("Weekly Activity", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            height: 120,
+                            child: weeklyAsync.when(
+                              data: (data) => BarChart(
+                                BarChartData(
+                                  titlesData: FlTitlesData(
+                                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (val, meta) {
+                                       if (val.toInt() >= 0 && val.toInt() < data.length) {
+                                         return Padding(padding: const EdgeInsets.only(top: 8), child: Text(data[val.toInt()]['day'].toString().substring(8), style: const TextStyle(fontSize: 10, color: Colors.grey)));
+                                       }
+                                       return const SizedBox();
+                                    })),
+                                  ),
+                                  gridData: FlGridData(show: false),
+                                  borderData: FlBorderData(show: false),
+                                  barGroups: data.asMap().entries.map((e) => BarChartGroupData(x: e.key, barRods: [BarChartRodData(toY: (e.value['points'] as num).toDouble(), color: const Color(0xFF6366F1), width: 12, borderRadius: BorderRadius.circular(4))])).toList(),
+                                )
+                              ),
+                              loading: () => const SizedBox(),
+                              error: (_,__) => const SizedBox(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn().slideY(begin: 0.2, end: 0, delay: 100.ms),
+
+                    const SizedBox(height: 24),
+                    const Align(alignment: Alignment.centerLeft, child: Text("Recent History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ),
+
+            // History List
+            historyAsync.when(
+               data: (sessions) => SliverList(
+                 delegate: SliverChildBuilderDelegate(
+                   (context, index) {
+                     final s = sessions[index];
+                     return Padding(
+                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                       child: GlassCard(
+                         padding: const EdgeInsets.all(16),
+                         child: Row(
+                           children: [
+                             Container(
+                               padding: const EdgeInsets.all(10),
+                               decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                               child: const Icon(Icons.check_circle, color: Color(0xFF4F46E5), size: 20),
+                             ),
+                             const SizedBox(width: 16),
+                             Expanded(
+                               child: Column(
+                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                 children: [
+                                   Text(s['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                                   Text("${s['minutes']} min • ${s['points']} pts", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                 ],
+                               ),
+                             ),
+                             IconButton(icon: const Icon(Icons.more_horiz), onPressed: () => _editSession(context, s, ref)),
+                           ],
+                         ),
+                       ).animate().fadeIn(delay: Duration(milliseconds: 50 * index)).slideX(),
+                     );
+                   },
+                   childCount: sessions.length
+                 ),
+               ),
+               loading: () => const SliverToBoxAdapter(child: Center(child: CircularProgressIndicator())),
+               error: (_,__) => const SliverToBoxAdapter(child: SizedBox()),
+            ),
+            
+            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+          ],
+        ),
+      ),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFFEC4899)]),
+          boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))]
+        ),
+        child: FloatingActionButton.extended(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          onPressed: () async {
+            // Check Location logic
+            bool onCampus = await checkIfOnCampus();
+            ref.read(isOnCampusProvider.notifier).state = onCampus;
+            
+            ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
+            context.push('/now');
+          },
+          icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
+          label: const Text("DO NOW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  final String label;
+  final String value;
+  const _Metric({required this.label, required this.value});
+  @override
+  Widget build(BuildContext context) {
+    return Column(children:[Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600]))]);
+  }
+}
+
+Future<void> _editSession(BuildContext context, Map<String, dynamic> session, WidgetRef ref) async {
+    final titleCtrl = TextEditingController(text: session['title']);
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Edit Session"),
+        content: TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: "Task Name")),
+        actions: [
+          TextButton(
+            onPressed: () async {
+               if (await _confirmDelete(ctx)) {
+                  await DatabaseHelper().deleteSession(session['id']);
+                  ref.refresh(historyProvider);
+                  ref.refresh(dailyAggProvider);
+                  ref.refresh(userStatsProvider);
+                  Navigator.pop(ctx);
+               }
+            }, 
+            child: const Text("Delete", style: TextStyle(color: Colors.red))
+          ),
+          FilledButton(
+            onPressed: () async {
+               await DatabaseHelper().updateSessionTitle(session['id'], titleCtrl.text);
+               ref.refresh(historyProvider);
+               Navigator.pop(ctx);
+            },
+            child: const Text("Save")
+          ),
+        ],
+      )
+    );
+}
+
+Future<bool> _confirmDelete(BuildContext context) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (c) => AlertDialog(
+      title: const Text("Delete?"), 
+      actions: [TextButton(onPressed:()=>Navigator.pop(c,false), child:const Text("Cancel")), TextButton(onPressed:()=>Navigator.pop(c,true), child:const Text("Delete", style:TextStyle(color:Colors.red)))]
+    )
+  ) ?? false;
+}
+
+// -----------------------------------------------------------------------------
+// NOW SCREEN (Focus Mode)
+// -----------------------------------------------------------------------------
 
 class NowScreen extends ConsumerStatefulWidget {
   const NowScreen({super.key});
@@ -479,96 +548,126 @@ class NowScreen extends ConsumerStatefulWidget {
   ConsumerState<NowScreen> createState() => _NowScreenState();
 }
 
-class _NowScreenState extends ConsumerState<NowScreen> {
+class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateMixin {
   late Timer _timer;
   Duration _elapsed = Duration.zero;
+  late AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
-    final session = ref.read(sessionProvider);
-    if (session == null) {
-      // Logic error recovery
-      _elapsed = Duration.zero;
-    } else {
-      _elapsed = DateTime.now().difference(session.startAt);
-    }
+    _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
     
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    final session = ref.read(sessionProvider);
+    if (session != null) {
+       _elapsed = DateTime.now().difference(session.startAt);
+    }
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final s = ref.read(sessionProvider);
-      if (s != null) {
-        setState(() {
-          _elapsed = DateTime.now().difference(s.startAt);
-        });
-      }
+      if (s != null) setState(() => _elapsed = DateTime.now().difference(s.startAt));
     });
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final minutes = _elapsed.inMinutes;
-    final seconds = _elapsed.inSeconds % 60;
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    final minutes = twoDigits(_elapsed.inMinutes);
+    final seconds = twoDigits(_elapsed.inSeconds % 60);
 
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("FOCUSING", style: TextStyle(letterSpacing: 4, color: Colors.grey[600])),
-            const SizedBox(height: 48),
-            // Timer Ring Visualization Mock
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                 SizedBox(
-                   width: 300, height: 300,
-                   child: CircularProgressIndicator(
-                     value: (minutes % 90) / 90.0, 
-                     strokeWidth: 20,
-                     backgroundColor: Colors.grey[200],
+      backgroundColor: const Color(0xFF111827), // Dark Mode
+      body: Stack(
+        children: [
+          // Background Glow
+           Center(
+             child: AnimatedBuilder(
+               animation: _pulseController,
+               builder: (_, __) {
+                 return Container(
+                   width: 300 + (_pulseController.value * 20),
+                   height: 300 + (_pulseController.value * 20),
+                   decoration: BoxDecoration(
+                     shape: BoxShape.circle,
+                     color: const Color(0xFF4F46E5).withOpacity(0.1 + (_pulseController.value * 0.1)),
+                     boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 50 + (_pulseController.value * 20))]
+                   ),
+                 );
+               },
+             ),
+           ),
+           
+           SafeArea(
+             child: Column(
+               children: [
+                 const SizedBox(height: 20),
+                 const Text("Deep Focus", style: TextStyle(color: Colors.white54, letterSpacing: 4, fontSize: 14)),
+                 
+                 Expanded(
+                   child: Center(
+                     child: Column(
+                       mainAxisSize: MainAxisSize.min,
+                       children: [
+                         Text(
+                           "$minutes:$seconds", 
+                           style: GoogleFonts.jetbrainsMono(color: Colors.white, fontSize: 80, fontWeight: FontWeight.w200),
+                         ).animate().fadeIn(duration: 1.seconds),
+                         const SizedBox(height: 10),
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                           decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+                           child: const Text("DaigakuAPP is running...", style: TextStyle(color: Colors.white38, fontSize: 12)),
+                         )
+                       ],
+                     ),
                    ),
                  ),
-                 Column(
-                   children: [
-                     Text("${minutes.toString().padLeft(2, '0')}", style: const TextStyle(fontSize: 96, fontWeight: FontWeight.w200)),
-                     Text("${seconds.toString().padLeft(2, '0')}", style: const TextStyle(fontSize: 32, color: Colors.grey)),
-                   ],
-                 )
-              ],
-            ),
-            const SizedBox(height: 64),
-            OutlinedButton.icon(
-              onPressed: () {
-                // Update session state with duration
-                final s = ref.read(sessionProvider);
-                if (s != null) {
-                  ref.read(sessionProvider.notifier).state = Session(
-                    id: s.id,
-                    startAt: s.startAt,
-                    durationMinutes: minutes == 0 ? 1 : minutes // Min 1 min
-                  );
-                }
-                context.pushReplacement('/finish');
-              },
-              icon: const Icon(Icons.check, size: 32),
-              label: const Text("COMPLETE"),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
-                shape: const StadiumBorder()
-              ),
-            )
-          ],
-        ),
+                 
+                 // Slider to Finish
+                 Padding(
+                   padding: const EdgeInsets.all(40),
+                   child: GestureDetector(
+                     onTap: () {
+                        // Complete logic
+                        final s = ref.read(sessionProvider);
+                        if (s != null) {
+                           int duration = _elapsed.inMinutes;
+                           if (duration < 1) duration = 1;
+                           ref.read(sessionProvider.notifier).state = Session(id: s.id, startAt: s.startAt, durationMinutes: duration);
+                        }
+                        context.pushReplacement('/finish');
+                     },
+                     child: Container(
+                       height: 60,
+                       decoration: BoxDecoration(
+                         borderRadius: BorderRadius.circular(30),
+                         border: Border.all(color: Colors.white24),
+                         color: Colors.white.withOpacity(0.05)
+                       ),
+                       child: const Center(
+                         child: Text("COMPLETED", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                       ),
+                     ),
+                   ),
+                 ),
+               ],
+             ),
+           )
+        ],
       ),
     );
   }
 }
+
+// -----------------------------------------------------------------------------
+// FINISH SCREEN
+// -----------------------------------------------------------------------------
 
 class FinishScreen extends ConsumerStatefulWidget {
   const FinishScreen({super.key});
@@ -578,45 +677,50 @@ class FinishScreen extends ConsumerStatefulWidget {
 }
 
 class _FinishScreenState extends ConsumerState<FinishScreen> {
-  final TextEditingController _titleController = TextEditingController();
-  bool _isSubmitting = false;
+  late ConfettiController _confetti;
+  final TextEditingController _titleCtrl = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
 
   @override
   void initState() {
     super.initState();
-    _fetchSuggestions();
+    _confetti = ConfettiController(duration: const Duration(seconds: 3));
+    _confetti.play();
+    _loadSuggestions();
+  }
+  
+  void _loadSuggestions() async {
+     final s = await DatabaseHelper().getSuggestions();
+     setState(() => _suggestions = s);
   }
 
-  Future<void> _fetchSuggestions() async {
-      final data = await DatabaseHelper().getSuggestions();
-      setState(() {
-        _suggestions = data;
-      });
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
   }
 
-  Future<void> _submit({String? selectedNodeId}) async {
-    final session = ref.read(sessionProvider);
-    if (session == null) return;
-    
-    setState(() => _isSubmitting = true);
-
-    try {
-      final minutes = DateTime.now().difference(session.startAt).inMinutes;
-      final isOnCampus = ref.read(isOnCampusProvider);
-
-      await DatabaseHelper().insertSession(
-        startAt: session.startAt,
-        minutes: minutes,
-        draftTitle: _titleController.text.isEmpty ? "(No Title)" : _titleController.text,
-        nodeId: selectedNodeId,
-        isOnCampus: isOnCampus,
-      );
-      
-      ref.refresh(dailyAggProvider);
-      ref.refresh(userStatsProvider);
-      ref.refresh(historyProvider);
-      if (mounted) context.go('/');
+  void _finish([String? nodeId]) async {
+     final session = ref.read(sessionProvider);
+     if (session == null) return;
+     
+     final title = _titleCtrl.text;
+     final draftTitle = title.isEmpty ? "(No Title)" : title;
+     final isOnCampus = ref.read(isOnCampusProvider);
+     
+     await DatabaseHelper().insertSession(
+       startAt: session.startAt,
+       minutes: session.durationMinutes ?? 0,
+       draftTitle: draftTitle,
+       nodeId: nodeId,
+       isOnCampus: isOnCampus,
+     );
+     
+     ref.refresh(historyProvider);
+     ref.refresh(userStatsProvider);
+     ref.refresh(dailyAggProvider);
+     
+     if (mounted) context.go('/');
   }
 
   @override
@@ -625,47 +729,72 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     final mins = session?.durationMinutes ?? 0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Attribute Result")),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text("$mins Minutes Completed!", style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 32),
-            const Text("What did you do?"),
-            const SizedBox(height: 16),
-            
-            // Suggestions Chips
-            Wrap(
-              spacing: 8,
-              children: _suggestions.map((s) => ActionChip(
-                label: Text(s['title']),
-                onPressed: () {
-                  _titleController.text = s['title'];
-                  // Auto-submit? Or just fill? Let's direct submit for speed.
-                  _submit(selectedNodeId: s['id']);
-                },
-              )).toList(),
-            ),
-            
-            const SizedBox(height: 16),
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Task Name (One-liner)',
-                hintText: 'e.g. Studied Go Backend'
+      body: Stack(
+        children: [
+          Align(alignment: Alignment.topCenter, child: ConfettiWidget(confettiController: _confetti, blastDirectionality: BlastDirectionality.explosive, numberOfParticles: 30, colors: const [Colors.blue, Colors.pink, Colors.orange])),
+          
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 40),
+                  const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
+                  const SizedBox(height: 24),
+                  Text("Good Job!", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text("You focused for $mins minutes.", style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600])),
+                  
+                  const SizedBox(height: 40),
+                  const Align(alignment: Alignment.centerLeft, child: Text("What did you work on?", style: TextStyle(fontWeight: FontWeight.bold))),
+                  const SizedBox(height: 12),
+                  
+                  Wrap(
+                    spacing: 8, runSpacing: 8,
+                    children: _suggestions.map((s) => ActionChip(
+                      elevation: 0,
+                      backgroundColor: Colors.white,
+                      label: Text(s['title']),
+                      onPressed: () {
+                         _titleCtrl.text = s['title'];
+                         _finish(s['id']);
+                      },
+                    )).toList(),
+                  ),
+                  
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: _titleCtrl,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      hintText: "Or type a new task...",
+                      prefixIcon: const Icon(Icons.edit)
+                    ),
+                  ),
+                  
+                  const Spacer(),
+                  
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => _finish(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.all(18),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
+                      ),
+                      child: const Text("SAVE SESSION", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  )
+                ],
               ),
             ),
-            const Spacer(),
-            FilledButton(
-               onPressed: _isSubmitting ? null : () => _submit(),
-               child: _isSubmitting ? const CircularProgressIndicator() : const Text("RECORD RESULT"),
-               style: FilledButton.styleFrom(padding: const EdgeInsets.all(20)),
-            )
-          ],
-        ),
+          )
+        ],
       ),
     );
   }
