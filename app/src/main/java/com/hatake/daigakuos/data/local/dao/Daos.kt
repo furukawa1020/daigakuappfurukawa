@@ -66,6 +66,9 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE id = :sessionId LIMIT 1")
     suspend fun getSessionById(sessionId: String): SessionEntity?
 
+    @Query("SELECT * FROM sessions ORDER BY startAt DESC LIMIT 50")
+    fun getRecentSessions(): Flow<List<SessionEntity>>
+
     @Delete
     suspend fun deleteSession(session: SessionEntity)
 }

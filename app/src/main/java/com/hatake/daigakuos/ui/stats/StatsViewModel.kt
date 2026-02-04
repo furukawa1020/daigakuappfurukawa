@@ -12,6 +12,7 @@ import javax.inject.Inject
 data class StatsUiState(
     val totalPoints: Double = 0.0,
     val dailyAggs: List<DailyAggEntity> = emptyList(),
+    val recentSessions: List<com.hatake.daigakuos.data.local.entity.SessionEntity> = emptyList(),
     val creatureStage: CreatureStage = CreatureStage.EGG
 )
 
@@ -22,16 +23,20 @@ enum class CreatureStage {
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     private val aggDao: AggDao,
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val updateSessionUseCase: com.hatake.daigakuos.domain.usecase.UpdateSessionUseCase,
+    private val deleteSessionUseCase: com.hatake.daigakuos.domain.usecase.DeleteSessionUseCase
 ) : ViewModel() {
 
     val uiState: StateFlow<StatsUiState> = combine(
         sessionDao.getTotalPointsFlow(),
-        aggDao.getAggRange(365)
-    ) { points, aggs ->
+        aggDao.getAggRange(365),
+        sessionDao.getRecentSessions()
+    ) { points, aggs, history ->
         StatsUiState(
             totalPoints = points,
             dailyAggs = aggs,
+            recentSessions = history,
             creatureStage = determineStage(points)
         )
     }.stateIn(
@@ -39,6 +44,18 @@ class StatsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = StatsUiState()
     )
+
+    fun updateSessionTitle(sessionId: String, newTitle: String) {
+        viewModelScope.launch {
+            updateSessionUseCase(sessionId, newTitle)
+        }
+    }
+
+    fun deleteSession(sessionId: String) {
+        viewModelScope.launch {
+            deleteSessionUseCase(sessionId)
+        }
+    }
 
     private fun determineStage(points: Double): CreatureStage {
         return when {
