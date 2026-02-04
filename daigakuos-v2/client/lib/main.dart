@@ -191,9 +191,29 @@ class HomeScreen extends ConsumerWidget {
                           title: Text(s['title']),
                           subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
                           leading: const Icon(Icons.check_circle_outline),
-                          trailing: Text(
-                             DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
-                             style: const TextStyle(fontSize: 12, color: Colors.grey)
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                 DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
+                                 style: const TextStyle(fontSize: 12, color: Colors.grey)
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  // Delete
+                                  try {
+                                    final id = s['id'];
+                                    final url = Uri.parse('http://localhost:8080/api/sessions/$id');
+                                    final res = await http.delete(url);
+                                    if (res.statusCode == 200) {
+                                      ref.refresh(historyProvider);
+                                      ref.refresh(dailyAggProvider);
+                                    }
+                                  } catch (e) { print(e); }
+                                },
+                              )
+                            ],
                           ),
                         );
                       },
