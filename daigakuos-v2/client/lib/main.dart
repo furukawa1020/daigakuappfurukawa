@@ -10,9 +10,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // Add import
 import 'database_helper.dart';
 import 'calendar_screen.dart';
+import 'settings_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -157,6 +159,7 @@ final _router = GoRouter(
   routes: [
     GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
     GoRoute(path: '/calendar', builder: (context, state) => const CalendarScreen()),
+    GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
   ],
@@ -610,12 +613,23 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
       final s = ref.read(sessionProvider);
       if (s != null) setState(() => _elapsed = DateTime.now().difference(s.startAt));
     });
+
+    // Enable WakeLock if setting is true
+    _enableWakeLock();
+  }
+
+  Future<void> _enableWakeLock() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('wakelock') ?? true) {
+      WakelockPlus.enable();
+    }
   }
 
   @override
   void dispose() {
     _timer.cancel();
     _pulseController.dispose();
+    WakelockPlus.disable(); // Always disable on exit
     super.dispose();
   }
 

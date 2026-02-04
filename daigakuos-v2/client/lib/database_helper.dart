@@ -319,4 +319,36 @@ class DatabaseHelper {
     
     await Share.shareXFiles([XFile(file.path)], text: 'DaigakuAPP Data Backup');
   }
+
+  Future<void> importData(String jsonString) async {
+    try {
+      final data = jsonDecode(jsonString) as Map<String, dynamic>;
+      final db = await database;
+      
+      // Clear existing data
+      await db.delete('sessions');
+      await db.delete('nodes');
+      
+      // Restore Nodes
+      final nodes = data['nodes'] as List;
+      for (var n in nodes) {
+        await db.insert('nodes', n as Map<String, dynamic>);
+      }
+      
+      // Restore Sessions
+      final sessions = data['sessions'] as List;
+      for (var s in sessions) {
+        await db.insert('sessions', s as Map<String, dynamic>);
+      }
+    } catch (e) {
+      print("Import Error: $e");
+      throw Exception("データの復元に失敗しました。ファイル形式を確認してください。");
+    }
+  }
+
+  Future<void> deleteAllData() async {
+    final db = await database;
+    await db.delete('sessions');
+    await db.delete('nodes');
+  }
 }
