@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'database_helper.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -40,12 +38,9 @@ class DailyAgg {
 
 // Global Providers
 
-String get baseUrl {
-  if (kIsWeb) return 'http://localhost:8080';
-  // if (Platform.isAndroid) return 'http://10.0.2.2:8080'; 
-  if (Platform.isAndroid) return 'http://192.168.68.57:8080'; // Physical Device + Emulator Support
-  return 'http://localhost:8080';
-}
+// -----------------------------------------------------------------------------
+// Global Constants
+// -----------------------------------------------------------------------------
 
 // Geofencing Configuration (Kanazawa University Natural Science Building No. 2)
 const double CAMPUS_LAT = 36.5639;
@@ -87,10 +82,12 @@ Future<bool> checkIfOnCampus() async {
 
 final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
   try {
-    final response = await http.get(Uri.parse('$baseUrl/api/aggs/daily'));
-    if (response.statusCode == 200) {
-      return DailyAgg.fromJson(jsonDecode(response.body));
-    }
+    final data = await DatabaseHelper().getDailyAgg();
+    return DailyAgg(
+      totalPoints: (data['totalPoints'] as num?)?.toDouble() ?? 0.0,
+      totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
+      sessionCount: 0
+    );
   } catch (e) {
     print("Fetch Stats Error: $e");
   }
@@ -131,21 +128,15 @@ class UserStats {
 
 final userStatsProvider = FutureProvider<UserStats>((ref) async {
   try {
-    final response = await http.get(Uri.parse('$baseUrl/api/user/stats'));
-    if (response.statusCode == 200) {
-      return UserStats.fromJson(jsonDecode(response.body));
-    }
+    final data = await DatabaseHelper().getUserStats();
+    return UserStats.fromJson(data);
   } catch (e) { print("UserStats Error: $e"); }
   return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0, currentStreak: 0);
 });
 
 final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
-    final response = await http.get(Uri.parse('$baseUrl/api/sessions'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.cast<Map<String, dynamic>>();
-    }
+    return await DatabaseHelper().getSessions();
   } catch(e) { print("History Error: $e"); }
   return [];
 });
@@ -200,11 +191,7 @@ class DaigakuAPPApp extends StatelessWidget {
 
 final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
-    final response = await http.get(Uri.parse('$baseUrl/api/aggs/weekly'));
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.cast<Map<String, dynamic>>();
-    }
+    return await DatabaseHelper().getWeeklyAgg();
   } catch(e) { print("Weekly Error: $e"); }
   return [];
 });
@@ -216,15 +203,7 @@ final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  Future<void> _toggleCampus(bool isOn, WidgetRef ref) async {
-    try {
-       await http.post(
-         Uri.parse('$baseUrl/api/context'),
-         body: jsonEncode({"isOnCampus": isOn})
-       );
-       ref.refresh(dailyAggProvider); // Refresh stats just in case
-    } catch(e) { print(e); }
-  }
+  // _toggleCampus removed as it's no longer needed for local-first (logic is in _submit)
 
   Future<void> _editSession(BuildContext context, Map<String, dynamic> session, WidgetRef ref) async {
     final titleCtrl = TextEditingController(text: session['title']);
@@ -240,50 +219,13 @@ class HomeScreen extends ConsumerWidget {
           autofocus: true,
         ),
         actions: [
-          TextButton(
-            onPressed: () async {
-               // Delete Logic
-               final confirm = await showDialog<bool>(
-                 context: ctx,
-                 builder: (c) => AlertDialog(
-                   title: const Text("Delete?"), 
-                   actions: [
-                     TextButton(onPressed: ()=>Navigator.pop(c,false), child: const Text("Cancel")),
-                     TextButton(onPressed: ()=>Navigator.pop(c,true), child: const Text("Delete", style: TextStyle(color: Colors.red))),
-                   ]
-                 )
-               );
-               if (confirm == true) {
-                  try {
-                    final res = await http.delete(Uri.parse('$baseUrl/api/sessions/${session['id']}'));
-                    if (res.statusCode != 200) throw "Status ${res.statusCode}";
-                    
-                    ref.refresh(historyProvider);
-                    ref.refresh(dailyAggProvider);
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  } catch(e) { 
-                     print(e);
-                     if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Error: $e")));
-                  }
-               }
-            }, 
             child: const Text("Delete", style: TextStyle(color: Colors.red))
           ),
-          FilledButton(
+            FilledButton(
             onPressed: () async {
               // Edit Logic
               try {
-                final url = Uri.parse('$baseUrl/api/sessions/${session['id']}');
-                print("PUT $url");
-                final res = await http.put(
-                  url,
-                  headers: {"Content-Type": "application/json"},
-                  body: jsonEncode({"draftTitle": titleCtrl.text})
-                );
-                
-                if (res.statusCode != 200) {
-                   throw "Server Error: ${res.statusCode} ${res.body}";
-                }
+                await DatabaseHelper().updateSessionTitle(session['id'], titleCtrl.text);
                 
                 ref.refresh(historyProvider);
                 if (ctx.mounted) {
@@ -489,14 +431,10 @@ class HomeScreen extends ConsumerWidget {
                               onPressed: () async {
                                   // Delete
                                   try {
-                                    final id = s['id'];
-                                    final url = Uri.parse('$baseUrl/api/sessions/$id');
-                                    final res = await http.delete(url, headers: {'Content-Type': 'application/json'});
-                                    if (res.statusCode == 200) {
-                                      ref.refresh(historyProvider);
-                                      ref.refresh(dailyAggProvider);
-                                      ref.refresh(userStatsProvider);
-                                    }
+                                    await DatabaseHelper().deleteSession(s['id']);
+                                    ref.refresh(historyProvider);
+                                    ref.refresh(dailyAggProvider);
+                                    ref.refresh(userStatsProvider);
                                   } catch (e) { print(e); }
                               },
                             )
@@ -651,15 +589,10 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
   }
 
   Future<void> _fetchSuggestions() async {
-    try {
-      final response = await http.get(Uri.parse('$baseUrl/api/nodes/suggestions'));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _suggestions = data.map((e) => {"id": e['id'], "title": e['title']}).toList();
-        });
-      }
-    } catch(e) { print("Error fetching suggestions: $e"); }
+      final data = await DatabaseHelper().getSuggestions();
+      setState(() {
+        _suggestions = data;
+      });
   }
 
   Future<void> _submit({String? selectedNodeId}) async {
@@ -671,32 +604,19 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     try {
       final minutes = DateTime.now().difference(session.startAt).inMinutes;
       final isOnCampus = ref.read(isOnCampusProvider);
-      
-      final url = Uri.parse('$baseUrl/api/sessions'); 
-      final response = await http.post(
-        url,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "startAt": session.startAt.toIso8601String(),
-          "minutes": minutes,
-          "draftTitle": _titleController.text.isEmpty ? "(No Title)" : _titleController.text,
-          "nodeId": selectedNodeId,
-          "isOnCampus": isOnCampus,
-        }),
+
+      await DatabaseHelper().insertSession(
+        startAt: session.startAt,
+        minutes: minutes,
+        draftTitle: _titleController.text.isEmpty ? "(No Title)" : _titleController.text,
+        nodeId: selectedNodeId,
+        isOnCampus: isOnCampus,
       );
       
-      if (response.statusCode == 201) {
-        ref.refresh(dailyAggProvider);
-        ref.refresh(userStatsProvider);
-        ref.refresh(historyProvider); // Refresh history
-        if (mounted) context.go('/');
-      } else {
-        if (mounted) context.go('/');
-      }
-    } catch (e) {
-      print("Network Error: $e");
-       if (mounted) context.go('/');
-    }
+      ref.refresh(dailyAggProvider);
+      ref.refresh(userStatsProvider);
+      ref.refresh(historyProvider);
+      if (mounted) context.go('/');
   }
 
   @override
