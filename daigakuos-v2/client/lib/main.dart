@@ -5,6 +5,8 @@ import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -36,8 +38,6 @@ class DailyAgg {
 }
 
 // Global Providers
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 
 String get baseUrl {
   if (kIsWeb) return 'http://localhost:8080';
