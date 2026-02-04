@@ -41,7 +41,8 @@ class DailyAgg {
 
 String get baseUrl {
   if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // Emulator Loopback
+  // if (Platform.isAndroid) return 'http://10.0.2.2:8080'; 
+  if (Platform.isAndroid) return 'http://192.168.68.57:8080'; // Physical Device + Emulator Support
   return 'http://localhost:8080';
 }
 
