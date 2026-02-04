@@ -47,7 +47,10 @@ fun UniversityNavGraph(navController: NavHostController) {
         
         composable(Screen.Tree.route) {
             TreeScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToNow = { nodeId ->
+                    navController.navigate(Screen.Now.createRoute(nodeId))
+                }
             )
         }
         

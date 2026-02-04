@@ -19,6 +19,7 @@ import com.hatake.daigakuos.data.local.entity.NodeType
 @Composable
 fun TreeScreen(
     onBack: () -> Unit,
+    onNavigateToNow: (String) -> Unit, // Added
     viewModel: TreeViewModel = hiltViewModel()
 ) {
     val nodes by viewModel.nodes.collectAsState()
@@ -74,7 +75,10 @@ fun TreeScreen(
                             )
                         }
                         items(typeNodes) { node ->
-                            NodeItem(node = node)
+                            NodeItem(
+                                node = node,
+                                onClick = { onNavigateToNow(node.id) }
+                            )
                         }
                     }
                 }
@@ -160,11 +164,12 @@ fun AddNodeDialog(
 }
 
 @Composable
-fun NodeItem(node: NodeEntity) {
+fun NodeItem(node: NodeEntity, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
+        onClick = onClick,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         )

@@ -47,10 +47,10 @@ object AppModule {
     @Provides
     fun provideCampusVisitDao(db: AppDatabase): CampusVisitDao = db.campusVisitDao()
 
-    // Repositories - Commented out during refactor until impls are ready
+    // Repositories
     @Provides
     @Singleton
-    fun provideUserContextRepository(): UserContextRepository {
-        return UserContextRepositoryImpl()
+    fun provideUserContextRepository(impl: UserContextRepositoryImpl): UserContextRepository {
+        return impl
     }
 }
