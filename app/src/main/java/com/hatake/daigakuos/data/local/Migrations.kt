@@ -16,15 +16,26 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  */
 
 /**
- * Example migration for future use (version 2 to 3)
+ * Migration from version 2 to version 3
+ * Adds index on 'points' column in sessions table for better query performance
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        // Add index on points column for efficient SUM queries
+        database.execSQL("CREATE INDEX IF NOT EXISTS index_sessions_points ON sessions(points)")
+    }
+}
+
+/**
+ * Example migration for future use (version 3 to 4)
  * 
  * When you need to update the database schema:
- * 1. Increment the version number in AppDatabase (e.g., version = 3)
+ * 1. Increment the version number in AppDatabase (e.g., version = 4)
  * 2. Create a new migration like this
  * 3. Add it to the database builder in AppModule
  * 
  * Example:
- * val MIGRATION_2_3 = object : Migration(2, 3) {
+ * val MIGRATION_3_4 = object : Migration(3, 4) {
  *     override fun migrate(database: SupportSQLiteDatabase) {
  *         // Example: Add a new column to sessions table
  *         database.execSQL("ALTER TABLE sessions ADD COLUMN new_field TEXT")
@@ -40,5 +51,5 @@ import androidx.sqlite.db.SupportSQLiteDatabase
  * }
  * 
  * Then in AppModule.kt:
- * .addMigrations(MIGRATION_2_3)
+ * .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
  */
