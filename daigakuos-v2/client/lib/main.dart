@@ -60,6 +60,45 @@ final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
   return DailyAgg(totalPoints: 0, totalMinutes: 0, sessionCount: 0);
 });
 
+class UserStats {
+  final double totalPoints;
+  final int level;
+  final double progress;
+  final double pointsToNext;
+  final double dailyPoints;
+  final int dailyMinutes;
+
+  UserStats({
+    required this.totalPoints,
+    required this.level,
+    required this.progress,
+    required this.pointsToNext,
+    required this.dailyPoints,
+    required this.dailyMinutes,
+  });
+
+  factory UserStats.fromJson(Map<String, dynamic> json) {
+    return UserStats(
+      totalPoints: (json['totalPoints'] as num).toDouble(),
+      level: json['level'] as int,
+      progress: (json['progress'] as num).toDouble(),
+      pointsToNext: (json['pointsToNext'] as num).toDouble(),
+      dailyPoints: (json['dailyPoints'] as num).toDouble(),
+      dailyMinutes: json['dailyMinutes'] as int,
+    );
+  }
+}
+
+final userStatsProvider = FutureProvider<UserStats>((ref) async {
+  try {
+    final response = await http.get(Uri.parse('$baseUrl/api/user/stats'));
+    if (response.statusCode == 200) {
+      return UserStats.fromJson(jsonDecode(response.body));
+    }
+  } catch (e) { print("UserStats Error: $e"); }
+  return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0);
+});
+
 final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   try {
     final response = await http.get(Uri.parse('$baseUrl/api/sessions'));
