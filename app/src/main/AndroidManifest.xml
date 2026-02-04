@@ -30,7 +30,7 @@
 
         <receiver
             android:name=".receiver.GeofenceBroadcastReceiver"
-            android:exported="true" />
+            android:exported="false" />
             
     </application>
 
