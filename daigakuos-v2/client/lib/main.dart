@@ -411,6 +411,7 @@ class HomeScreen extends ConsumerWidget {
                                     if (res.statusCode == 200) {
                                       ref.refresh(historyProvider);
                                       ref.refresh(dailyAggProvider);
+                                      ref.refresh(userStatsProvider);
                                     }
                                   } catch (e) { print(e); }
                               },
@@ -597,6 +598,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
       
       if (response.statusCode == 201) {
         ref.refresh(dailyAggProvider);
+        ref.refresh(userStatsProvider);
         ref.refresh(historyProvider); // Refresh history
         if (mounted) context.go('/');
       } else {
