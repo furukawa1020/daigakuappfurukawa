@@ -2,6 +2,8 @@ package com.hatake.daigakuos.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.hatake.daigakuos.data.local.AppDatabase
 import com.hatake.daigakuos.data.local.dao.*
 import com.hatake.daigakuos.data.repository.UserContextRepositoryImpl
@@ -17,6 +19,20 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    // Migration from version 1 to 2: Add campus_visits table
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create campus_visits table for tracking campus visit streaks
+            database.execSQL(
+                """
+                CREATE TABLE campus_visits (
+                    yyyymmdd INTEGER NOT NULL PRIMARY KEY
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -25,18 +41,7 @@ object AppModule {
             AppDatabase::class.java,
             "daigaku_os.db"
         )
-        // Database Migration Strategy:
-        // - Version 2 is the first production version (no migration from v1 needed)
-        // - When adding new versions, define migrations in Migrations.kt
-        // - Add migrations here using .addMigrations(MIGRATION_X_Y)
-        // 
-        // Example for future v3:
-        // .addMigrations(MIGRATION_2_3)
-        //
-        // IMPORTANT: We do NOT use .fallbackToDestructiveMigration()
-        // This ensures the app will crash (fail-fast) if a migration is missing,
-        // rather than silently deleting all user data. This is intentional to
-        // protect user data and force developers to implement proper migrations.
+        .addMigrations(MIGRATION_1_2)
         .build()
     }
 
