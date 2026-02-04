@@ -29,6 +29,7 @@ fun StatsScreen(
     viewModel: StatsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var editingSession by remember { mutableStateOf<com.hatake.daigakuos.data.local.entity.SessionEntity?>(null) }
 
     Scaffold(
         topBar = {
@@ -63,7 +64,147 @@ fun StatsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             GrassGrid(uiState.dailyAggs)
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // 3. Recent History (Editable)
+            Text(
+                "履歴 (タップで編集)",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.align(Alignment.Start)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            SessionHistoryList(
+                sessions = uiState.recentSessions,
+                onSessionClick = { session ->
+                    // Show Edit Dialog
+                    editingSession = session
+                }
+            )
         }
+        
+        if (editingSession != null) {
+            EditSessionDialog(
+                session = editingSession!!,
+                onDismiss = { editingSession = null },
+                onUpdate = { newTitle ->
+                    viewModel.updateSessionTitle(editingSession!!.id, newTitle)
+                    editingSession = null
+                },
+                onDelete = {
+                    viewModel.deleteSession(editingSession!!.id)
+                    editingSession = null
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun SessionHistoryList(
+    sessions: List<com.hatake.daigakuos.data.local.entity.SessionEntity>,
+    onSessionClick: (com.hatake.daigakuos.data.local.entity.SessionEntity) -> Unit
+) {
+    androidx.compose.foundation.lazy.LazyColumn(
+        modifier = Modifier.fillMaxWidth().height(300.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(sessions) { session ->
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { onSessionClick(session) },
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = session.draftTitle.ifBlank { "名称未設定" },
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "${session.minutes}分 · ${String.format("%.1f", session.points)} pts",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
+                    val dateStr = java.time.Instant.ofEpochMilli(session.startAt)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("MM/dd HH:mm"))
+                    Text(text = dateStr, style = MaterialTheme.typography.labelSmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EditSessionDialog(
+    session: com.hatake.daigakuos.data.local.entity.SessionEntity,
+    onDismiss: () -> Unit,
+    onUpdate: (String) -> Unit,
+    onDelete: () -> Unit
+) {
+    var title by remember { mutableStateOf(session.draftTitle) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("削除しますか？") },
+            text = { Text("この操作は取り消せません。") },
+            confirmButton = {
+                TextButton(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("削除")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("キャンセル")
+                }
+            }
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("セッション編集") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("タイトル") },
+                        singleLine = true
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { onUpdate(title) }) {
+                    Text("保存")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = { showDeleteConfirm = true },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text("削除")
+                    }
+                    TextButton(onClick = onDismiss) {
+                        Text("キャンセル")
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -114,7 +255,7 @@ fun GrassGrid(aggs: List<DailyAggEntity>) {
         columns = GridCells.Adaptive(minSize = 20.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.height(300.dp)
+        modifier = Modifier.height(180.dp)
     ) {
         items(aggs) { agg ->
             val intensity = (agg.pointsTotal / 100.0).coerceIn(0.1, 1.0).toFloat()
