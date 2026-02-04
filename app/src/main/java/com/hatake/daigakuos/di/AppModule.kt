@@ -24,7 +24,9 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "daigaku_os.db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
