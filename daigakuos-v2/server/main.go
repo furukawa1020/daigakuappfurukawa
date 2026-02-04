@@ -38,12 +38,13 @@ type Node struct {
 }
 
 type UserStats struct {
-	TotalPoints  float64 `json:"totalPoints"`
-	Level        int     `json:"level"`
-	Progress     float64 `json:"progress"` // 0.0 - 1.0 within current level
-	PointsToNext float64 `json:"pointsToNext"`
-	DailyPoints  float64 `json:"dailyPoints"`
-	DailyMinutes int     `json:"dailyMinutes"`
+	TotalPoints   float64 `json:"totalPoints"`
+	Level         int     `json:"level"`
+	Progress      float64 `json:"progress"` // 0.0 - 1.0 within current level
+	PointsToNext  float64 `json:"pointsToNext"`
+	DailyPoints   float64 `json:"dailyPoints"`
+	DailyMinutes  int     `json:"dailyMinutes"`
+	CurrentStreak int     `json:"currentStreak"` // Consecutive days
 }
 
 var db *sql.DB
@@ -236,6 +237,61 @@ func main() {
 			stats.Progress = (stats.TotalPoints - currentBase) / rangeSpan
 		} else {
 			stats.Progress = 1.0 // Maxed?
+		}
+
+		// 4. Streak Calculation
+		// Get all distinct days with activity
+		rows, err := db.Query(`
+			SELECT DISTINCT date(start_at) as day 
+			FROM sessions 
+			WHERE start_at >= date('now', '-60 days')
+			ORDER BY day DESC
+		`)
+
+		stats.CurrentStreak = 0
+		if err == nil {
+			defer rows.Close()
+
+			var days []string
+			for rows.Next() {
+				var day string
+				if err := rows.Scan(&day); err == nil {
+					days = append(days, day)
+				}
+			}
+
+			// Calculate streak from today backwards
+			today := time.Now().Format("2006-01-02")
+			if len(days) > 0 {
+				// Check if today has activity
+				if days[0] == today {
+					stats.CurrentStreak = 1
+
+					// Check consecutive days backwards
+					for i := 1; i < len(days); i++ {
+						expectedDate := time.Now().AddDate(0, 0, -i).Format("2006-01-02")
+						if days[i] == expectedDate {
+							stats.CurrentStreak++
+						} else {
+							break
+						}
+					}
+				} else {
+					// Check if yesterday had activity (grace period)
+					yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
+					if days[0] == yesterday {
+						stats.CurrentStreak = 1
+						for i := 1; i < len(days); i++ {
+							expectedDate := time.Now().AddDate(0, 0, -(i + 1)).Format("2006-01-02")
+							if days[i] == expectedDate {
+								stats.CurrentStreak++
+							} else {
+								break
+							}
+						}
+					}
+				}
+			}
 		}
 
 		json.NewEncoder(w).Encode(stats)
