@@ -97,16 +97,17 @@ func main() {
 	http.HandleFunc("/api/aggs/daily", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		// Query: Sum of total stats
-		rows, err := db.Query("SELECT points, minutes FROM sessions")
+		today := time.Now().Format("2006-01-02")
+
+		rows, err := db.Query("SELECT points, minutes FROM sessions WHERE date(start_at) = ?", today)
 		if err != nil {
-			http.Error(w, "Query failed", http.StatusInternalServerError)
+			http.Error(w, "Query failed: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 		defer rows.Close()
 
 		agg := DailyAgg{
-			Date: time.Now().Format("2006-01-02"),
+			Date: today,
 		}
 
 		for rows.Next() {
@@ -120,6 +121,65 @@ func main() {
 		}
 
 		json.NewEncoder(w).Encode(agg)
+	})
+
+	// GET /api/aggs/weekly - Last 7 Days
+	http.HandleFunc("/api/aggs/weekly", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		rows, err := db.Query(`
+			SELECT date(start_at) as day, sum(points), sum(minutes) 
+			FROM sessions 
+			WHERE start_at >= date('now', '-7 days')
+			GROUP BY day
+			ORDER BY day ASC
+		`)
+		if err != nil {
+			http.Error(w, "Query failed: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		type DayStat struct {
+			Day     string  `json:"day"`
+			Points  float64 `json:"points"`
+			Minutes int     `json:"minutes"`
+		}
+		stats := []DayStat{}
+
+		for rows.Next() {
+			var s DayStat
+			if err := rows.Scan(&s.Day, &s.Points, &s.Minutes); err == nil {
+				stats = append(stats, s)
+			}
+		}
+		json.NewEncoder(w).Encode(stats)
+	})
+
+	// GET /api/nodes/suggestions - Get Recent Nodes (Context Aware)
+	http.HandleFunc("/api/nodes/suggestions", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		// MVP Context Logic:
+		// If OnCampus, we could prioritize nodes used OnCampus? (Needs schema change to track context in sessions)
+		// For now, let's just return recent nodes.
+		// Future: JOIN sessions s ON s.node_id = n.id WHERE s.context = 'CAMPUS' ...
+
+		rows, err := db.Query("SELECT id, title FROM nodes ORDER BY updated_at DESC LIMIT 5")
+		if err != nil {
+			http.Error(w, "Query failed", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		nodes := []Node{}
+		for rows.Next() {
+			var n Node
+			if err := rows.Scan(&n.ID, &n.Title); err == nil {
+				nodes = append(nodes, n)
+			}
+		}
+		json.NewEncoder(w).Encode(nodes)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
