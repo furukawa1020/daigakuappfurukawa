@@ -20,13 +20,12 @@ data class NowUiState(
 @HiltViewModel
 class NowViewModel @Inject constructor(
     private val startSessionUseCase: com.hatake.daigakuos.domain.usecase.StartSessionUseCase,
-    private val finishSessionUseCase: com.hatake.daigakuos.domain.usecase.FinishSessionUseCase,
     private val userContextRepository: UserContextRepository,
-    private val nodeDao: NodeDao, // Direct DAO usage for simple fetch
+    private val nodeDao: NodeDao,
     private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao
 ) : ViewModel() {
 
-    var currentSessionId: String? = null // Public for UI
+    var currentSessionId: String? = null
     
     private val _uiState = MutableStateFlow(NowUiState())
     val uiState: StateFlow<NowUiState> = _uiState.asStateFlow()
@@ -46,7 +45,7 @@ class NowViewModel @Inject constructor(
                 val isOnCampus = userContextRepository.isOnCampus.value
                 val mode = userContextRepository.currentMode.value
                 
-                // Set temporary start time to prevent UI flickering until database value loads
+                // Set temporary start time
                 _uiState.value = _uiState.value.copy(sessionStartTime = System.currentTimeMillis())
                 
                 currentSessionId = startSessionUseCase(
@@ -55,7 +54,7 @@ class NowViewModel @Inject constructor(
                     onCampus = isOnCampus
                 )
                 
-                // Update with actual session start time from database
+                // Update with actual session start time
                 currentSessionId?.let { id ->
                     val session = sessionDao.getSessionById(id)
                     session?.let {
@@ -63,21 +62,6 @@ class NowViewModel @Inject constructor(
                     }
                 }
             }
-        }
-    }
-
-    fun completeSession(selfReportMinutes: Int, focusLevel: Int, onComplete: () -> Unit) {
-        viewModelScope.launch {
-            val sessionId = currentSessionId
-            if (sessionId != null) {
-                finishSessionUseCase(
-                    sessionId = sessionId,
-                    selfReportMin = selfReportMinutes,
-                    focus = focusLevel
-                )
-            }
-            onComplete()
-            currentSessionId = null
         }
     }
 }
