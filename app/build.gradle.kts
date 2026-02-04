@@ -7,7 +7,6 @@ plugins {
 
 android {
     namespace = "com.hatake.daigakuos"
-    namespace = "com.hatake.daigakuos"
     compileSdk = 34
 
     defaultConfig {
