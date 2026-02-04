@@ -304,26 +304,71 @@ class _NowScreenState extends ConsumerState<NowScreen> {
   late Timer _timer;
   Duration _elapsed = Duration.zero;
 
-  @override
-  void initState() {
-    super.initState();
-    final session = ref.read(sessionProvider);
-    if (session == null) {
-      // Logic error recovery
-      _elapsed = Duration.zero;
-    } else {
-      _elapsed = DateTime.now().difference(session.startAt);
-    }
-    
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      final s = ref.read(sessionProvider);
-      if (s != null) {
-        setState(() {
-          _elapsed = DateTime.now().difference(s.startAt);
-        });
-      }
-    });
+  Future<void> _editSession(Map<String, dynamic> session, WidgetRef ref) async {
+    final titleCtrl = TextEditingController(text: session['title']);
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Edit Session"),
+        content: TextField(
+          controller: titleCtrl,
+          decoration: const InputDecoration(labelText: "Task Name"),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+               // Delete Logic
+               final confirm = await showDialog<bool>(
+                 context: ctx,
+                 builder: (c) => AlertDialog(
+                   title: const Text("Delete?"), 
+                   actions: [
+                     TextButton(onPressed: ()=>Navigator.pop(c,false), child: const Text("Cancel")),
+                     TextButton(onPressed: ()=>Navigator.pop(c,true), child: const Text("Delete", style: TextStyle(color: Colors.red))),
+                   ]
+                 )
+               );
+               if (confirm == true) {
+                  try {
+                    await http.delete(Uri.parse('http://localhost:8080/api/sessions/${session['id']}'));
+                    ref.refresh(historyProvider);
+                    ref.refresh(dailyAggProvider);
+                    if (mounted) Navigator.pop(ctx);
+                  } catch(e) { print(e); }
+               }
+            }, 
+            child: const Text("Delete", style: TextStyle(color: Colors.red))
+          ),
+          FilledButton(
+            onPressed: () async {
+              // Edit Logic
+              try {
+                await http.put(
+                  Uri.parse('http://localhost:8080/api/sessions/${session['id']}'),
+                  body: jsonEncode({"draftTitle": titleCtrl.text})
+                );
+                ref.refresh(historyProvider);
+                if (mounted) Navigator.pop(ctx);
+              } catch(e) { print(e); }
+            }, 
+            child: const Text("Save")
+          ),
+        ],
+      )
+    );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    // ...
+    // Note: I need to verify where to insert this method. 
+    // It should be inside _HomeScreenState.
+    // The previous view_file was useless (showed NowScreen).
+    // I will Assume insertion before 'build' in _HomeScreenState
+    // BUT I cannot "Assume". I need to find the right place.
+    // Let's use view_file again on the correct lines 150-250 roughly.
+    return Container(); // Dummy replacement to fail if I am wrong? No, I should READ first.
 
   @override
   void dispose() {

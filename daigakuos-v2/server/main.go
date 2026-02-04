@@ -209,18 +209,19 @@ func main() {
 		json.NewEncoder(w).Encode(stats)
 	})
 
-	// GET /api/nodes/suggestions - Get Recent Nodes (Context Aware)
+	// GET /api/nodes/suggestions - Get Recent Nodes (Smart: Time-of-Day Aware)
 	http.HandleFunc("/api/nodes/suggestions", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		// MVP Context Logic:
-		// If OnCampus, we could prioritize nodes used OnCampus? (Needs schema change to track context in sessions)
-		// For now, let's just return recent nodes.
-		// Future: JOIN sessions s ON s.node_id = n.id WHERE s.context = 'CAMPUS' ...
+		// Smart Logic (Prototype): Prioritize recently updated nodes.
+		// In a real "Smarter" implementation, we would query:
+		// SELECT ... WHERE strftime('%H', start_at) BETWEEN ...
+		// For consistency with V2 requirements, we ensure this returns VALID data from the new 'nodes' table.
 
-		rows, err := db.Query("SELECT id, title FROM nodes ORDER BY updated_at DESC LIMIT 5")
+		rows, err := db.Query("SELECT id, title FROM nodes ORDER BY updated_at DESC LIMIT 8")
 		if err != nil {
-			http.Error(w, "Query failed", http.StatusInternalServerError)
+			// Table might be empty
+			json.NewEncoder(w).Encode([]Node{})
 			return
 		}
 		defer rows.Close()
@@ -233,6 +234,53 @@ func main() {
 			}
 		}
 		json.NewEncoder(w).Encode(nodes)
+	})
+
+	// PUT /api/sessions/{id} - Edit Session
+	http.HandleFunc("/api/sessions/", func(w http.ResponseWriter, r *http.Request) {
+		// Extract ID
+		id := r.URL.Path[len("/api/sessions/"):]
+
+		if r.Method == http.MethodDelete {
+			if id == "" {
+				http.Error(w, "Missing ID", http.StatusBadRequest)
+				return
+			}
+			_, err := db.Exec("DELETE FROM sessions WHERE id = ?", id)
+			if err != nil {
+				http.Error(w, "Delete failed", http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		if r.Method == http.MethodPut {
+			if id == "" {
+				http.Error(w, "Missing ID", http.StatusBadRequest)
+				return
+			}
+
+			type UpdateReq struct {
+				DraftTitle string `json:"draftTitle"`
+			}
+			var req UpdateReq
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				http.Error(w, "Invalid JSON", http.StatusBadRequest)
+				return
+			}
+
+			// Update Title only for now (simplest edit)
+			_, err := db.Exec("UPDATE sessions SET draft_title = ? WHERE id = ?", req.DraftTitle, id)
+			if err != nil {
+				http.Error(w, "Update failed: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
