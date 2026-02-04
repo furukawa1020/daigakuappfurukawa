@@ -49,6 +49,8 @@ class FinalizeSessionUseCase @Inject constructor(
 
         // 2. Fetch Session & Settings
         val session = sessionDao.getSessionById(sessionId) ?: return
+        val session = sessionDao.getSessionById(sessionId) 
+            ?: throw IllegalStateException("Session with id $sessionId not found")
         val onCampus = session.onCampus
         
         var settings = settingsDao.getSettings()
@@ -79,6 +81,52 @@ class FinalizeSessionUseCase @Inject constructor(
         
         // 5. Update Aggregation (using centralized use case)
         updateDailyAggregationUseCase(finalNodeId, points, selfReportMin)
+        // 5. Update Agg (using atomic updates to prevent race conditions)
+        val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
+        
+        // Check Node Type
+        val nodeTypeStr = if (finalNodeId != null) {
+            nodeDao.getNodeById(finalNodeId)?.type
+        } else null
+        
+        // Use atomic updates based on node type
+        // If the row doesn't exist (returns 0), insert it and retry
+        val updateSuccessful = if (nodeTypeStr != null) {
+             try {
+                when (NodeType.valueOf(nodeTypeStr)) {
+                    NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                    NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, selfReportMin)
+                    NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, selfReportMin)
+                    NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+                }
+            } catch (e: Exception) { 
+                // Unknown type, default to Study
+                aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+            }
+        } else {
+             // Unspecified points -> Admin
+             aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+        }
+        
+        // If atomic update failed (row didn't exist), insert and retry
+        if (updateSuccessful == 0) {
+            aggDao.upsertDailyAgg(DailyAggEntity(yyyymmdd = yyyymmdd))
+            // Retry the update
+            if (nodeTypeStr != null) {
+                try {
+                    when (NodeType.valueOf(nodeTypeStr)) {
+                        NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                        NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, selfReportMin)
+                        NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, selfReportMin)
+                        NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+                    }
+                } catch (e: Exception) { 
+                    aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                }
+            } else {
+                aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+            }
+        }
         
         // 6. Mark Node as Updated
         if (finalNodeId != null) {

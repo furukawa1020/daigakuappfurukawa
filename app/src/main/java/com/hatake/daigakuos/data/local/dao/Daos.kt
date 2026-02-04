@@ -77,6 +77,62 @@ interface AggDao {
     
     @Query("SELECT * FROM daily_agg ORDER BY yyyymmdd DESC LIMIT :limit")
     fun getAggRange(limit: Int): Flow<List<DailyAggEntity>>
+    
+    /**
+     * Atomically add study points to the daily aggregate.
+     * @return Number of rows affected (1 if successful, 0 if row doesn't exist)
+     */
+    @Query("""
+        UPDATE daily_agg 
+        SET pointsTotal = pointsTotal + :points,
+            pointsStudy = pointsStudy + :points,
+            countDone = countDone + 1,
+            minutesSelfReport = minutesSelfReport + :minutes
+        WHERE yyyymmdd = :yyyymmdd
+    """)
+    suspend fun addStudyPoints(yyyymmdd: Int, points: Double, minutes: Int): Int
+    
+    /**
+     * Atomically add research points to the daily aggregate.
+     * @return Number of rows affected (1 if successful, 0 if row doesn't exist)
+     */
+    @Query("""
+        UPDATE daily_agg 
+        SET pointsTotal = pointsTotal + :points,
+            pointsResearch = pointsResearch + :points,
+            countDone = countDone + 1,
+            minutesSelfReport = minutesSelfReport + :minutes
+        WHERE yyyymmdd = :yyyymmdd
+    """)
+    suspend fun addResearchPoints(yyyymmdd: Int, points: Double, minutes: Int): Int
+    
+    /**
+     * Atomically add make points to the daily aggregate.
+     * @return Number of rows affected (1 if successful, 0 if row doesn't exist)
+     */
+    @Query("""
+        UPDATE daily_agg 
+        SET pointsTotal = pointsTotal + :points,
+            pointsMake = pointsMake + :points,
+            countDone = countDone + 1,
+            minutesSelfReport = minutesSelfReport + :minutes
+        WHERE yyyymmdd = :yyyymmdd
+    """)
+    suspend fun addMakePoints(yyyymmdd: Int, points: Double, minutes: Int): Int
+    
+    /**
+     * Atomically add admin points to the daily aggregate.
+     * @return Number of rows affected (1 if successful, 0 if row doesn't exist)
+     */
+    @Query("""
+        UPDATE daily_agg 
+        SET pointsTotal = pointsTotal + :points,
+            pointsAdmin = pointsAdmin + :points,
+            countDone = countDone + 1,
+            minutesSelfReport = minutesSelfReport + :minutes
+        WHERE yyyymmdd = :yyyymmdd
+    """)
+    suspend fun addAdminPoints(yyyymmdd: Int, points: Double, minutes: Int): Int
 }
 
 @Dao

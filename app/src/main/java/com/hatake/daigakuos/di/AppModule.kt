@@ -2,6 +2,8 @@ package com.hatake.daigakuos.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.hatake.daigakuos.data.local.AppDatabase
 import com.hatake.daigakuos.data.local.dao.*
 import com.hatake.daigakuos.data.repository.UserContextRepositoryImpl
@@ -16,6 +18,20 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    // Migration from version 1 to 2: Add campus_visits table
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create campus_visits table for tracking campus visit streaks
+            database.execSQL(
+                """
+                CREATE TABLE campus_visits (
+                    yyyymmdd INTEGER NOT NULL PRIMARY KEY
+                )
+                """.trimIndent()
+            )
+        }
+    }
 
     @Provides
     @Singleton
@@ -36,6 +52,7 @@ object AppModule {
         // This ensures the app will crash (fail-fast) if a migration is missing,
         // rather than silently deleting all user data. This is intentional to
         // protect user data and force developers to implement proper migrations.
+        .addMigrations(MIGRATION_1_2)
         .build()
     }
 
