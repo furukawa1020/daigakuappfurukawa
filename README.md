@@ -1,4 +1,4 @@
-# University OS (DaigakuOS) - インストールガイド
+# University app (Daigakuapp) - インストールガイド
 
 このプロジェクトは、**Jetpack Compose**と**Room Database**で構築されたネイティブAndroidアプリケーションです。
 
