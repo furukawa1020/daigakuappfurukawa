@@ -264,14 +264,14 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final aggAsync = ref.watch(dailyAggProvider);
+    final statsAsync = ref.watch(userStatsProvider);
     final weeklyAsync = ref.watch(weeklyAggProvider);
     
     return Scaffold(
       appBar: AppBar(title: const Text('DaigakuOS v2')),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          ref.refresh(dailyAggProvider);
+          ref.refresh(userStatsProvider);
           ref.refresh(weeklyAggProvider);
           ref.refresh(historyProvider);
         },
@@ -314,17 +314,43 @@ class HomeScreen extends ConsumerWidget {
              ),
              
              // Stats Card (Today)
+             // Stats Card (Gamification)
             Card(
               margin: const EdgeInsets.all(16),
+              elevation: 4,
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: aggAsync.when(
-                  data: (agg) => Column(
+                child: statsAsync.when(
+                  data: (stats) => Column(
                     children: [
-                       Text("Today's Output", style: Theme.of(context).textTheme.labelLarge),
+                       Text("LEVEL ${stats.level}", style: Theme.of(context).textTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                       const SizedBox(height: 16),
+                       LinearProgressIndicator(
+                         value: stats.progress, 
+                         minHeight: 12, 
+                         borderRadius: BorderRadius.circular(6),
+                         backgroundColor: Colors.grey[200],
+                       ),
                        const SizedBox(height: 8),
-                       Text("${agg.totalPoints.toStringAsFixed(1)} Pts", style: Theme.of(context).textTheme.displayMedium),
-                       Text("${agg.totalMinutes} min / ${agg.sessionCount} sessions", style: Theme.of(context).textTheme.bodyMedium),
+                       Text("${stats.pointsToNext.toStringAsFixed(0)} XP to Next Level", style: Theme.of(context).textTheme.bodySmall),
+                       const SizedBox(height: 24),
+                       Row(
+                         mainAxisAlignment: MainAxisAlignment.spaceAround,
+                         children: [
+                           Column(children: [
+                             Text("${stats.dailyPoints.toStringAsFixed(0)}", style: Theme.of(context).textTheme.titleLarge),
+                             const Text("Today's Pts", style: TextStyle(fontSize: 10, color: Colors.grey))
+                           ]),
+                           Column(children: [
+                             Text("${stats.dailyMinutes}", style: Theme.of(context).textTheme.titleLarge),
+                             const Text("Minutes", style: TextStyle(fontSize: 10, color: Colors.grey))
+                           ]),
+                           Column(children: [
+                             Text("${stats.totalPoints.toStringAsFixed(0)}", style: Theme.of(context).textTheme.titleLarge),
+                             const Text("Total Pts", style: TextStyle(fontSize: 10, color: Colors.grey))
+                           ]),
+                         ],
+                       )
                     ],
                   ),
                   loading: () => const CircularProgressIndicator(),
