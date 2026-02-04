@@ -42,7 +42,7 @@ interface NodeDao {
 
 @Dao
 interface SessionDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE) // Changed to REPLACE to allow easy updates
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSession(session: SessionEntity)
 
     @Update
@@ -54,18 +54,16 @@ interface SessionDao {
     @Query("SELECT * FROM sessions WHERE startAt BETWEEN :start AND :end")
     suspend fun getSessionsInRange(start: Long, end: Long): List<SessionEntity>
 
-    // Helper for "Today" (Caller provides startOfDay timestamp)
     @Query("SELECT * FROM sessions WHERE startAt >= :startOfDay")
     suspend fun getSessionsSince(startOfDay: Long): List<SessionEntity>
 
     @Insert
     suspend fun insertRecoveryEvent(event: RecoveryEventEntity)
     
-    // For Stats/Tank flow
-    @Query("SELECT SUM(points) FROM sessions")
-    fun getTotalPointsFlow(): Flow<Double?>
+    @Query("SELECT COALESCE(SUM(points), 0.0) FROM sessions")
+    fun getTotalPointsFlow(): Flow<Double>
 
-    @Query("SELECT * FROM sessions WHERE id = :sessionId")
+    @Query("SELECT * FROM sessions WHERE id = :sessionId LIMIT 1")
     suspend fun getSessionById(sessionId: String): SessionEntity?
 }
 

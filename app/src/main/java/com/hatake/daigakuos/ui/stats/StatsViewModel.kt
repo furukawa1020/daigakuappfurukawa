@@ -26,7 +26,7 @@ class StatsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val uiState: StateFlow<StatsUiState> = combine(
-        sessionDao.getTotalPointsFlow().map { it ?: 0.0 },
+        sessionDao.getTotalPointsFlow(),
         aggDao.getAggRange(365)
     ) { points, aggs ->
         StatsUiState(

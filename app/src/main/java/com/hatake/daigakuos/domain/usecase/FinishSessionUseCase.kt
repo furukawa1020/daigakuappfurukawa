@@ -1,23 +1,15 @@
 package com.hatake.daigakuos.domain.usecase
 
-import com.hatake.daigakuos.data.local.dao.AggDao
-import com.hatake.daigakuos.data.local.dao.NodeDao
 import com.hatake.daigakuos.data.local.dao.SessionDao
 import com.hatake.daigakuos.data.local.dao.SettingsDao
-import com.hatake.daigakuos.data.local.entity.DailyAggEntity
-import com.hatake.daigakuos.data.local.entity.NodeType
 import com.hatake.daigakuos.data.local.entity.SettingsEntity
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 
 class FinishSessionUseCase @Inject constructor(
     private val sessionDao: SessionDao,
-    private val aggDao: AggDao,
     private val settingsDao: SettingsDao,
-    private val nodeDao: NodeDao, // Added
-    private val pointsCalculator: PointsCalculator
+    private val pointsCalculator: PointsCalculator,
+    private val updateDailyAggregationUseCase: UpdateDailyAggregationUseCase
 ) {
     suspend operator fun invoke(
         sessionId: String,
@@ -27,6 +19,9 @@ class FinishSessionUseCase @Inject constructor(
         val endAt = System.currentTimeMillis()
         
         // 1. Fetch Session Context
+        val session = sessionDao.getSessionById(sessionId)
+        val onCampus = session?.onCampus ?: false
+        val nodeId = session?.nodeId
         val session = sessionDao.getSessionById(sessionId) 
             ?: throw IllegalStateException("Session with id $sessionId not found")
         val onCampus = session.onCampus
@@ -35,27 +30,27 @@ class FinishSessionUseCase @Inject constructor(
         // 2. Fetch Node to determine Type
         val node = if (nodeId != null) nodeDao.getNodeById(nodeId) else null
 
-        // 3. Settings (or Default)
+        // 2. Settings (or Default)
         var settings = settingsDao.getSettings()
         if (settings == null) {
             settings = SettingsEntity()
             settingsDao.insertSettings(settings)
         }
 
-        // Mock Recency/Streak for MVP
-        val streakMul = 1.0 
-
+        // 3. Calculate Points
         val points = pointsCalculator.computePoints(
             selfReportMin = selfReportMin,
             focus = focus,
             onCampus = onCampus,
             campusBaseMultiplier = settings.campusBaseMultiplier,
-            streakMultiplier = streakMul
+            streakMultiplier = 1.0
         )
 
         // 4. Update Session
         sessionDao.endSession(sessionId, endAt, selfReportMin, focus, points)
 
+        // 5. Update Daily Aggregation (using centralized use case)
+        updateDailyAggregationUseCase(nodeId, points, selfReportMin)
         // 5. Update DailyAgg (using atomic updates to prevent race conditions)
         val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
         

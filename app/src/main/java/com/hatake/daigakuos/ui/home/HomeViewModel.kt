@@ -29,7 +29,7 @@ class HomeViewModel @Inject constructor(
         _recommendedNodes,
         userContextRepository.isOnCampus,
         userContextRepository.currentMode,
-        sessionDao.getTotalPointsFlow().map { it?.toFloat() ?: 0f }
+        sessionDao.getTotalPointsFlow().map { it.toFloat() }
     ) { nodes, onCampus, mode, points ->
         HomeUiState(
             currentPoints = points,

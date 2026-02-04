@@ -66,7 +66,7 @@ data class NodeEntity(
 // 2.3 Session（実行ログ：開始→完了/中断）
 @Entity(
     tableName = "sessions",
-    indices = [Index("nodeId"), Index("startAt"), Index("mode")]
+    indices = [Index("nodeId"), Index("startAt"), Index("mode"), Index("points")]
 )
 data class SessionEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
