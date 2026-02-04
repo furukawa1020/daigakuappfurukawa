@@ -59,13 +59,9 @@ class FinishSessionUseCase @Inject constructor(
         // 5. Update DailyAgg (using atomic updates to prevent race conditions)
         val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
         
-        // Ensure DailyAgg exists for today
-        if (aggDao.getAgg(yyyymmdd) == null) {
-            aggDao.upsertDailyAgg(DailyAggEntity(yyyymmdd = yyyymmdd))
-        }
-        
         // Use atomic updates based on node type
-        if (node != null) {
+        // If the row doesn't exist (returns 0), insert it and retry
+        val updateSuccessful = if (node != null) {
             try {
                 when (NodeType.valueOf(node.type)) {
                     NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
@@ -80,6 +76,26 @@ class FinishSessionUseCase @Inject constructor(
         } else {
             // No Node (Ad-hoc), default to Admin (Task handling)
             aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+        }
+        
+        // If atomic update failed (row didn't exist), insert and retry
+        if (updateSuccessful == 0) {
+            aggDao.upsertDailyAgg(DailyAggEntity(yyyymmdd = yyyymmdd))
+            // Retry the update
+            if (node != null) {
+                try {
+                    when (NodeType.valueOf(node.type)) {
+                        NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                        NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, selfReportMin)
+                        NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, selfReportMin)
+                        NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+                    }
+                } catch (e: Exception) {
+                    aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                }
+            } else {
+                aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+            }
         }
         
         // If Node exists, mark done? 
