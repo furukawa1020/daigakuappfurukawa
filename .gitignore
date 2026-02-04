@@ -4,6 +4,7 @@ build/
 
 # Local configuration file (sdk.dir, etc.)
 local.properties
+gradle.properties
 
 # Android Studio generated files
 .idea/
