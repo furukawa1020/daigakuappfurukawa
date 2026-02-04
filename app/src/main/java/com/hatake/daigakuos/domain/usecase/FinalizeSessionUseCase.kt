@@ -53,7 +53,8 @@ class FinalizeSessionUseCase @Inject constructor(
         }
 
         // 2. Fetch Session & Settings
-        val session = sessionDao.getSessionById(sessionId) ?: return // Should throw?
+        val session = sessionDao.getSessionById(sessionId) 
+            ?: throw IllegalStateException("Session with id $sessionId not found")
         val onCampus = session.onCampus
         
         var settings = settingsDao.getSettings()
@@ -92,45 +93,36 @@ class FinalizeSessionUseCase @Inject constructor(
         // Use updateSession to reliably update the existing session
         sessionDao.updateSession(updatedSession)
         
-        // 5. Update Agg
+        // 5. Update Agg (using atomic updates to prevent race conditions)
         val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
-        val currentAgg = aggDao.getAgg(yyyymmdd) ?: DailyAggEntity(yyyymmdd = yyyymmdd)
         
-        // Attribute to Type
-        var pStudy = currentAgg.pointsStudy
-        var pResearch = currentAgg.pointsResearch
-        var pMake = currentAgg.pointsMake
-        var pAdmin = currentAgg.pointsAdmin
+        // Ensure DailyAgg exists for today
+        if (aggDao.getAgg(yyyymmdd) == null) {
+            aggDao.upsertDailyAgg(DailyAggEntity(yyyymmdd = yyyymmdd))
+        }
         
         // Check Node Type
         val nodeTypeStr = if (finalNodeId != null) {
             nodeDao.getNodeById(finalNodeId)?.type
         } else null
         
+        // Use atomic updates based on node type
         if (nodeTypeStr != null) {
              try {
                 when (NodeType.valueOf(nodeTypeStr)) {
-                    NodeType.STUDY -> pStudy += points
-                    NodeType.RESEARCH -> pResearch += points
-                    NodeType.MAKE -> pMake += points
-                    NodeType.ADMIN -> pAdmin += points
+                    NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                    NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, selfReportMin)
+                    NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, selfReportMin)
+                    NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
                 }
-            } catch (e: Exception) { pStudy += points }
+            } catch (e: Exception) { 
+                // Unknown type, default to Study
+                aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+            }
         } else {
-             // Unspecified points -> Study? or Admin? 
-             pAdmin += points
+             // Unspecified points -> Admin
+             aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
         }
-
-        val newAgg = currentAgg.copy(
-            pointsTotal = currentAgg.pointsTotal + points,
-            countDone = currentAgg.countDone + 1,
-            minutesSelfReport = currentAgg.minutesSelfReport + selfReportMin,
-            pointsStudy = pStudy,
-            pointsResearch = pResearch,
-            pointsMake = pMake,
-            pointsAdmin = pAdmin
-        )
-        aggDao.upsertDailyAgg(newAgg)
         
         // 6. Mark Node as Updated (Recency)
         if (finalNodeId != null) {
