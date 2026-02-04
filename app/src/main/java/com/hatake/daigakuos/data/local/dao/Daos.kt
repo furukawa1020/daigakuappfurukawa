@@ -60,7 +60,7 @@ interface SessionDao {
     @Insert
     suspend fun insertRecoveryEvent(event: RecoveryEventEntity)
     
-    @Query("SELECT COALESCE(SUM(points), 0.0) FROM sessions WHERE points IS NOT NULL")
+    @Query("SELECT COALESCE(SUM(points), 0.0) FROM sessions")
     fun getTotalPointsFlow(): Flow<Double>
 
     @Query("SELECT * FROM sessions WHERE id = :sessionId LIMIT 1")

@@ -26,7 +26,7 @@ class PointsCalculator @Inject constructor() {
         return base * t * f * l * streakMultiplier * recoveryMultiplier
     }
     
-    private inline fun getTimeMultiplier(minutes: Int): Double = when (minutes) {
+    private fun getTimeMultiplier(minutes: Int): Double = when (minutes) {
         in 0..15 -> 0.6
         in 16..35 -> 1.0
         in 36..70 -> 1.6
@@ -34,7 +34,7 @@ class PointsCalculator @Inject constructor() {
         else -> 3.0
     }
     
-    private inline fun getFocusMultiplier(focus: Int): Double = when (focus) {
+    private fun getFocusMultiplier(focus: Int): Double = when (focus) {
         1 -> 0.8
         2 -> 0.9
         3 -> 1.0

@@ -65,12 +65,14 @@ class UpdateDailyAggregationUseCase @Inject constructor(
                         NodeType.ADMIN -> pAdmin += points
                     }
                 } catch (e: IllegalArgumentException) {
-                    pStudy += points
+                    // Invalid enum value - treat as admin for consistency with ad-hoc sessions
+                    pAdmin += points
                 }
             } else {
                 pAdmin += points
             }
         } else {
+            // Ad-hoc session without a node - categorize as admin
             pAdmin += points
         }
         
