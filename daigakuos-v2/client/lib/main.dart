@@ -137,6 +137,63 @@ class HomeScreen extends ConsumerWidget {
     } catch(e) { print(e); }
   }
 
+  Future<void> _editSession(BuildContext context, Map<String, dynamic> session, WidgetRef ref) async {
+    final titleCtrl = TextEditingController(text: session['title']);
+    if (!context.mounted) return;
+    
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Edit Session"),
+        content: TextField(
+          controller: titleCtrl,
+          decoration: const InputDecoration(labelText: "Task Name"),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+               // Delete Logic
+               final confirm = await showDialog<bool>(
+                 context: ctx,
+                 builder: (c) => AlertDialog(
+                   title: const Text("Delete?"), 
+                   actions: [
+                     TextButton(onPressed: ()=>Navigator.pop(c,false), child: const Text("Cancel")),
+                     TextButton(onPressed: ()=>Navigator.pop(c,true), child: const Text("Delete", style: TextStyle(color: Colors.red))),
+                   ]
+                 )
+               );
+               if (confirm == true) {
+                  try {
+                    await http.delete(Uri.parse('http://localhost:8080/api/sessions/${session['id']}'));
+                    ref.refresh(historyProvider);
+                    ref.refresh(dailyAggProvider);
+                    if (ctx.mounted) Navigator.pop(ctx);
+                  } catch(e) { print(e); }
+               }
+            }, 
+            child: const Text("Delete", style: TextStyle(color: Colors.red))
+          ),
+          FilledButton(
+            onPressed: () async {
+              // Edit Logic
+              try {
+                await http.put(
+                  Uri.parse('http://localhost:8080/api/sessions/${session['id']}'),
+                  body: jsonEncode({"draftTitle": titleCtrl.text})
+                );
+                ref.refresh(historyProvider);
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch(e) { print(e); }
+            }, 
+            child: const Text("Save")
+          ),
+        ],
+      )
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final aggAsync = ref.watch(dailyAggProvider);
@@ -240,17 +297,21 @@ class HomeScreen extends ConsumerWidget {
                         return ListTile(
                           title: Text(s['title']),
                           subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
-                          leading: const Icon(Icons.check_circle_outline),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                 DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
-                                 style: const TextStyle(fontSize: 12, color: Colors.grey)
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () async {
+                      return ListTile(
+                        title: Text(s['title']),
+                        subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
+                        leading: const Icon(Icons.check_circle_outline),
+                        onTap: () => _editSession(context, s, ref),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                               DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
+                               style: const TextStyle(fontSize: 12, color: Colors.grey)
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () async {
                                   // Delete
                                   try {
                                     final id = s['id'];
@@ -261,11 +322,11 @@ class HomeScreen extends ConsumerWidget {
                                       ref.refresh(dailyAggProvider);
                                     }
                                   } catch (e) { print(e); }
-                                },
-                              )
-                            ],
-                          ),
-                        );
+                              },
+                            )
+                          ],
+                        ),
+                      );
                       },
                     ),
                     loading: () => const Center(child: CircularProgressIndicator()),
@@ -304,59 +365,25 @@ class _NowScreenState extends ConsumerState<NowScreen> {
   late Timer _timer;
   Duration _elapsed = Duration.zero;
 
-  Future<void> _editSession(Map<String, dynamic> session, WidgetRef ref) async {
-    final titleCtrl = TextEditingController(text: session['title']);
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Edit Session"),
-        content: TextField(
-          controller: titleCtrl,
-          decoration: const InputDecoration(labelText: "Task Name"),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-               // Delete Logic
-               final confirm = await showDialog<bool>(
-                 context: ctx,
-                 builder: (c) => AlertDialog(
-                   title: const Text("Delete?"), 
-                   actions: [
-                     TextButton(onPressed: ()=>Navigator.pop(c,false), child: const Text("Cancel")),
-                     TextButton(onPressed: ()=>Navigator.pop(c,true), child: const Text("Delete", style: TextStyle(color: Colors.red))),
-                   ]
-                 )
-               );
-               if (confirm == true) {
-                  try {
-                    await http.delete(Uri.parse('http://localhost:8080/api/sessions/${session['id']}'));
-                    ref.refresh(historyProvider);
-                    ref.refresh(dailyAggProvider);
-                    if (mounted) Navigator.pop(ctx);
-                  } catch(e) { print(e); }
-               }
-            }, 
-            child: const Text("Delete", style: TextStyle(color: Colors.red))
-          ),
-          FilledButton(
-            onPressed: () async {
-              // Edit Logic
-              try {
-                await http.put(
-                  Uri.parse('http://localhost:8080/api/sessions/${session['id']}'),
-                  body: jsonEncode({"draftTitle": titleCtrl.text})
-                );
-                ref.refresh(historyProvider);
-                if (mounted) Navigator.pop(ctx);
-              } catch(e) { print(e); }
-            }, 
-            child: const Text("Save")
-          ),
-        ],
-      )
-    );
+  @override
+  void initState() {
+    super.initState();
+    final session = ref.read(sessionProvider);
+    if (session == null) {
+      // Logic error recovery
+      _elapsed = Duration.zero;
+    } else {
+      _elapsed = DateTime.now().difference(session.startAt);
+    }
+    
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final s = ref.read(sessionProvider);
+      if (s != null) {
+        setState(() {
+          _elapsed = DateTime.now().difference(s.startAt);
+        });
+      }
+    });
   }
 
   @override

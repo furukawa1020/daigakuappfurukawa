@@ -238,6 +238,16 @@ func main() {
 
 	// PUT /api/sessions/{id} - Edit Session
 	http.HandleFunc("/api/sessions/", func(w http.ResponseWriter, r *http.Request) {
+		// CORS
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
 		// Extract ID
 		id := r.URL.Path[len("/api/sessions/"):]
 
