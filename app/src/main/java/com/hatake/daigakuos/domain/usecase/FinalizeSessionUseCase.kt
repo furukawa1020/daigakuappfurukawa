@@ -82,18 +82,15 @@ class FinalizeSessionUseCase @Inject constructor(
         // I will add `updateSession(session)` to DAO for cleaner code.
         
         val updatedSession = session.copy(
-            nodeId = finalNodeId ?: session.nodeId, // Use selected, or keep original, or remain null (if user actively skipped?)
+            nodeId = finalNodeId ?: session.nodeId,
             endAt = endAt,
             selfReportMin = selfReportMin,
             focus = focus,
             points = points,
             finalizedAt = finalizedAt
         )
-        // Use Insert(REPLACE) or Update
-        sessionDao.insertSession(updatedSession) // If REPLACE strategy is ON? 
-        // SessionDao insertSession is just @Insert. Conflict strategy matches?
-        // Default is ABORT.
-        // I need to add `updateSession`.
+        // Use updateSession to reliably update the existing session
+        sessionDao.updateSession(updatedSession)
         
         // 5. Update Agg
         val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
