@@ -17,8 +17,37 @@ class Session {
   Session({this.id, required this.startAt, this.durationMinutes});
 }
 
+// Models
+class DailyAgg {
+  final double totalPoints;
+  final int totalMinutes;
+  final int sessionCount;
+  
+  DailyAgg({required this.totalPoints, required this.totalMinutes, required this.sessionCount});
+  
+  factory DailyAgg.fromJson(Map<String, dynamic> json) {
+    return DailyAgg(
+      totalPoints: (json['totalPoints'] as num?)?.toDouble() ?? 0.0,
+      totalMinutes: (json['totalMinutes'] as num?)?.toInt() ?? 0,
+      sessionCount: (json['sessionCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
 // Global Providers
 final sessionProvider = StateProvider<Session?>((ref) => null);
+
+final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
+  try {
+    final response = await http.get(Uri.parse('http://localhost:8080/api/aggs/daily'));
+    if (response.statusCode == 200) {
+      return DailyAgg.fromJson(jsonDecode(response.body));
+    }
+  } catch (e) {
+    print("Fetch Stats Error: $e");
+  }
+  return DailyAgg(totalPoints: 0, totalMinutes: 0, sessionCount: 0);
+});
 
 // -----------------------------------------------------------------------------
 // 2. Navigation
@@ -73,12 +102,39 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final aggAsync = ref.watch(dailyAggProvider);
+    
     return Scaffold(
       appBar: AppBar(title: const Text('DaigakuOS v2')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => ref.refresh(dailyAggProvider),
+        child: const Icon(Icons.refresh),
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Stats Card
+            Card(
+              margin: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: aggAsync.when(
+                  data: (agg) => Column(
+                    children: [
+                       Text("Today's Output", style: Theme.of(context).textTheme.labelLarge),
+                       const SizedBox(height: 8),
+                       Text("${agg.totalPoints.toStringAsFixed(1)} Pts", style: Theme.of(context).textTheme.displayMedium),
+                       Text("${agg.totalMinutes} min / ${agg.sessionCount} sessions", style: Theme.of(context).textTheme.bodyMedium),
+                    ],
+                  ),
+                  loading: () => const CircularProgressIndicator(),
+                  error: (e, _) => const Text("Failed to load stats"),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 32),
             const Text("Zero Future Input", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 32),
             FilledButton.icon(
