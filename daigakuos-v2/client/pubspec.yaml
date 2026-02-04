@@ -1,4 +1,4 @@
-name: daigaku_os_client
+name: daigaku_app_client
 description: "DaigakuAPP v2 Client (Zero Input)"
 publish_to: 'none'
 version: 1.0.0+1
