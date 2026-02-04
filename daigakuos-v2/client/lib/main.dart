@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:fl_chart/fl_chart.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -106,10 +107,6 @@ class DaigakuOSApp extends StatelessWidget {
   }
 }
 
-import 'package:fl_chart/fl_chart.dart'; // Added
-
-// ... (Existing Imports)
-
 // ...
 
 final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -130,7 +127,15 @@ final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
-  // ... (Toggle Campus)
+  Future<void> _toggleCampus(bool isOn, WidgetRef ref) async {
+    try {
+       await http.post(
+         Uri.parse('http://localhost:8080/api/context'),
+         body: jsonEncode({"isOnCampus": isOn})
+       );
+       ref.refresh(dailyAggProvider); // Refresh stats just in case
+    } catch(e) { print(e); }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

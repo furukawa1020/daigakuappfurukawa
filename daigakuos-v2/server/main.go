@@ -29,6 +29,13 @@ type DailyAgg struct {
 	SessionCount int     `json:"sessionCount"`
 }
 
+// Node represents a task/project
+type Node struct {
+	ID        string    `json:"id"`
+	Title     string    `json:"title"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
 var db *sql.DB
 
 func initDB() {
