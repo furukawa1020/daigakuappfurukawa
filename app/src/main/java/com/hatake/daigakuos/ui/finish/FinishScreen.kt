@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -67,7 +66,6 @@ fun FinishScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("$finalMinutes 分", style = MaterialTheme.typography.displayMedium)
                     Spacer(modifier = Modifier.width(16.dp))
-                    // Slider logic simplified for UI
                     IconButton(onClick = { if(finalMinutes > 5) finalMinutes -= 5 }) { Text("-") }
                     IconButton(onClick = { finalMinutes += 5 }) { Text("+") }
                 }
@@ -77,12 +75,11 @@ fun FinishScreen(
             item {
                 Text("何をやりましたか？", style = MaterialTheme.typography.titleMedium)
                 
-                // New Input
                 OutlinedTextField(
                     value = newTaskTitle,
                     onValueChange = { 
                         newTaskTitle = it 
-                        selectedNodeId = null // clear selection if typing
+                        selectedNodeId = null 
                     },
                     label = { Text("新しい成果 (1行入力)") },
                     modifier = Modifier.fillMaxWidth()
@@ -95,7 +92,7 @@ fun FinishScreen(
             
             // Suggestions
             item {
-                Text("または履歴・候補から選択", style = MaterialTheme.typography.labelLarge)
+                Text("履歴・候補から選択", style = MaterialTheme.typography.labelLarge)
             }
             
             items(uiState.suggestions) { node ->
@@ -105,7 +102,7 @@ fun FinishScreen(
                     isSelected = selectedNodeId == node.id,
                     onClick = {
                         selectedNodeId = node.id
-                        newTaskTitle = "" // Clear new input
+                        newTaskTitle = "" 
                     }
                 )
             }
@@ -120,7 +117,7 @@ fun FinishScreen(
                  )
             }
             
-            item { Spacer(modifier = Modifier.height(64.dp)) }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 }

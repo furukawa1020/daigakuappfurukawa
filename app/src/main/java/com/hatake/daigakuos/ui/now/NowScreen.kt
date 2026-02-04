@@ -206,7 +206,9 @@ fun NowScreen(
             OutlinedButton(
                 onClick = { 
                     isRunning = false
-                    showDialog = true
+                    val minutes = (timeElapsed / 1000 / 60).toInt().coerceAtLeast(1)
+                    val sessionId = viewModel.currentSessionId ?: ""
+                    onComplete(sessionId, minutes)
                 },
                 modifier = Modifier.height(72.dp),
                 shape = CircleShape,
