@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"time"
 
@@ -195,13 +196,13 @@ func main() {
 	// GET /api/user/stats - Gamification Stats
 	http.HandleFunc("/api/user/stats", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		
+
 		today := time.Now().Format("2006-01-02")
 		stats := UserStats{}
 
 		// 1. Lifetime Points
 		db.QueryRow("SELECT COALESCE(SUM(points), 0) FROM sessions").Scan(&stats.TotalPoints)
-		
+
 		// 2. Daily Stats
 		db.QueryRow("SELECT COALESCE(SUM(points), 0), COALESCE(SUM(minutes), 0) FROM sessions WHERE date(start_at) = ?", today).Scan(&stats.DailyPoints, &stats.DailyMinutes)
 
@@ -212,38 +213,32 @@ func main() {
 		// 900 pts = Lvl 3
 		// ...
 		// XP for Level L = 100 * L^2
-		
-		import "math"
-		
-		// Logic handles in main function for cleaner look or inline here
-		// We can't import inside function. Assuming 'math' is imported at top.
-		// Wait, I need to add 'math' to imports.
-		
-		// Fallback simple math without math pkg if strictly no import edits allowed (but I can edit imports).
-		// Let's assume linear for now to save complexity, OR add math import.
-		// Actually, I can use int logic.
-		
-		// Linear: Level = Points / 100
-		// stats.Level = int(stats.TotalPoints / 100) + 1
-		// currentLevelBase := float64((stats.Level - 1) * 100)
-		// nextLevelBase := float64(stats.Level * 100)
-		// stats.PointsToNext = nextLevelBase - stats.TotalPoints
-		// stats.Progress = (stats.TotalPoints - currentLevelBase) / 100.0
-		
-		// Let's use the Sqrt curve, it's better. I will add "math" import in next step.
-		// For now, I'll write the logic assuming math.Sqrt is available.
-		
-		// NO, I can't break compilation. I should use replacement to add import too.
-		// Or separate tool.
-		// usage of math.Sqrt requires "math".
-		
-		// I will use a simple quadratic approximation without Sqrt for safety or just edit imports.
-		// I'll edit imports in a previous step? No, I am in middle of tool chain.
-		// I will do multi_replace.
-		
-		// Re-thinking: I used replace_file_content already. 
-		// I'll do a MultiReplace to add import AND the handler.
-		
+
+		// 3. Level Calc (Quadratic Curve)
+		// Level 1 = 0-100 pts
+		// Level 2 = 100-400 pts (300 xp gap)
+		// Level 3 = 400-900 pts (500 xp gap)
+		// Formula: Points = 100 * Level^2  => Level = Sqrt(Points/100)
+
+		val := stats.TotalPoints / 100.0
+		if val < 0 {
+			val = 0
+		}
+		rawLevel := math.Sqrt(val)
+		stats.Level = int(rawLevel) + 1 // Start at Lvl 1
+
+		currentBase := 100.0 * float64(stats.Level-1) * float64(stats.Level-1)
+		nextBase := 100.0 * float64(stats.Level) * float64(stats.Level)
+
+		stats.PointsToNext = nextBase - stats.TotalPoints
+		rangeSpan := nextBase - currentBase
+		if rangeSpan > 0 {
+			stats.Progress = (stats.TotalPoints - currentBase) / rangeSpan
+		} else {
+			stats.Progress = 1.0 // Maxed?
+		}
+
+		json.NewEncoder(w).Encode(stats)
 	}))
 
 	// GET /api/aggs/daily - Get Stats for Today
