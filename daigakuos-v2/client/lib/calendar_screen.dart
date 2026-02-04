@@ -50,6 +50,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             AppBar(
               title: const Text("Study Calendar", style: TextStyle(fontWeight: FontWeight.bold)),
               backgroundColor: Colors.transparent,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.download),
+                  tooltip: "Export Data",
+                  onPressed: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Exporting data...")));
+                    await DatabaseHelper().exportData();
+                  },
+                )
+              ],
             ),
             
             // Calendar Card

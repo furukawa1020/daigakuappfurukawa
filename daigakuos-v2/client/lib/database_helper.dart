@@ -2,6 +2,10 @@ import 'dart:async';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'dart:math';
+import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -295,5 +299,24 @@ class DatabaseHelper {
     final db = await database;
     final res = await db.rawQuery("SELECT DISTINCT substr(start_at, 1, 10) as day FROM sessions");
     return res.map((e) => DateTime.parse(e['day'] as String)).toList();
+  }
+
+  Future<void> exportData() async {
+    final db = await database;
+    final sessions = await db.query('sessions');
+    final nodes = await db.query('nodes');
+    
+    final data = {
+      'generated_at': DateTime.now().toIso8601String(),
+      'sessions': sessions,
+      'nodes': nodes,
+    };
+    
+    final jsonStr = jsonEncode(data);
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/daigaku_export_${DateTime.now().millisecondsSinceEpoch}.json');
+    await file.writeAsString(jsonStr);
+    
+    await Share.shareXFiles([XFile(file.path)], text: 'DaigakuAPP Data Backup');
   }
 }
