@@ -58,6 +58,9 @@ interface SessionDao {
     // For Stats/Tank flow
     @Query("SELECT SUM(points) FROM sessions")
     fun getTotalPointsFlow(): Flow<Double?>
+
+    @Query("SELECT * FROM sessions WHERE id = :sessionId")
+    suspend fun getSessionById(sessionId: String): SessionEntity?
 }
 
 @Dao
