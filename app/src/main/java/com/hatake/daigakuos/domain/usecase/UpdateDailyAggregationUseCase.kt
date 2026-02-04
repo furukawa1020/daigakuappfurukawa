@@ -56,7 +56,7 @@ class UpdateDailyAggregationUseCase @Inject constructor(
         
         if (nodeId != null) {
             val nodeType = nodeDao.getNodeById(nodeId)?.type
-            if (nodeType != null) {
+            if (!nodeType.isNullOrBlank()) {
                 try {
                     when (NodeType.valueOf(nodeType)) {
                         NodeType.STUDY -> pStudy += points
@@ -64,8 +64,8 @@ class UpdateDailyAggregationUseCase @Inject constructor(
                         NodeType.MAKE -> pMake += points
                         NodeType.ADMIN -> pAdmin += points
                     }
-                } catch (e: IllegalArgumentException) {
-                    // Invalid enum value - treat as admin for consistency with ad-hoc sessions
+                } catch (e: Exception) {
+                    // Invalid or malformed enum value - treat as admin for consistency
                     pAdmin += points
                 }
             } else {
@@ -80,9 +80,9 @@ class UpdateDailyAggregationUseCase @Inject constructor(
     }
     
     private data class PointsDistribution(
-        val study: Double,
-        val research: Double,
-        val make: Double,
-        val admin: Double
+        val pStudy: Double,
+        val pResearch: Double,
+        val pMake: Double,
+        val pAdmin: Double
     )
 }
