@@ -272,4 +272,28 @@ class DatabaseHelper {
       'title': e['title'],
     }).toList();
   }
+
+  Future<List<Map<String, dynamic>>> getSessionsForDate(DateTime date) async {
+    final db = await database;
+    final dateStr = date.toIso8601String().substring(0, 10);
+    final res = await db.query(
+      'sessions',
+      where: 'start_at LIKE ?',
+      whereArgs: ['$dateStr%'],
+      orderBy: 'start_at DESC'
+    );
+    return res.map((e) => {
+      'id': e['id'],
+      'title': e['draft_title'],
+      'startAt': e['start_at'],
+      'minutes': e['minutes'],
+      'points': e['points'],
+    }).toList();
+  }
+
+  Future<List<DateTime>> getSessionDates() async {
+    final db = await database;
+    final res = await db.rawQuery("SELECT DISTINCT substr(start_at, 1, 10) as day FROM sessions");
+    return res.map((e) => DateTime.parse(e['day'] as String)).toList();
+  }
 }

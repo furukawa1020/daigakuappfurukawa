@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
 import 'database_helper.dart';
+import 'calendar_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -134,6 +135,7 @@ final _router = GoRouter(
   initialLocation: '/',
   routes: [
     GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/calendar', builder: (context, state) => const CalendarScreen()),
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
   ],
@@ -407,6 +409,25 @@ class HomeScreen extends ConsumerWidget {
                     ).animate().fadeIn().slideY(begin: 0.2, end: 0, delay: 100.ms),
 
                     const SizedBox(height: 24),
+                    
+                    // Calendar Button (Header)
+                    GlassCard(
+                      padding: EdgeInsets.zero,
+                      child: ListTile(
+                        onTap: () => context.push('/calendar'),
+                        leading: Container(
+                           padding: const EdgeInsets.all(8),
+                           decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                           child: const Icon(Icons.calendar_month, color: Colors.purple),
+                        ),
+                        title: const Text("Study Calendar", style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text("View your monthly progress"),
+                        trailing: const Icon(Icons.chevron_right),
+                      ),
+                    ).animate().fadeIn().slideX(),
+                    
+                    const SizedBox(height: 16),
+
                     const Align(alignment: Alignment.centerLeft, child: Text("Recent History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
                     const SizedBox(height: 12),
                   ],
