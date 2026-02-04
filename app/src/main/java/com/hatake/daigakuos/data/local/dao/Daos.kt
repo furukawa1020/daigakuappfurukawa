@@ -65,6 +65,9 @@ interface SessionDao {
 
     @Query("SELECT * FROM sessions WHERE id = :sessionId LIMIT 1")
     suspend fun getSessionById(sessionId: String): SessionEntity?
+
+    @Delete
+    suspend fun deleteSession(session: SessionEntity)
 }
 
 @Dao
