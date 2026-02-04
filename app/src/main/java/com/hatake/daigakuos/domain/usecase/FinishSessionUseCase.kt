@@ -27,9 +27,10 @@ class FinishSessionUseCase @Inject constructor(
         val endAt = System.currentTimeMillis()
         
         // 1. Fetch Session Context
-        val session = sessionDao.getSessionById(sessionId)
-        val onCampus = session?.onCampus ?: false
-        val nodeId = session?.nodeId
+        val session = sessionDao.getSessionById(sessionId) 
+            ?: throw IllegalStateException("Session with id $sessionId not found")
+        val onCampus = session.onCampus
+        val nodeId = session.nodeId
         
         // 2. Fetch Node to determine Type
         val node = if (nodeId != null) nodeDao.getNodeById(nodeId) else null
@@ -55,48 +56,47 @@ class FinishSessionUseCase @Inject constructor(
         // 4. Update Session
         sessionDao.endSession(sessionId, endAt, selfReportMin, focus, points)
 
-        // 5. Update DailyAgg
+        // 5. Update DailyAgg (using atomic updates to prevent race conditions)
         val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
-        val currentAgg = aggDao.getAgg(yyyymmdd) ?: DailyAggEntity(yyyymmdd = yyyymmdd)
         
-        // Update Agg fields based on NodeType
-        // If node is null (Ad-hoc session?), attribute to Study or distribute? 
-        // Let's assume Study/Admin mix or just leave fields 0 and only update Total.
-        // But for "User Spec", Research/Make/Study balance is key.
-        
-        var pStudy = currentAgg.pointsStudy
-        var pResearch = currentAgg.pointsResearch
-        var pMake = currentAgg.pointsMake
-        var pAdmin = currentAgg.pointsAdmin
-        
-        if (node != null) {
+        // Use atomic updates based on node type
+        // If the row doesn't exist (returns 0), insert it and retry
+        val updateSuccessful = if (node != null) {
             try {
                 when (NodeType.valueOf(node.type)) {
-                    NodeType.STUDY -> pStudy += points
-                    NodeType.RESEARCH -> pResearch += points
-                    NodeType.MAKE -> pMake += points
-                    NodeType.ADMIN -> pAdmin += points
+                    NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                    NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, selfReportMin)
+                    NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, selfReportMin)
+                    NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
                 }
             } catch (e: Exception) {
                 // Unknown type, maybe legacy or string mismatch. Add to Study default.
-                pStudy += points
+                aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
             }
         } else {
-            // No Node (Ad-hoc), default to Admin or Study? 
-            // Let's assume Admin (Task handling)
-            pAdmin += points
+            // No Node (Ad-hoc), default to Admin (Task handling)
+            aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
         }
         
-        val newAgg = currentAgg.copy(
-            pointsTotal = currentAgg.pointsTotal + points,
-            countDone = currentAgg.countDone + 1,
-            minutesSelfReport = currentAgg.minutesSelfReport + selfReportMin,
-            pointsStudy = pStudy,
-            pointsResearch = pResearch,
-            pointsMake = pMake,
-            pointsAdmin = pAdmin
-        )
-        aggDao.upsertDailyAgg(newAgg)
+        // If atomic update failed (row didn't exist), insert and retry
+        if (updateSuccessful == 0) {
+            aggDao.upsertDailyAgg(DailyAggEntity(yyyymmdd = yyyymmdd))
+            // Retry the update
+            if (node != null) {
+                try {
+                    when (NodeType.valueOf(node.type)) {
+                        NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                        NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, selfReportMin)
+                        NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, selfReportMin)
+                        NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+                    }
+                } catch (e: Exception) {
+                    aggDao.addStudyPoints(yyyymmdd, points, selfReportMin)
+                }
+            } else {
+                aggDao.addAdminPoints(yyyymmdd, points, selfReportMin)
+            }
+        }
         
         // If Node exists, mark done? 
         // Spec: Session doesn't autocompile Node. User marks 'DONE' separately?
