@@ -166,11 +166,16 @@ class HomeScreen extends ConsumerWidget {
                );
                if (confirm == true) {
                   try {
-                    await http.delete(Uri.parse('http://localhost:8080/api/sessions/${session['id']}'));
+                    final res = await http.delete(Uri.parse('http://localhost:8080/api/sessions/${session['id']}'));
+                    if (res.statusCode != 200) throw "Status ${res.statusCode}";
+                    
                     ref.refresh(historyProvider);
                     ref.refresh(dailyAggProvider);
                     if (ctx.mounted) Navigator.pop(ctx);
-                  } catch(e) { print(e); }
+                  } catch(e) { 
+                     print(e);
+                     if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Error: $e")));
+                  }
                }
             }, 
             child: const Text("Delete", style: TextStyle(color: Colors.red))
@@ -179,13 +184,18 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () async {
               // Edit Logic
               try {
-                await http.put(
+                final res = await http.put(
                   Uri.parse('http://localhost:8080/api/sessions/${session['id']}'),
                   body: jsonEncode({"draftTitle": titleCtrl.text})
                 );
+                if (res.statusCode != 200) throw "Status ${res.statusCode}";
+                
                 ref.refresh(historyProvider);
                 if (ctx.mounted) Navigator.pop(ctx);
-              } catch(e) { print(e); }
+              } catch(e) { 
+                print(e); 
+                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Error: $e")));
+              }
             }, 
             child: const Text("Save")
           ),
