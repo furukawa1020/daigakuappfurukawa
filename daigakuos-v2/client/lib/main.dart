@@ -325,9 +325,6 @@ class HomeScreen extends ConsumerWidget {
                         return ListTile(
                           title: Text(s['title']),
                           subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
-                      return ListTile(
-                        title: Text(s['title']),
-                        subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
                         leading: const Icon(Icons.check_circle_outline),
                         onTap: () => _editSession(context, s, ref),
                         trailing: Row(
