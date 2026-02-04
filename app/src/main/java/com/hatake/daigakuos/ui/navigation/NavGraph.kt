@@ -39,9 +39,30 @@ fun UniversityNavGraph(navController: NavHostController) {
         
         composable(Screen.Now.route) { backStackEntry ->
             val nodeId = backStackEntry.arguments?.getString("nodeId")
+            // Handle "null" string from navigation if any, or logic
+            val safeNodeId = if(nodeId == "null") null else nodeId
+            
             NowScreen(
-                nodeId = nodeId,
-                onComplete = { navController.popBackStack() } // Return to Home after completion
+                nodeId = safeNodeId,
+                onComplete = { sessionId, minutes ->
+                    navController.navigate("finish/$sessionId/$minutes") {
+                         popUpTo(Screen.Home.route) { inclusive = false } // Don't allow back to Now
+                    }
+                }
+            )
+        }
+        
+        composable("finish/{sessionId}/{minutes}") { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+            val minutes = backStackEntry.arguments?.getString("minutes")?.toIntOrNull() ?: 25
+            com.hatake.daigakuos.ui.finish.FinishScreen(
+                sessionId = sessionId,
+                elapsedMinutes = minutes,
+                onFinish = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                }
             )
         }
         

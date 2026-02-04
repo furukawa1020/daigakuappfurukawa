@@ -32,7 +32,7 @@ import androidx.compose.runtime.collectAsState
 @Composable
 fun NowScreen(
     nodeId: String?,
-    onComplete: () -> Unit,
+    onComplete: (String, Int) -> Unit, // sessionId, minutes
     viewModel: NowViewModel = hiltViewModel()
 ) {
     // Start session on enter
@@ -58,16 +58,30 @@ fun NowScreen(
         }
     }
 
-    if (showDialog) {
-        CompletionDialog(
-            initialMinutes = (timeElapsed / 1000 / 60).toInt().coerceAtLeast(10),
-            onDismiss = { showDialog = false },
-            onConfirm = { minutes, focus ->
-                showDialog = false
-                viewModel.completeSession(minutes, focus, onComplete)
+// Removed CompletionDialog
+                
+            // Finish (Outlined)
+            OutlinedButton(
+                onClick = { 
+                    isRunning = false
+                    val minutes = (timeElapsed / 1000 / 60).toInt().coerceAtLeast(1)
+                    val sessionId = viewModel.currentSessionId ?: "" // Should expose this
+                    onComplete(sessionId, minutes)
+                },
+                modifier = Modifier.height(72.dp),
+                shape = CircleShape,
+                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Text("完了", style = MaterialTheme.typography.labelSmall)
+                }
             }
-        )
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
     }
+}
 
     // Colors
     val primaryColor = MaterialTheme.colorScheme.primary

@@ -284,6 +284,19 @@ fun HomeScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // "Do Now" Button (Zero Input Start)
+            Button(
+                onClick = { onNavigateToNow("null") },
+                modifier = Modifier.height(56.dp).fillMaxWidth(0.6f),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("今やる (未定)", fontSize = 18.sp)
+            }
+
             Spacer(modifier = Modifier.height(48.dp))
 
             // Center: The TANK (Minimalist Circle)

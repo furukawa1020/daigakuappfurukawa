@@ -19,13 +19,14 @@ class FinalizeSessionUseCase @Inject constructor(
     private val aggDao: AggDao,
     private val settingsDao: SettingsDao,
     private val nodeDao: NodeDao,
+    private val projectDao: com.hatake.daigakuos.data.local.dao.ProjectDao, // Added
     private val pointsCalculator: PointsCalculator
 ) {
     suspend operator fun invoke(
         sessionId: String,
-        selectedNodeId: String?, // Existing Node
-        newNodeTitle: String?,   // Or Create New
-        newNodeType: NodeType?,  // Type for new node
+        selectedNodeId: String?,
+        newNodeTitle: String?,
+        newNodeType: NodeType?,
         selfReportMin: Int,
         focus: Int
     ) {
@@ -36,34 +37,18 @@ class FinalizeSessionUseCase @Inject constructor(
         var finalNodeId = selectedNodeId
         
         if (finalNodeId == null && newNodeTitle != null && newNodeType != null) {
-            // Create New Node (Inbox/One-liner)
-            // Need a Project. For now, find first project or "Inbox" project.
-            // Simplified: Just use randomly or hardcode if ProjectDao not injected?
-            // User Spec: "ProjectId INBOX OK". 
-            // We'll create a "Inbox" project if missing? 
-            // For MVP, just put in *some* project. 
-            // Since we don't have ProjectDao here, we might need it.
-            // Or just make nodeId nullable in session (it is).
-            // But we WANT to attribute points.
+            val defaultProject = projectDao.findDefaultProject()
+            val projectId = defaultProject?.id ?: "inbox" // Fallback (or create inbox project logic?)
             
-            // To create a node, we need an ID.
             val newNode = NodeEntity(
                 id = UUID.randomUUID().toString(),
-                projectId = "inbox", // Placeholder, ideally fetch 'Default' project
+                projectId = projectId,
                 title = newNodeTitle,
                 type = newNodeType.name,
-                status = "DONE", // Immediately DONE? Or TODO? Spec says "Results". So DONE.
+                status = "DONE",
                 updatedAt = finalizedAt
             )
-            nodeDao.insertNode(newNode) // This might fail if "inbox" project doesn't exist FK constraint.
-            // Requires Project. 
-            // We should fetch default project.
-            // Skipping strictly correct Project ID for brevity, assuming foreign key might bite us.
-            // Let's rely on Valid Node ID being passed if possible, or handle FK.
-            // Logic hack: Create Node requires ProjectId.
-            // We'll assume ViewModel handles creation? 
-            // NO, UseCase is better.
-            // Let's assume we use the Session's existing nodeId if set, or the user's selection.
+            nodeDao.insertNode(newNode)
             finalNodeId = newNode.id
         }
 
