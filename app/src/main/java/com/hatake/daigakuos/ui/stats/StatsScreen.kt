@@ -146,6 +146,7 @@ fun SessionHistoryList(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditSessionDialog(
     session: com.hatake.daigakuos.data.local.entity.SessionEntity,

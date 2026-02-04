@@ -195,6 +195,7 @@ class HomeScreen extends ConsumerWidget {
               try {
                 final res = await http.put(
                   Uri.parse('$baseUrl/api/sessions/${session['id']}'),
+                  headers: {"Content-Type": "application/json"},
                   body: jsonEncode({"draftTitle": titleCtrl.text})
                 );
                 if (res.statusCode != 200) throw "Status ${res.statusCode}";
@@ -329,13 +330,13 @@ class HomeScreen extends ConsumerWidget {
                                style: const TextStyle(fontSize: 12, color: Colors.grey)
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
+                              icon: const Icon(Icons.delete, color: Colors.blueGrey),
                               onPressed: () async {
                                   // Delete
                                   try {
                                     final id = s['id'];
-                                    final url = Uri.parse('http://localhost:8080/api/sessions/$id');
-                                    final res = await http.delete(url);
+                                    final url = Uri.parse('$baseUrl/api/sessions/$id');
+                                    final res = await http.delete(url, headers: {'Content-Type': 'application/json'});
                                     if (res.statusCode == 200) {
                                       ref.refresh(historyProvider);
                                       ref.refresh(dailyAggProvider);
@@ -522,6 +523,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
       final url = Uri.parse('$baseUrl/api/sessions'); 
       final response = await http.post(
         url,
+        headers: {"Content-Type": "application/json"},
         body: jsonEncode({
           "nodeId": selectedNodeId,
           "draftTitle": _titleController.text, // If creating new
