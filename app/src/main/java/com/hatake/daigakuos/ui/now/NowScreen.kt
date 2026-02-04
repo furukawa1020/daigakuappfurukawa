@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState // Added
 
 @Composable
 fun NowScreen(
@@ -24,7 +25,8 @@ fun NowScreen(
         viewModel.startSession(nodeId)
     }
 
-    val nodeTitle = "集中セッション" // TODO: Fetch Node Title using UseCase if needed
+    val uiState by viewModel.uiState.collectAsState()
+    val nodeTitle = uiState.nodeTitle
     
     var timeElapsed by remember { mutableLongStateOf(0L) }
     var isRunning by remember { mutableStateOf(true) }
