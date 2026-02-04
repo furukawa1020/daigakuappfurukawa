@@ -49,6 +49,17 @@ final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
   return DailyAgg(totalPoints: 0, totalMinutes: 0, sessionCount: 0);
 });
 
+final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  try {
+    final response = await http.get(Uri.parse('http://localhost:8080/api/sessions'));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.cast<Map<String, dynamic>>();
+    }
+  } catch(e) { print("History Error: $e"); }
+  return [];
+});
+
 // -----------------------------------------------------------------------------
 // 2. Navigation
 // -----------------------------------------------------------------------------
@@ -117,7 +128,10 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('DaigakuOS v2')),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => ref.refresh(dailyAggProvider),
+        onPressed: () {
+          ref.refresh(dailyAggProvider);
+          ref.refresh(historyProvider);
+        },
         child: const Icon(Icons.refresh),
       ),
       body: Center(
@@ -150,16 +164,47 @@ class HomeScreen extends ConsumerWidget {
               children: [
                 const Text("Mock Location: "),
                 Switch(
-                  value: true, // TODO: sync state
+                  value: true, 
                   onChanged: (val) => _toggleCampus(val, ref), 
                 ),
                 const Text("On Campus"),
               ],
             ),
             
-            const SizedBox(height: 32),
-            const Text("Zero Future Input", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 32),
+            const Divider(),
+            
+            // History List
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text("Recent History", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Expanded(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  final historyAsync = ref.watch(historyProvider);
+                  return historyAsync.when(
+                    data: (sessions) => ListView.builder(
+                      itemCount: sessions.length,
+                      itemBuilder: (ctx, i) {
+                        final s = sessions[i];
+                        return ListTile(
+                          title: Text(s['title']),
+                          subtitle: Text("${s['minutes']} min • ${s['points']} pts"),
+                          leading: const Icon(Icons.check_circle_outline),
+                          trailing: Text(
+                             DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
+                             style: const TextStyle(fontSize: 12, color: Colors.grey)
+                          ),
+                        );
+                      },
+                    ),
+                    loading: () => const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => const SizedBox(),
+                  );
+                },
+              ),
+            ),
+
             FilledButton.icon(
               onPressed: () {
                 // Start Unspecified Session
@@ -167,9 +212,10 @@ class HomeScreen extends ConsumerWidget {
                 context.push('/now');
               },
               icon: const Icon(Icons.play_arrow),
-              label: const Text("DO NOW (Unspecified)", style: TextStyle(fontSize: 20)),
-              style: FilledButton.styleFrom(padding: const EdgeInsets.all(24)),
+              label: const Text("DO NOW"),
+              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16)),
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -327,7 +373,8 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
       );
       
       if (response.statusCode == 201) {
-        ref.refresh(dailyAggProvider); // Refresh stats on home
+        ref.refresh(dailyAggProvider);
+        ref.refresh(historyProvider); // Refresh history
         if (mounted) context.go('/');
       } else {
         if (mounted) context.go('/');
