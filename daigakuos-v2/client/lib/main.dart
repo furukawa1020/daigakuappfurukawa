@@ -177,16 +177,16 @@ final _router = GoRouter(
 // -----------------------------------------------------------------------------
 
 void main() {
-  runApp(const ProviderScope(child: DaigakuOSApp()));
+  runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
-class DaigakuOSApp extends StatelessWidget {
-  const DaigakuOSApp({super.key});
+class DaigakuAPPApp extends StatelessWidget {
+  const DaigakuAPPApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'DaigakuOS v2',
+      title: 'DaigakuAPP v2',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
         useMaterial3: true,

@@ -103,7 +103,7 @@ func enableCors(next http.HandlerFunc) http.HandlerFunc {
 
 func main() {
 	initDB()
-	fmt.Println("DaigakuOS v2 Server Starting on :8080...")
+	log.Println("DaigakuAPP v2 Server Starting on :8080...")
 
 	http.HandleFunc("/api/health", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
