@@ -100,6 +100,16 @@ class DaigakuOSApp extends StatelessWidget {
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
+  Future<void> _toggleCampus(bool isOn, WidgetRef ref) async {
+    try {
+       await http.post(
+         Uri.parse('http://localhost:8080/api/context'),
+         body: jsonEncode({"isOnCampus": isOn})
+       );
+       ref.refresh(dailyAggProvider); // Refresh stats just in case
+    } catch(e) { print(e); }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final aggAsync = ref.watch(dailyAggProvider);
@@ -132,6 +142,19 @@ class HomeScreen extends ConsumerWidget {
                   error: (e, _) => const Text("Failed to load stats"),
                 ),
               ),
+            ),
+            
+            // Simulation Controls
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Mock Location: "),
+                Switch(
+                  value: true, // TODO: sync state
+                  onChanged: (val) => _toggleCampus(val, ref), 
+                ),
+                const Text("On Campus"),
+              ],
             ),
             
             const SizedBox(height: 32),
@@ -278,7 +301,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
           "minutes": session.durationMinutes,
           "startAt": session.startAt.toIso8601String(),
           "endAt": DateTime.now().toIso8601String(),
-          "points": (session.durationMinutes ?? 0) * 1.0, // Basic Calc
+          // Points calculated by Server
           "focus": 3 
         }),
       );
@@ -286,12 +309,10 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
       if (response.statusCode == 201) {
         if (mounted) context.go('/');
       } else {
-        // Fallback for demo without backend
         if (mounted) context.go('/');
       }
     } catch (e) {
       print("Network Error: $e");
-      // Proceed mostly for demo
        if (mounted) context.go('/');
     }
   }
