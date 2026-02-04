@@ -22,10 +22,10 @@ object AppModule {
     // Migration from version 1 to 2: Add campus_visits table
     private val MIGRATION_1_2 = object : Migration(1, 2) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Create campus_visits table if it doesn't exist
+            // Create campus_visits table for tracking campus visit streaks
             database.execSQL(
                 """
-                CREATE TABLE IF NOT EXISTS campus_visits (
+                CREATE TABLE campus_visits (
                     yyyymmdd INTEGER NOT NULL PRIMARY KEY
                 )
                 """.trimIndent()
