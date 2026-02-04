@@ -46,7 +46,7 @@ class NowViewModel @Inject constructor(
                 val isOnCampus = userContextRepository.isOnCampus.value
                 val mode = userContextRepository.currentMode.value
                 
-                // Set start time to current time immediately to avoid null state
+                // Set temporary start time to prevent UI flickering until database value loads
                 _uiState.value = _uiState.value.copy(sessionStartTime = System.currentTimeMillis())
                 
                 currentSessionId = startSessionUseCase(
@@ -55,7 +55,7 @@ class NowViewModel @Inject constructor(
                     onCampus = isOnCampus
                 )
                 
-                // 3. Update with actual session start time from database
+                // Update with actual session start time from database
                 currentSessionId?.let { id ->
                     val session = sessionDao.getSessionById(id)
                     session?.let {
