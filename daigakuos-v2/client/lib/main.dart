@@ -10,12 +10,33 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // Add import
 import 'database_helper.dart';
 import 'calendar_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
 // -----------------------------------------------------------------------------
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin(); // Global plugin instance
+
+Future<void> initNotifications() async {
+  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
+  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+}
+
+Future<void> showNotification(String title, String body) async {
+  const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
+    'your channel id', 'your channel name',
+    channelDescription: 'your channel description',
+    importance: Importance.max,
+    priority: Priority.high,
+    ticker: 'ticker');
+  const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
+  await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
+}
+
 
 class Session {
   final String? id;
@@ -141,7 +162,9 @@ final _router = GoRouter(
   ],
 );
 
-void main() {
+void main() async { // Async main
+  WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
+  await initNotifications(); // Init notifications
   runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
@@ -741,6 +764,9 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      ref.refresh(userStatsProvider);
      ref.refresh(dailyAggProvider);
      
+     // Show Notification
+     showNotification("Session Saved!", "Great job! You focused for $mins minutes.");
+
      if (mounted) context.go('/');
   }
 
