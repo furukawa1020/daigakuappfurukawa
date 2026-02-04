@@ -175,10 +175,10 @@ func main() {
 			finalNodeID.Valid = true
 			// Update Node Timestamp
 			db.Exec("UPDATE nodes SET updated_at = ? WHERE id = ?", time.Now(), req.NodeID)
-		} else if s.DraftTitle != "" {
+		} else if req.DraftTitle != "" {
 			// Auto-create/find node from Title
 			var existingID string
-			err := db.QueryRow("SELECT id FROM nodes WHERE title = ?", s.DraftTitle).Scan(&existingID)
+			err := db.QueryRow("SELECT id FROM nodes WHERE title = ?", req.DraftTitle).Scan(&existingID)
 			if err == nil {
 				finalNodeID.String = existingID
 				finalNodeID.Valid = true
@@ -186,7 +186,7 @@ func main() {
 			} else {
 				// Create New Node
 				newNodeID := fmt.Sprintf("node_%d", time.Now().UnixNano())
-				_, err := db.Exec("INSERT INTO nodes (id, title, updated_at) VALUES (?, ?, ?)", newNodeID, s.DraftTitle, time.Now())
+				_, err := db.Exec("INSERT INTO nodes (id, title, updated_at) VALUES (?, ?, ?)", newNodeID, req.DraftTitle, time.Now())
 				if err == nil {
 					finalNodeID.String = newNodeID
 					finalNodeID.Valid = true
@@ -194,18 +194,17 @@ func main() {
 			}
 		}
 
-		_, err := db.Exec(
-			"INSERT INTO sessions (id, node_id, draft_title, start_at, minutes, points, focus) VALUES (?, ?, ?, ?, ?, ?, ?)",
-			s.ID, finalNodeID, s.DraftTitle, s.StartAt, s.Minutes, s.Points, s.Focus,
-		)
+		// Insert Session
+		_, err := db.Exec("INSERT INTO sessions (id, draft_title, start_at, minutes, points, focus, node_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			req.ID, req.DraftTitle, req.StartAt, req.Minutes, finalPoints, req.Focus, finalNodeID)
+
 		if err != nil {
-			log.Println("Save error:", err)
-			http.Error(w, "Database save failed: "+err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{"result": "saved", "id": s.ID})
+		json.NewEncoder(w).Encode(map[string]string{"result": "saved", "id": req.ID})
 	}))
 
 	// GET /api/user/stats - Gamification Stats
