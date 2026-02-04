@@ -70,14 +70,16 @@ data class NodeEntity(
 )
 data class SessionEntity(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val nodeId: String?,
+    val nodeId: String? = null,         // Nullable for "Unspecified"
+    val draftTitle: String? = null,     // For ad-hoc sessions
     val mode: String,                   // Mode.name
     val startAt: Long = System.currentTimeMillis(),
     val endAt: Long? = null,
     val selfReportMin: Int? = null,      // 10/25/50/90...
     val focus: Int? = null,              // 1..5
     val onCampus: Boolean = false,
-    val points: Double? = null           // 完了時に確定
+    val points: Double? = null,          // 完了時に確定
+    val finalizedAt: Long? = null        // 確定時刻
 )
 
 // 2.4 Recovery（回復ノード：簡易でもOK）

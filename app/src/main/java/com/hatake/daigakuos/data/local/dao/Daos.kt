@@ -14,6 +14,9 @@ interface ProjectDao {
 
     @Delete
     suspend fun deleteProject(project: ProjectEntity)
+
+    @Query("SELECT * FROM projects LIMIT 1")
+    suspend fun findDefaultProject(): ProjectEntity?
 }
 
 @Dao
@@ -39,8 +42,11 @@ interface NodeDao {
 
 @Dao
 interface SessionDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE) // Changed to REPLACE to allow easy updates
     suspend fun insertSession(session: SessionEntity)
+
+    @Update
+    suspend fun updateSession(session: SessionEntity)
 
     @Query("UPDATE sessions SET endAt = :endAt, selfReportMin = :selfReportMin, focus = :focus, points = :points WHERE id = :sessionId")
     suspend fun endSession(sessionId: String, endAt: Long, selfReportMin: Int, focus: Int, points: Double)
