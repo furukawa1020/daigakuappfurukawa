@@ -41,7 +41,7 @@ import 'package:flutter/foundation.dart';
 
 String get baseUrl {
   if (kIsWeb) return 'http://localhost:8080';
-  if (Platform.isAndroid) return 'http://192.168.68.57:8080'; // LAN IP for Physical Device
+  if (Platform.isAndroid) return 'http://10.0.2.2:8080'; // Emulator Loopback
   return 'http://localhost:8080';
 }
 
