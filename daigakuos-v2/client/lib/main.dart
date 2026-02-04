@@ -242,7 +242,7 @@ class HomeScreen extends ConsumerWidget {
           children: [
              const SizedBox(height: 16),
              // Weekly Chart
-             SizedBox(
+             Container(
                height: 150,
                padding: const EdgeInsets.symmetric(horizontal: 16),
                child: weeklyAsync.when(
