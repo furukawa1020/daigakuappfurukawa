@@ -100,6 +100,26 @@ func main() {
 
 	// POST /api/sessions - Save Session
 	http.HandleFunc("/api/sessions", enableCors(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.Header().Set("Content-Type", "application/json")
+			rows, err := db.Query("SELECT id, draft_title, start_at, minutes, points, focus FROM sessions ORDER BY start_at DESC LIMIT 20")
+			if err != nil {
+				json.NewEncoder(w).Encode([]Session{})
+				return
+			}
+			defer rows.Close()
+
+			sessions := []Session{}
+			for rows.Next() {
+				var s Session
+				if err := rows.Scan(&s.ID, &s.DraftTitle, &s.StartAt, &s.Minutes, &s.Points, &s.Focus); err == nil {
+					sessions = append(sessions, s)
+				}
+			}
+			json.NewEncoder(w).Encode(sessions)
+			return
+		}
+
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
