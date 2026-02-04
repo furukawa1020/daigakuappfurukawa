@@ -56,7 +56,7 @@
 
 - JDK 17
 - Android SDK (API 34)
-- Gradle 8.2 以上
+- Gradle 8.9 以上
 
 ## トラブルシューティング
 
