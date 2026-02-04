@@ -25,7 +25,18 @@ object AppModule {
             AppDatabase::class.java,
             "daigaku_os.db"
         )
-        .fallbackToDestructiveMigration()
+        // Database Migration Strategy:
+        // - Version 2 is the first production version (no migration from v1 needed)
+        // - When adding new versions, define migrations in Migrations.kt
+        // - Add migrations here using .addMigrations(MIGRATION_X_Y)
+        // 
+        // Example for future v3:
+        // .addMigrations(MIGRATION_2_3)
+        //
+        // IMPORTANT: We do NOT use .fallbackToDestructiveMigration()
+        // This ensures the app will crash (fail-fast) if a migration is missing,
+        // rather than silently deleting all user data. This is intentional to
+        // protect user data and force developers to implement proper migrations.
         .build()
     }
 
