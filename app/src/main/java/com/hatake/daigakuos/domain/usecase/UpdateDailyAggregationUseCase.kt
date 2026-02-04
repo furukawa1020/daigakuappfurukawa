@@ -1,5 +1,6 @@
 package com.hatake.daigakuos.domain.usecase
 
+import android.util.Log
 import com.hatake.daigakuos.data.local.dao.AggDao
 import com.hatake.daigakuos.data.local.dao.NodeDao
 import com.hatake.daigakuos.data.local.entity.DailyAggEntity
@@ -66,6 +67,7 @@ class UpdateDailyAggregationUseCase @Inject constructor(
                     }
                 } catch (e: Exception) {
                     // Invalid or malformed enum value - treat as admin for consistency
+                    Log.w("DailyAggregation", "Invalid node type '$nodeType' for node $nodeId, defaulting to ADMIN", e)
                     pAdmin += points
                 }
             } else {
