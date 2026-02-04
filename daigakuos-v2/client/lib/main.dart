@@ -415,17 +415,6 @@ class _NowScreenState extends ConsumerState<NowScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // ...
-    // Note: I need to verify where to insert this method. 
-    // It should be inside _HomeScreenState.
-    // The previous view_file was useless (showed NowScreen).
-    // I will Assume insertion before 'build' in _HomeScreenState
-    // BUT I cannot "Assume". I need to find the right place.
-    // Let's use view_file again on the correct lines 150-250 roughly.
-    return Container(); // Dummy replacement to fail if I am wrong? No, I should READ first.
-
-  @override
   void dispose() {
     _timer.cancel();
     super.dispose();
