@@ -2,6 +2,8 @@ package com.hatake.daigakuos.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.hatake.daigakuos.data.local.AppDatabase
 import com.hatake.daigakuos.data.local.dao.*
 import com.hatake.daigakuos.data.repository.UserContextRepositoryImpl
@@ -17,6 +19,20 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    // Migration from version 1 to 2: Add campus_visits table
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Create campus_visits table if it doesn't exist
+            database.execSQL(
+                """
+                CREATE TABLE IF NOT EXISTS campus_visits (
+                    yyyymmdd INTEGER NOT NULL PRIMARY KEY
+                )
+                """.trimIndent()
+            )
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -25,7 +41,7 @@ object AppModule {
             AppDatabase::class.java,
             "daigaku_os.db"
         )
-        .fallbackToDestructiveMigration()
+        .addMigrations(MIGRATION_1_2)
         .build()
     }
 
