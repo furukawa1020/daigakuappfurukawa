@@ -47,7 +47,43 @@ String get baseUrl {
   return 'http://localhost:8080';
 }
 
+// Geofencing Configuration (Kanazawa University Natural Science Building No. 2)
+const double CAMPUS_LAT = 36.5639;
+const double CAMPUS_LON = 136.6845;
+const double CAMPUS_RADIUS_METERS = 500.0; // 500m radius
+
 final sessionProvider = StateProvider<Session?>((ref) => null);
+final isOnCampusProvider = StateProvider<bool>((ref) => false);
+
+Future<bool> checkIfOnCampus() async {
+  try {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) return false;
+    
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return false;
+    }
+    if (permission == LocationPermission.deniedForever) return false;
+
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+
+    double distanceInMeters = Geolocator.distanceBetween(
+      CAMPUS_LAT,
+      CAMPUS_LON,
+      position.latitude,
+      position.longitude,
+    );
+
+    return distanceInMeters <= CAMPUS_RADIUS_METERS;
+  } catch (e) {
+    print("Geolocation Error: $e");
+    return false;
+  }
+}
 
 final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
   try {
@@ -388,18 +424,37 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             
-            // Simulation Controls
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Mock Location: "),
-                Switch(
-                  value: true, 
-                  onChanged: (val) => _toggleCampus(val, ref), 
+            
+            // Real Location Status
+            Consumer(builder: (context, ref, _) {
+              final isOnCampus = ref.watch(isOnCampusProvider);
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isOnCampus ? Colors.green.shade50 : Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isOnCampus ? Colors.green : Colors.grey),
                 ),
-                const Text("On Campus"),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isOnCampus ? Icons.school : Icons.home,
+                      color: isOnCampus ? Colors.green : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isOnCampus ? "📍 On Campus (Kakuma)" : "📍 Off Campus",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isOnCampus ? Colors.green.shade700 : Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
             
             const Divider(),
             
