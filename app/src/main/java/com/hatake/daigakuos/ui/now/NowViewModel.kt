@@ -13,7 +13,8 @@ import javax.inject.Inject
 
 data class NowUiState(
     val nodeTitle: String = "集中セッション",
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val sessionStartTime: Long? = null
 )
 
 @HiltViewModel
@@ -21,7 +22,8 @@ class NowViewModel @Inject constructor(
     private val startSessionUseCase: com.hatake.daigakuos.domain.usecase.StartSessionUseCase,
     private val finishSessionUseCase: com.hatake.daigakuos.domain.usecase.FinishSessionUseCase,
     private val userContextRepository: UserContextRepository,
-    private val nodeDao: NodeDao // Direct DAO usage for simple fetch
+    private val nodeDao: NodeDao, // Direct DAO usage for simple fetch
+    private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao
 ) : ViewModel() {
 
     var currentSessionId: String? = null // Public for UI
@@ -49,6 +51,14 @@ class NowViewModel @Inject constructor(
                     mode = mode.name,
                     onCampus = isOnCampus
                 )
+                
+                // 3. Fetch session start time
+                currentSessionId?.let { id ->
+                    val session = sessionDao.getSessionById(id)
+                    session?.let {
+                        _uiState.value = _uiState.value.copy(sessionStartTime = it.startAt)
+                    }
+                }
             }
         }
     }

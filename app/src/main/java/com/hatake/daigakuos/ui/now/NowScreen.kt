@@ -42,18 +42,18 @@ fun NowScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val nodeTitle = uiState.nodeTitle
+    val sessionStartTime = uiState.sessionStartTime ?: System.currentTimeMillis()
     
     var timeElapsed by remember { mutableLongStateOf(0L) }
     var isRunning by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
     
-    // Timer Effect
-    LaunchedEffect(isRunning) {
+    // Timer Effect - calculate from session start time
+    LaunchedEffect(isRunning, sessionStartTime) {
         if (isRunning) {
-            val startTime = System.currentTimeMillis() - timeElapsed
             while (isRunning) {
-                timeElapsed = System.currentTimeMillis() - startTime
-                delay(100L) // Update faster for smooth UI?
+                timeElapsed = System.currentTimeMillis() - sessionStartTime
+                delay(100L) // Update faster for smooth UI
             }
         }
     }
@@ -196,6 +196,7 @@ fun NowScreen(
                 modifier = Modifier.size(72.dp)
             ) {
                 Icon(
+                    imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
                     contentDescription = "Toggle"
                 )
             }
