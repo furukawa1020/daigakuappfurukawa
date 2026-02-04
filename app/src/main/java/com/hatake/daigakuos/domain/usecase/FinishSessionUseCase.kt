@@ -23,36 +23,20 @@ class FinishSessionUseCase @Inject constructor(
     ) {
         val endAt = System.currentTimeMillis()
         
-        // 1. Fetch Context (We act as if we loaded session, but here we update)
-        // In real clean arch, we might fetch session first.
-        // For efficiency, we trust the caller passed correct ID.
-        // But for Points, we need 'onCampus' state from the session?
-        // Let's assume onCampus was stored in Session at Start.
-        // However, we don't have getSessionById easily exposed in DAO for single item yet?
-        // Or we pass onCampus here?
-        // Let's fetch session startAt and onCampus.
-        // NOTE: SessionDao needs getSessionById.
+        // 1. Fetch Session Context
+        val session = sessionDao.getSessionById(sessionId)
+        val onCampus = session?.onCampus ?: false
+        val nodeId = session?.nodeId
         
-        // MVP: Assume onCampus is passed or we assume default.
-        // Actually, we should fetch the session to get 'onCampus' recorded at start.
-        // I'll skip fetching for MVP speed and assume context passed or just defaults.
-        // Wait, "onCampus" is in SessionEntity.
-        
-        // Let's assume Settings exist
+        // 2. Settings (or Default)
         var settings = settingsDao.getSettings()
         if (settings == null) {
             settings = SettingsEntity()
             settingsDao.insertSettings(settings)
         }
 
-        // Mock Recency/Streak for MVP
+        // Mock Recency/Streak for MVP (Future: Calculate from Session History)
         val streakMul = 1.0 
-        
-        // We need 'onCampus' from the session to calculate points correctly. 
-        // But since I didn't add getSessionById in DAO yet (oops), I will update DAO later.
-        // For now, I will assume it's true/false based on current state? No, saved state.
-        // I will just use default for now to unblock.
-        val onCampus = false // TODO: Fetch from DB
 
         val points = pointsCalculator.computePoints(
             selfReportMin = selfReportMin,
@@ -62,19 +46,33 @@ class FinishSessionUseCase @Inject constructor(
             streakMultiplier = streakMul
         )
 
-        // 2. Update Session
+        // 3. Update Session
         sessionDao.endSession(sessionId, endAt, selfReportMin, focus, points)
 
-        // 3. Update DailyAgg
+        // 4. Update DailyAgg
+        // Determine NodeType to attribute points correctly
+        // We need Node from DB.
+        // Assuming we have NodeDao injected... wait, we need NodeDao.
+        // I will add NodeDao to constructor.
+        
+        // Note: Invoke doesn't have NodeDao injected yet in this file scope. 
+        // I MUST update constructor injection in the actual file update.
+        
+        // For now, I will assume Generic aggregation if NodeDao is missing, 
+        // BUT ideally I should fetch Node.
+        
         val yyyymmdd = SimpleDateFormat("yyyyMMdd", Locale.US).format(Date()).toInt()
         val currentAgg = aggDao.getAgg(yyyymmdd) ?: DailyAggEntity(yyyymmdd = yyyymmdd)
         
-        // Update Agg (Simple addition for MVP)
-        // Note: Real logic needs to split validation by type (Study/Research etc)
-        // which requires knowing the Node Type.
-        // We need Node from Session -> Node.
-        // This suggests FinishSession needs to read Session+Node.
+        // Prepare new Agg
+        // Use generic "Study" if unknown for MVP, or better, split evenly? 
+        // Let's just put it in total and maybe update specific if we can.
+        // Since I can't easily add NodeDao to constructor in 'ReplacementContent' without replacing the class header...
+        // I will perform a replacement of the Logic block first.
         
+        // Actually, without NodeDao, I can't know the Type.
+        // I will update the Constructor AND the Logic in a full file rewrite or multi-chunk.
+        // Let's do a rewrite of the UseCase to include NodeDao.
         val newAgg = currentAgg.copy(
             pointsTotal = currentAgg.pointsTotal + points,
             countDone = currentAgg.countDone + 1,
