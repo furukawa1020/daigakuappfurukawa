@@ -24,7 +24,7 @@ class NowViewModel @Inject constructor(
     private val nodeDao: NodeDao // Direct DAO usage for simple fetch
 ) : ViewModel() {
 
-    var currentSessionId: String? = null // Public for UI    var currentSessionId: String? = null
+    var currentSessionId: String? = null // Public for UI
     
     private val _uiState = MutableStateFlow(NowUiState())
     val uiState: StateFlow<NowUiState> = _uiState.asStateFlow()
