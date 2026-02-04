@@ -84,6 +84,8 @@ func enableCors(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		log.Printf("Request: %s %s", r.Method, r.URL.Path)
+
 		next(w, r)
 	}
 }
