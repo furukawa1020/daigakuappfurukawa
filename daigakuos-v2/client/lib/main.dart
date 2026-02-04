@@ -67,6 +67,7 @@ class UserStats {
   final double pointsToNext;
   final double dailyPoints;
   final int dailyMinutes;
+  final int currentStreak;
 
   UserStats({
     required this.totalPoints,
@@ -75,6 +76,7 @@ class UserStats {
     required this.pointsToNext,
     required this.dailyPoints,
     required this.dailyMinutes,
+    required this.currentStreak,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
@@ -85,6 +87,7 @@ class UserStats {
       pointsToNext: (json['pointsToNext'] as num).toDouble(),
       dailyPoints: (json['dailyPoints'] as num).toDouble(),
       dailyMinutes: json['dailyMinutes'] as int,
+      currentStreak: json['currentStreak'] as int,
     );
   }
 }
@@ -96,7 +99,7 @@ final userStatsProvider = FutureProvider<UserStats>((ref) async {
       return UserStats.fromJson(jsonDecode(response.body));
     }
   } catch (e) { print("UserStats Error: $e"); }
-  return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0);
+  return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0, currentStreak: 0);
 });
 
 final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
@@ -323,6 +326,31 @@ class HomeScreen extends ConsumerWidget {
                 child: statsAsync.when(
                   data: (stats) => Column(
                     children: [
+                       // Streak Badge
+                       if (stats.currentStreak > 0)
+                         Container(
+                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                           decoration: BoxDecoration(
+                             gradient: LinearGradient(
+                               colors: [Colors.orange.shade400, Colors.red.shade400],
+                               begin: Alignment.centerLeft,
+                               end: Alignment.centerRight,
+                             ),
+                             borderRadius: BorderRadius.circular(20),
+                           ),
+                           child: Row(
+                             mainAxisSize: MainAxisSize.min,
+                             children: [
+                               const Text("🔥", style: TextStyle(fontSize: 20)),
+                               const SizedBox(width: 8),
+                               Text(
+                                 "${stats.currentStreak} Day Streak", 
+                                 style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)
+                               ),
+                             ],
+                           ),
+                         ),
+                       SizedBox(height: stats.currentStreak > 0 ? 16 : 0),
                        Text("LEVEL ${stats.level}", style: Theme.of(context).textTheme.displayLarge?.copyWith(fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
                        const SizedBox(height: 16),
                        LinearProgressIndicator(
