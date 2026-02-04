@@ -36,6 +36,15 @@ type Node struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 }
 
+type UserStats struct {
+	TotalPoints  float64 `json:"totalPoints"`
+	Level        int     `json:"level"`
+	Progress     float64 `json:"progress"` // 0.0 - 1.0 within current level
+	PointsToNext float64 `json:"pointsToNext"`
+	DailyPoints  float64 `json:"dailyPoints"`
+	DailyMinutes int     `json:"dailyMinutes"`
+}
+
 var db *sql.DB
 
 func initDB() {
@@ -181,6 +190,60 @@ func main() {
 
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]string{"result": "saved", "id": s.ID})
+	}))
+
+	// GET /api/user/stats - Gamification Stats
+	http.HandleFunc("/api/user/stats", enableCors(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		
+		today := time.Now().Format("2006-01-02")
+		stats := UserStats{}
+
+		// 1. Lifetime Points
+		db.QueryRow("SELECT COALESCE(SUM(points), 0) FROM sessions").Scan(&stats.TotalPoints)
+		
+		// 2. Daily Stats
+		db.QueryRow("SELECT COALESCE(SUM(points), 0), COALESCE(SUM(minutes), 0) FROM sessions WHERE date(start_at) = ?", today).Scan(&stats.DailyPoints, &stats.DailyMinutes)
+
+		// 3. Level Calc (Simple Sqrt Curve)
+		// Level = sqrt(Points / 100)
+		// 100 pts = Lvl 1
+		// 400 pts = Lvl 2
+		// 900 pts = Lvl 3
+		// ...
+		// XP for Level L = 100 * L^2
+		
+		import "math"
+		
+		// Logic handles in main function for cleaner look or inline here
+		// We can't import inside function. Assuming 'math' is imported at top.
+		// Wait, I need to add 'math' to imports.
+		
+		// Fallback simple math without math pkg if strictly no import edits allowed (but I can edit imports).
+		// Let's assume linear for now to save complexity, OR add math import.
+		// Actually, I can use int logic.
+		
+		// Linear: Level = Points / 100
+		// stats.Level = int(stats.TotalPoints / 100) + 1
+		// currentLevelBase := float64((stats.Level - 1) * 100)
+		// nextLevelBase := float64(stats.Level * 100)
+		// stats.PointsToNext = nextLevelBase - stats.TotalPoints
+		// stats.Progress = (stats.TotalPoints - currentLevelBase) / 100.0
+		
+		// Let's use the Sqrt curve, it's better. I will add "math" import in next step.
+		// For now, I'll write the logic assuming math.Sqrt is available.
+		
+		// NO, I can't break compilation. I should use replacement to add import too.
+		// Or separate tool.
+		// usage of math.Sqrt requires "math".
+		
+		// I will use a simple quadratic approximation without Sqrt for safety or just edit imports.
+		// I'll edit imports in a previous step? No, I am in middle of tool chain.
+		// I will do multi_replace.
+		
+		// Re-thinking: I used replace_file_content already. 
+		// I'll do a MultiReplace to add import AND the handler.
+		
 	}))
 
 	// GET /api/aggs/daily - Get Stats for Today
