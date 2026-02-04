@@ -193,18 +193,26 @@ class HomeScreen extends ConsumerWidget {
             onPressed: () async {
               // Edit Logic
               try {
+                final url = Uri.parse('$baseUrl/api/sessions/${session['id']}');
+                print("PUT $url");
                 final res = await http.put(
-                  Uri.parse('$baseUrl/api/sessions/${session['id']}'),
+                  url,
                   headers: {"Content-Type": "application/json"},
                   body: jsonEncode({"draftTitle": titleCtrl.text})
                 );
-                if (res.statusCode != 200) throw "Status ${res.statusCode}";
+                
+                if (res.statusCode != 200) {
+                   throw "Server Error: ${res.statusCode} ${res.body}";
+                }
                 
                 ref.refresh(historyProvider);
-                if (ctx.mounted) Navigator.pop(ctx);
+                if (ctx.mounted) {
+                   Navigator.pop(ctx);
+                   ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text("Updated successfully!")));
+                }
               } catch(e) { 
                 print(e); 
-                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Error: $e")));
+                if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text("Edit Failed: $e"), backgroundColor: Colors.red));
               }
             }, 
             child: const Text("Save")
