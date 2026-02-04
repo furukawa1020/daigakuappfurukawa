@@ -250,26 +250,73 @@ func main() {
 	http.HandleFunc("/api/nodes/suggestions", enableCors(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
-		// Smart Logic (Prototype): Prioritize recently updated nodes.
-		// In a real "Smarter" implementation, we would query:
-		// SELECT ... WHERE strftime('%H', start_at) BETWEEN ...
-		// For consistency with V2 requirements, we ensure this returns VALID data from the new 'nodes' table.
+		// 1. Get Current Hour
+		hour := time.Now().Hour()
 
-		rows, err := db.Query("SELECT id, title FROM nodes ORDER BY updated_at DESC LIMIT 8")
-		if err != nil {
-			// Table might be empty
-			json.NewEncoder(w).Encode([]Node{})
-			return
-		}
-		defer rows.Close()
+		// 2. Query: Find nodes active +/- 2 hours from now, weighted by frequency
+		// If SQLite doesn't have good time functions, we might stick to raw string matching for 'HH' or use a simpler approximation.
+		// SQLite `strftime('%H', start_at)` works.
 
+		query := `
+			SELECT n.id, n.title, COUNT(s.id) as freq
+			FROM sessions s
+			JOIN nodes n ON s.node_id = n.id
+			WHERE CAST(strftime('%H', s.start_at) AS INTEGER) BETWEEN ? AND ?
+			GROUP BY n.id
+			ORDER BY freq DESC
+			LIMIT 5
+		`
+
+		// Range: e.g. 14 -> 12 to 16
+		startH := hour - 2
+		endH := hour + 2
+
+		rows, err := db.Query(query, startH, endH)
 		nodes := []Node{}
-		for rows.Next() {
-			var n Node
-			if err := rows.Scan(&n.ID, &n.Title); err == nil {
-				nodes = append(nodes, n)
+
+		// 3. Fallback / Fill with Recent if logic fails or returns few results
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var n Node
+				var freq int
+				if err := rows.Scan(&n.ID, &n.Title, &freq); err == nil {
+					nodes = append(nodes, n)
+				}
 			}
 		}
+
+		// Always append "Recent" to fill up to 8 slots
+		if len(nodes) < 8 {
+			excludedIDs := ""
+			args := []interface{}{}
+			for i, n := range nodes {
+				if i > 0 {
+					excludedIDs += ","
+				}
+				excludedIDs += "?"
+				args = append(args, n.ID)
+			}
+
+			recentQuery := "SELECT id, title FROM nodes "
+			if len(nodes) > 0 {
+				recentQuery += fmt.Sprintf("WHERE id NOT IN (%s) ", excludedIDs)
+			}
+			recentQuery += "ORDER BY updated_at DESC LIMIT ?"
+			args = append(args, 8-len(nodes))
+
+			rows2, err2 := db.Query(recentQuery, args...)
+			if err2 == nil {
+				defer rows2.Close()
+				for rows2.Next() {
+					var n Node
+					if err := rows2.Scan(&n.ID, &n.Title); err == nil {
+						nodes = append(nodes, n)
+					}
+				}
+			}
+		}
+
 		json.NewEncoder(w).Encode(nodes)
 	}))
 
