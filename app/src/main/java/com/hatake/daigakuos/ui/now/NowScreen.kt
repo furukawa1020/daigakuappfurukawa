@@ -42,15 +42,15 @@ fun NowScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val nodeTitle = uiState.nodeTitle
-    val sessionStartTime = uiState.sessionStartTime ?: System.currentTimeMillis()
+    val sessionStartTime = uiState.sessionStartTime
     
     var timeElapsed by remember { mutableLongStateOf(0L) }
     var isRunning by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
     
-    // Timer Effect - calculate from session start time
+    // Timer Effect - calculate from session start time once available
     LaunchedEffect(isRunning, sessionStartTime) {
-        if (isRunning) {
+        if (isRunning && sessionStartTime != null) {
             while (isRunning) {
                 timeElapsed = System.currentTimeMillis() - sessionStartTime
                 delay(100L) // Update faster for smooth UI
