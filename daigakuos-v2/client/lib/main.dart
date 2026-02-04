@@ -285,19 +285,39 @@ class FinishScreen extends ConsumerStatefulWidget {
 class _FinishScreenState extends ConsumerState<FinishScreen> {
   final TextEditingController _titleController = TextEditingController();
   bool _isSubmitting = false;
+  List<Map<String, dynamic>> _suggestions = [];
 
-  Future<void> _submit() async {
+  @override
+  void initState() {
+    super.initState();
+    _fetchSuggestions();
+  }
+
+  Future<void> _fetchSuggestions() async {
+    try {
+      final response = await http.get(Uri.parse('http://localhost:8080/api/nodes/suggestions'));
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _suggestions = data.map((e) => {"id": e['id'], "title": e['title']}).toList();
+        });
+      }
+    } catch(e) { print("Error fetching suggestions: $e"); }
+  }
+
+  Future<void> _submit({String? selectedNodeId}) async {
     final session = ref.read(sessionProvider);
     if (session == null) return;
     
     setState(() => _isSubmitting = true);
 
     try {
-      final url = Uri.parse('http://localhost:8080/api/sessions'); // Android Emulator needs 10.0.2.2 usually
+      final url = Uri.parse('http://localhost:8080/api/sessions'); 
       final response = await http.post(
         url,
         body: jsonEncode({
-          "draftTitle": _titleController.text,
+          "nodeId": selectedNodeId,
+          "draftTitle": _titleController.text, // If creating new
           "minutes": session.durationMinutes,
           "startAt": session.startAt.toIso8601String(),
           "endAt": DateTime.now().toIso8601String(),
@@ -307,6 +327,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
       );
       
       if (response.statusCode == 201) {
+        ref.refresh(dailyAggProvider); // Refresh stats on home
         if (mounted) context.go('/');
       } else {
         if (mounted) context.go('/');
@@ -333,6 +354,21 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
             const SizedBox(height: 32),
             const Text("What did you do?"),
             const SizedBox(height: 16),
+            
+            // Suggestions Chips
+            Wrap(
+              spacing: 8,
+              children: _suggestions.map((s) => ActionChip(
+                label: Text(s['title']),
+                onPressed: () {
+                  _titleController.text = s['title'];
+                  // Auto-submit? Or just fill? Let's direct submit for speed.
+                  _submit(selectedNodeId: s['id']);
+                },
+              )).toList(),
+            ),
+            
+            const SizedBox(height: 16),
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -343,7 +379,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
             ),
             const Spacer(),
             FilledButton(
-               onPressed: _isSubmitting ? null : _submit,
+               onPressed: _isSubmitting ? null : () => _submit(),
                child: _isSubmitting ? const CircularProgressIndicator() : const Text("RECORD RESULT"),
                style: FilledButton.styleFrom(padding: const EdgeInsets.all(20)),
             )
