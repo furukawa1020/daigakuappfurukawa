@@ -48,14 +48,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: Column(
           children: [
             AppBar(
-              title: const Text("Study Calendar", style: TextStyle(fontWeight: FontWeight.bold)),
+              title: const Text("学習カレンダー", style: TextStyle(fontWeight: FontWeight.bold)),
               backgroundColor: Colors.transparent,
               actions: [
                 IconButton(
                   icon: const Icon(Icons.download),
-                  tooltip: "Export Data",
+                  tooltip: "データをエクスポート",
                   onPressed: () async {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Exporting data...")));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("データをエクスポート中...")));
                     await DatabaseHelper().exportData();
                   },
                 )
@@ -102,7 +102,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     },
                   ),
                   loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => const Center(child: Text("Error loading calendar")),
+                  error: (e, _) => const Center(child: Text("カレンダーの読み込みエラー")),
                 ),
               ),
             ),
@@ -119,7 +119,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       return sessionsAsync.when(
                         data: (sessions) {
                           if (sessions.isEmpty) {
-                            return Center(child: Text("No study history for ${DateFormat('M/d').format(_selectedDay!)}", style: const TextStyle(color: Colors.grey)));
+                            return Center(child: Text("${DateFormat('M/d').format(_selectedDay!)} の学習記録はありません", style: const TextStyle(color: Colors.grey)));
                           }
                           return ListView.builder(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -132,7 +132,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                                   padding: const EdgeInsets.all(12),
                                   child: ListTile(
                                     title: Text(s['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    subtitle: Text("${s['minutes']} min • ${s['points'].toStringAsFixed(0)} pts"),
+                                    subtitle: Text("${s['minutes']} 分 • ${s['points'].toStringAsFixed(0)} pts"),
                                     leading: const Icon(Icons.check_circle_outline, color: Colors.green),
                                     trailing: Text(
                                        DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
@@ -145,7 +145,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                           );
                         },
                         loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => Center(child: Text("Error: $e")),
+                        error: (e, _) => Center(child: Text("エラー: $e")),
                       );
                     },
                   ),

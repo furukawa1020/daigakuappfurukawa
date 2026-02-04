@@ -308,7 +308,7 @@ class HomeScreen extends ConsumerWidget {
                           onTap: () async {
                               bool on = await checkIfOnCampus();
                               ref.read(isOnCampusProvider.notifier).state = on;
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(on ? "You are on Campus!" : "Geolocation checked.")));
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(on ? "キャンパス内にいます！ (1.5倍ボーナス)" : "位置情報を更新しました")));
                           },
                           child: AnimatedContainer(
                             duration: 500.ms,
@@ -324,7 +324,7 @@ class HomeScreen extends ConsumerWidget {
                                 Icon(Icons.location_on, size: 16, color: isOnCampus ? Colors.green[700] : Colors.grey),
                                 const SizedBox(width: 8),
                                 Text(
-                                  isOnCampus ? "On Campus (1.5x Boost)" : "Off Campus",
+                                  isOnCampus ? "キャンパス内 (1.5倍)" : "キャンパス外",
                                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isOnCampus ? Colors.green[800] : Colors.grey[700]),
                                 )
                               ],
@@ -374,15 +374,15 @@ class HomeScreen extends ConsumerWidget {
                                child: LinearProgressIndicator(value: stats.progress, minHeight: 8, backgroundColor: Colors.grey.withOpacity(0.1), color: const Color(0xFF4F46E5)),
                             ),
                             const SizedBox(height: 8),
-                            Align(alignment: Alignment.centerRight, child: Text("Next Lvl in ${stats.pointsToNext.toInt()} XP", style: TextStyle(fontSize: 12, color: Colors.grey[600]))),
+                            Align(alignment: Alignment.centerRight, child: Text("あと ${stats.pointsToNext.toInt()} XP でレベルアップ", style: TextStyle(fontSize: 12, color: Colors.grey[600]))),
                             
                             const Divider(height: 32),
                             
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                 _Metric(label: "Today's Pts", value: "${stats.dailyPoints.toInt()}"),
-                                 _Metric(label: "Minutes", value: "${stats.dailyMinutes}"),
+                                 _Metric(label: "今日のポイント", value: "${stats.dailyPoints.toInt()}"),
+                                 _Metric(label: "集中時間(分)", value: "${stats.dailyMinutes}"),
                               ],
                             )
                           ],
@@ -400,7 +400,7 @@ class HomeScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text("Weekly Activity", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const Text("週間アクティビティ", style: TextStyle(fontWeight: FontWeight.bold)),
                           const SizedBox(height: 16),
                           SizedBox(
                             height: 120,
@@ -443,15 +443,15 @@ class HomeScreen extends ConsumerWidget {
                            decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
                            child: const Icon(Icons.calendar_month, color: Colors.purple),
                         ),
-                        title: const Text("Study Calendar", style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text("View your monthly progress"),
+                        title: const Text("学習カレンダー", style: TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: const Text("月ごとの記録を確認"),
                         trailing: const Icon(Icons.chevron_right),
                       ),
                     ).animate().fadeIn().slideX(),
                     
                     const SizedBox(height: 16),
 
-                    const Align(alignment: Alignment.centerLeft, child: Text("Recent History", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                    const Align(alignment: Alignment.centerLeft, child: Text("最近の履歴", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
                     const SizedBox(height: 12),
                   ],
                 ),
@@ -481,7 +481,7 @@ class HomeScreen extends ConsumerWidget {
                                  crossAxisAlignment: CrossAxisAlignment.start,
                                  children: [
                                    Text(s['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                                   Text("${s['minutes']} min • ${s['points']} pts", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+                                   Text("${s['minutes']} 分 • ${s['points']} pts", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
                                  ],
                                ),
                              ),
@@ -520,7 +520,7 @@ class HomeScreen extends ConsumerWidget {
             context.push('/now');
           },
           icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-          label: const Text("DO NOW", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          label: const Text("今すぐ集中する", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -543,8 +543,8 @@ Future<void> _editSession(BuildContext context, Map<String, dynamic> session, Wi
     await showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("Edit Session"),
-        content: TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: "Task Name")),
+        title: const Text("セッション編集"),
+        content: TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: "タスク名")),
         actions: [
           TextButton(
             onPressed: () async {
@@ -556,7 +556,7 @@ Future<void> _editSession(BuildContext context, Map<String, dynamic> session, Wi
                   Navigator.pop(ctx);
                }
             }, 
-            child: const Text("Delete", style: TextStyle(color: Colors.red))
+            child: const Text("削除", style: TextStyle(color: Colors.red))
           ),
           FilledButton(
             onPressed: () async {
@@ -564,7 +564,7 @@ Future<void> _editSession(BuildContext context, Map<String, dynamic> session, Wi
                ref.refresh(historyProvider);
                Navigator.pop(ctx);
             },
-            child: const Text("Save")
+            child: const Text("保存")
           ),
         ],
       )
@@ -575,8 +575,8 @@ Future<bool> _confirmDelete(BuildContext context) async {
   return await showDialog<bool>(
     context: context,
     builder: (c) => AlertDialog(
-      title: const Text("Delete?"), 
-      actions: [TextButton(onPressed:()=>Navigator.pop(c,false), child:const Text("Cancel")), TextButton(onPressed:()=>Navigator.pop(c,true), child:const Text("Delete", style:TextStyle(color:Colors.red)))]
+      title: const Text("削除しますか？"), 
+      actions: [TextButton(onPressed:()=>Navigator.pop(c,false), child:const Text("キャンセル")), TextButton(onPressed:()=>Navigator.pop(c,true), child:const Text("削除", style:TextStyle(color:Colors.red)))]
     )
   ) ?? false;
 }
@@ -666,7 +666,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                           child: const Text("DaigakuAPP is running...", style: TextStyle(color: Colors.white38, fontSize: 12)),
+                           child: const Text("DaigakuAPP 実行中...", style: TextStyle(color: Colors.white38, fontSize: 12)),
                          )
                        ],
                      ),
@@ -695,7 +695,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                          color: Colors.white.withOpacity(0.05)
                        ),
                        child: const Center(
-                         child: Text("COMPLETED", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)),
+                         child: Text("完了", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 2)),
                        ),
                      ),
                    ),
@@ -765,7 +765,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      ref.refresh(dailyAggProvider);
      
      // Show Notification
-     showNotification("Session Saved!", "Great job! You focused for $mins minutes.");
+     showNotification("セッション記録完了！", "お疲れ様！ $mins 分間の集中を記録しました。");
 
      if (mounted) context.go('/');
   }
@@ -789,12 +789,12 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                   const SizedBox(height: 40),
                   const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
                   const SizedBox(height: 24),
-                  Text("Good Job!", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
+                  Text("お疲れ様でした！", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Text("You focused for $mins minutes.", style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600])),
+                  Text("$mins 分間集中しました。", style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600])),
                   
                   const SizedBox(height: 40),
-                  const Align(alignment: Alignment.centerLeft, child: Text("What did you work on?", style: TextStyle(fontWeight: FontWeight.bold))),
+                  const Align(alignment: Alignment.centerLeft, child: Text("何をしていましたか？", style: TextStyle(fontWeight: FontWeight.bold))),
                   const SizedBox(height: 12),
                   
                   Wrap(
@@ -817,7 +817,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      hintText: "Or type a new task...",
+                      hintText: "タスク名を入力...",
                       prefixIcon: const Icon(Icons.edit)
                     ),
                   ),
@@ -834,7 +834,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                         padding: const EdgeInsets.all(18),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
                       ),
-                      child: const Text("SAVE SESSION", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text("記録する", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   )
                 ],
