@@ -12,7 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart'; // Add import
+// Notifications temporarily disabled
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'database_helper.dart';
 import 'calendar_screen.dart';
 import 'settings_screen.dart';
@@ -22,24 +23,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 // 1. Models & State
 // -----------------------------------------------------------------------------
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin(); // Global plugin instance
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
 Future<void> initNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+  // Disabled temporarily
 }
 
 Future<void> showNotification(String title, String body) async {
-  const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
-    'daigaku_channel', 
-    'DaigakuAPP Notifications',
-    channelDescription: 'Notifications for study session completion',
-    importance: Importance.max,
-    priority: Priority.high,
-  );
-  const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
-  await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
+  // Disabled temporarily
+  debugPrint("Notification: $title - $body");
 }
 
 
