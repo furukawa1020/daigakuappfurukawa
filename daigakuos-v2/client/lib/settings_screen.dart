@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart'; // For StateProvider in Riverpod v3
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'main.dart';
@@ -53,42 +53,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _importData() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
-
-      if (result != null) {
-        File file = File(result.files.single.path!);
-        String jsonString = await file.readAsString();
-        
-        // Show confirmation
-        bool confirm = await showDialog(
-          context: context, 
-          builder: (c) => AlertDialog(
-             title: const Text("データを復元しますか？"),
-             content: const Text("現在のデータはすべて上書きされます。この操作は取り消せません。"),
-             actions: [
-               TextButton(onPressed:()=>Navigator.pop(c,false), child: const Text("キャンセル")),
-               TextButton(onPressed:()=>Navigator.pop(c,true), child: const Text("復元", style: TextStyle(color: Colors.red))),
-             ],
-          )
-        ) ?? false;
-
-        if (confirm) {
-          await DatabaseHelper().importData(jsonString);
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("データを復元しました！アプリを再起動してください。")));
-          // Force refresh providers
-          ref.refresh(dailyAggProvider);
-          ref.refresh(weeklyAggProvider);
-          ref.refresh(userStatsProvider);
-          ref.refresh(historyProvider);
-        }
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("エラー: $e")));
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("データインポート機能は現在利用できません"))
+    );
   }
 
   Future<void> _resetData() async {

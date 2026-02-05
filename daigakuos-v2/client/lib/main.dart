@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart'; // For StateProvider in Riverpod v3
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 import 'dart:ui';
@@ -31,11 +32,12 @@ Future<void> initNotifications() async {
 
 Future<void> showNotification(String title, String body) async {
   const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
-    'your channel id', 'your channel name',
-    channelDescription: 'your channel description',
+    'daigaku_channel', 
+    'DaigakuAPP Notifications',
+    channelDescription: 'Notifications for study session completion',
     importance: Importance.max,
     priority: Priority.high,
-    ticker: 'ticker');
+  );
   const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
   await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
 }
