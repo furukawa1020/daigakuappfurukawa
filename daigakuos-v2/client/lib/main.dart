@@ -15,6 +15,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart'; /
 import 'database_helper.dart';
 import 'calendar_screen.dart';
 import 'settings_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -186,7 +187,7 @@ class DaigakuAPPApp extends StatelessWidget {
           primary: const Color(0xFF4F46E5),
           secondary: const Color(0xFFEC4899), // Pink
         ),
-        textTheme: GoogleFonts.outfitTextTheme(),
+        textTheme: Typography.material2021().black,
         scaffoldBackgroundColor: const Color(0xFFF3F4F6),
       ),
       routerConfig: _router,
@@ -294,6 +295,7 @@ class HomeScreen extends ConsumerWidget {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
+            SliverAppBar.large(
               title: const Text("DaigakuAPP", style: TextStyle(fontWeight: FontWeight.w800)),
               centerTitle: false,
               backgroundColor: Colors.transparent,
@@ -304,6 +306,7 @@ class HomeScreen extends ConsumerWidget {
                 )
               ],
             ),
+
             
             SliverToBoxAdapter(
               child: Padding(
@@ -679,7 +682,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                        children: [
                          Text(
                            "$minutes:$seconds", 
-                           style: GoogleFonts.jetbrainsMono(color: Colors.white, fontSize: 80, fontWeight: FontWeight.w200),
+                           style: const TextStyle(color: Colors.white, fontSize: 80, fontWeight: FontWeight.w200, fontFamily: 'monospace'),
                          ).animate().fadeIn(duration: 1.seconds),
                          const SizedBox(height: 10),
                          Container(
@@ -767,6 +770,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      final session = ref.read(sessionProvider);
      if (session == null) return;
      
+     final mins = session.durationMinutes ?? 0;
      final title = _titleCtrl.text;
      final draftTitle = title.isEmpty ? "(No Title)" : title;
      final isOnCampus = ref.read(isOnCampusProvider);

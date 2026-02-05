@@ -85,7 +85,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     headerStyle: HeaderStyle(
                        titleCentered: true,
                        formatButtonVisible: false,
-                       TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                       titleTextStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                        leftChevronIcon: Icon(Icons.chevron_left, color: Theme.of(context).primaryColor),
                        rightChevronIcon: Icon(Icons.chevron_right, color: Theme.of(context).primaryColor),
                     ),
