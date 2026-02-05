@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart'; // For StateProvider in Riverpod 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wakelock_plus/wakelock_plus.dart';
+// import 'package:file_picker/file_picker.dart'; // Removed due to v1 embedding error
 import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'main.dart';
@@ -54,7 +55,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _importData() async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("データインポート機能は現在利用できません"))
+      const SnackBar(content: Text("データインポート機能は現在利用できません（file_pickerプラグイン互換性問題）"))
     );
   }
 
