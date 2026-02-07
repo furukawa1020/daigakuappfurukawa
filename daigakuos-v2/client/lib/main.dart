@@ -422,7 +422,7 @@ class HomeScreen extends ConsumerWidget {
                     
                     Consumer(
                       builder: (context, ref, _) {
-                        final history = ref.watch(historyProvider).valueOrNull ?? [];
+                        final history = ref.watch(historyProvider).asData?.value ?? [];
                         // Extract unique recent titles
                         final recentTitles = history.map((s) => s['title'] as String).toSet().take(4).toList();
                         
