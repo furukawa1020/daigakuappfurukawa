@@ -18,6 +18,7 @@ import 'calendar_screen.dart';
 import 'settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'haptics_service.dart';
+import 'widgets/hyperfocus_button.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -519,33 +520,33 @@ class HomeScreen extends ConsumerWidget {
                error: (_,__) => const SliverToBoxAdapter(child: SizedBox()),
             ),
             
-            const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+            // Spacer for FAB
+            const SliverPadding(padding: EdgeInsets.only(bottom: 150)),
+            
+            SliverToBoxAdapter(
+              child: Center(
+                child: Text(
+                  "長押しでチャージして開始",
+                  style: TextStyle(color: Colors.grey[500], fontSize: 12, letterSpacing: 1.2),
+                ).animate().fadeIn(delay: 1.seconds),
+              ),
+            ),
+            const SliverPadding(padding: EdgeInsets.only(bottom: 50)),
           ],
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(30),
-          gradient: const LinearGradient(colors: [Color(0xFF4F46E5), Color(0xFFEC4899)]),
-          boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.4), blurRadius: 20, offset: const Offset(0, 8))]
-        ),
-        child: FloatingActionButton.extended(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          onPressed: () async {
-            ref.read(hapticsProvider.notifier).heavyImpact();
-            // Check Location logic
+      floatingActionButton: HyperfocusButton(
+        onComplete: () async {
+            // Start Session Logic
             bool onCampus = await checkIfOnCampus();
             ref.read(isOnCampusProvider.notifier).state = onCampus;
             
             ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
             context.push('/now');
-          },
-          icon: const Icon(Icons.play_arrow_rounded, color: Colors.white),
-          label: const Text("今すぐ集中する", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        ),
+        },
       ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      extendBody: true, // For better visual integration
     );
   }
 }
