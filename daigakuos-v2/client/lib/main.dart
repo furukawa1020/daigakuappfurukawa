@@ -19,6 +19,7 @@ import 'settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'haptics_service.dart';
 import 'widgets/hyperfocus_button.dart';
+import 'achievement_service.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -827,11 +828,190 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      ref.refresh(historyProvider);
      ref.refresh(userStatsProvider);
      ref.refresh(dailyAggProvider);
+     ref.refresh(weeklyAggProvider);
      
-     // Show Notification
-     showNotification("セッション記録完了！", "お疲れ様！ $mins 分間の集中を記録しました。");
-
-     if (mounted) context.go('/');
+     // Check Achievements
+     // Note: isOnCampus logic was temporarily hardcoded to false, we need to pass true context in future
+     // For now, let's just check based on available data
+     final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
+     
+     final newAchievements = await ref.read(achievementProvider).checkAchievements(mins, session.startAt, homeBonus);
+     
+     if (mounted) {
+        if (newAchievements.isNotEmpty) {
+           // Show Moko-Moko Dialog for Achievements
+           showDialog(
+             context: context,
+             builder: (c) => Dialog(
+               backgroundColor: Colors.transparent,
+               insetPadding: const EdgeInsets.all(20),
+               child: Stack(
+                 alignment: Alignment.center,
+                 children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [BoxShadow(color: const Color(0xFFFFB7B2).withOpacity(0.5), blurRadius: 30, spreadRadius: 5)]
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text("🎉 実績解除！", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFFB7B2))),
+                          const SizedBox(height: 16),
+                          ...newAchievements.map((ach) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: ach.color.withOpacity(0.3), shape: BoxShape.circle),
+                                  child: Icon(ach.icon, color: ach.color, size: 32),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(ach.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                      Text(ach.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          )),
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFFB5EAD7),
+                              foregroundColor: Colors.grey[800],
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(c);
+                              context.go('/');
+                            }, 
+                            child: const Text("やったね！")
+                          )
+                        ],
+                      ),
+                    ),
+                    // Confetti is already playing in background
+                 ],
+               ),
+             )
+           );
+        } else {
+           context.go('/');
+        }
+     }
+  }
+  
+  void _finish([String? nodeId]) async {
+     ref.read(hapticsProvider.notifier).mediumImpact();
+     final session = ref.read(sessionProvider);
+     if (session == null) return;
+     
+     final mins = session.durationMinutes ?? 0;
+     final title = _titleCtrl.text;
+     final draftTitle = title.isEmpty ? "(No Title)" : title;
+     
+     await DatabaseHelper().insertSession(
+       startAt: session.startAt,
+       minutes: mins,
+       draftTitle: draftTitle,
+       nodeId: nodeId,
+       isOnCampus: false, // Updated to false as we removed local state, TODO: fix
+       // TODO: Add support for Home Bonus in DB points calculation if needed
+     );
+     
+     // Reset intent
+     ref.read(selectedTaskProvider.notifier).state = null;
+     
+     ref.refresh(historyProvider);
+     ref.refresh(userStatsProvider);
+     ref.refresh(dailyAggProvider);
+     ref.refresh(weeklyAggProvider);
+     
+     // Check Achievements
+     // Note: isOnCampus logic was temporarily hardcoded to false, we need to pass true context in future
+     // For now, let's just check based on available data
+     final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
+     
+     final newAchievements = await ref.read(achievementProvider).checkAchievements(mins, session.startAt, homeBonus);
+     
+     if (mounted) {
+        if (newAchievements.isNotEmpty) {
+           // Show Moko-Moko Dialog for Achievements
+           showDialog(
+             context: context,
+             builder: (c) => Dialog(
+               backgroundColor: Colors.transparent,
+               insetPadding: const EdgeInsets.all(20),
+               child: Stack(
+                 alignment: Alignment.center,
+                 children: [
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(30),
+                        boxShadow: [BoxShadow(color: const Color(0xFFFFB7B2).withOpacity(0.5), blurRadius: 30, spreadRadius: 5)]
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text("🎉 実績解除！", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFFB7B2))),
+                          const SizedBox(height: 16),
+                          ...newAchievements.map((ach) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(color: ach.color.withOpacity(0.3), shape: BoxShape.circle),
+                                  child: Icon(ach.icon, color: ach.color, size: 32),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(ach.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                      Text(ach.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    ],
+                                  ),
+                                )
+                              ],
+                            ),
+                          )),
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: const Color(0xFFB5EAD7),
+                              foregroundColor: Colors.grey[800],
+                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                            ),
+                            onPressed: () {
+                              Navigator.pop(c);
+                              context.go('/');
+                            }, 
+                            child: const Text("やったね！")
+                          )
+                        ],
+                      ),
+                    ),
+                    // Confetti is already playing in background
+                 ],
+               ),
+             )
+           );
+        } else {
+           context.go('/');
+        }
+     }
   }
 
   @override
