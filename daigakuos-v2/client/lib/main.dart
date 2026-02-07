@@ -778,9 +778,25 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
   final TextEditingController _titleCtrl = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
 
+  String _praiseMessage = "お疲れ様でした！";
+
+  final List<String> _praiseMessages = [
+    "天才ですか？",
+    "その集中力、神。",
+    "偉業を成し遂げましたね。",
+    "今日も世界を救いました",
+    "ゆっくり休んでね。",
+    "君ならできると信じてた！",
+    "圧倒的成長！",
+    "自分を褒めてあげて！",
+    "ナイスファイト！",
+    "輝いてるよ！",
+  ];
+
   @override
   void initState() {
     super.initState();
+    _praiseMessage = (_praiseMessages..shuffle()).first;
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _confetti.play();
     
@@ -1031,56 +1047,63 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 40),
-                  const Icon(Icons.check_circle_outline, size: 80, color: Colors.green),
-                  const SizedBox(height: 24),
-                  Text("お疲れ様でした！", style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  Text("$mins 分間集中しました。", style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.grey[600])),
                   
-                  const SizedBox(height: 40),
-                  const Align(alignment: Alignment.centerLeft, child: Text("何をしていましたか？", style: TextStyle(fontWeight: FontWeight.bold))),
-                  const SizedBox(height: 12),
-                  
-                  Wrap(
-                    spacing: 8, runSpacing: 8,
-                    children: _suggestions.map((s) => ActionChip(
-                      elevation: 0,
-                      backgroundColor: Colors.white,
-                      label: Text(s['title']),
-                      onPressed: () {
-                         _titleCtrl.text = s['title'];
-                         _finish(s['id']);
-                      },
-                    )).toList(),
-                  ),
-                  
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _titleCtrl,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                      hintText: "タスク名を入力...",
-                      prefixIcon: const Icon(Icons.edit)
-                    ),
-                  ),
-                  
-                  const Spacer(),
-                  
-                  SizedBox(
+                  // Moko-Moko Finish Card
+                  Container(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => _finish(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4F46E5),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.all(18),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))
-                      ),
-                      child: const Text("記録する", style: TextStyle(fontWeight: FontWeight.bold)),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: [BoxShadow(color: const Color(0xFFC7CEEA).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]
                     ),
-                  )
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                         const Icon(Icons.check_circle, color: Color(0xFFB5EAD7), size: 80).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
+                         const SizedBox(height: 16),
+                         Text(_praiseMessage, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey[800]), textAlign: TextAlign.center),
+                         const SizedBox(height: 8),
+                         Text("$mins分間の集中", style: TextStyle(color: Colors.grey[500])),
+                         const SizedBox(height: 24),
+                         TextField(
+                           controller: _titleCtrl,
+                           decoration: InputDecoration(
+                             filled: true,
+                             fillColor: const Color(0xFFFFF5F6),
+                             hintText: "何をしていましたか？",
+                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                           ),
+                         ),
+                         const SizedBox(height: 16),
+                         Wrap(
+                           spacing: 8,
+                           children: _suggestions.map((s) => ActionChip(
+                             elevation: 0,
+                             backgroundColor: const Color(0xFFE2F0CB),
+                             label: Text(s['title'], style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold)),
+                             onPressed: () {
+                               ref.read(hapticsProvider.notifier).lightImpact();
+                               _titleCtrl.text = s['title'];
+                             },
+                           )).toList(),
+                         ),
+                         const SizedBox(height: 32),
+                         SizedBox(
+                           width: double.infinity,
+                           height: 50,
+                           child: FilledButton(
+                             style: FilledButton.styleFrom(
+                               backgroundColor: const Color(0xFFFFB7B2),
+                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))
+                             ),
+                             onPressed: () => _finish(_suggestions.isNotEmpty ? _suggestions.first['node_id'] : null),
+                             child: const Text("記録する", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                           ),
+                         ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
