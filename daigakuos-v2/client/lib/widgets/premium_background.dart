@@ -21,7 +21,7 @@ class PremiumBackground extends StatelessWidget {
               color: const Color(0xFFC7CEEA).withOpacity(0.4), // Periwinkle
               shape: BoxShape.circle
             ),
-          ).animate().scale(duration: 5.seconds, curve: Curves.easeInOut).then().scale(begin: 1.0, end: 0.9),
+          ).animate().scale(duration: 5.seconds, curve: Curves.easeInOut).then().scale(begin: const Offset(1.0, 1.0), end: const Offset(0.9, 0.9)),
         ),
         Positioned(
           bottom: -50, right: -50,
