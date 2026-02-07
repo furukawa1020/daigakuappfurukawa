@@ -206,47 +206,6 @@ class DaigakuAPPApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF6366F1), // Indigo
           brightness: Brightness.light,
-          primary: const Color(0xFF4F46E5),
-          secondary: const Color(0xFFEC4899), // Pink
-        ),
-        textTheme: Typography.material2021().black,
-        scaffoldBackgroundColor: const Color(0xFFF3F4F6),
-      ),
-      routerConfig: _router,
-    );
-  }
-}
-
-// -----------------------------------------------------------------------------
-// 3. Reusable UI Components (Glassmorphism)
-// -----------------------------------------------------------------------------
-
-class GlassCard extends StatelessWidget {
-  final Widget child;
-  final EdgeInsets? padding;
-  final double? height;
-
-  const GlassCard({super.key, required this.child, this.padding, this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          height: height,
-          padding: padding ?? const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              )
             ],
           ),
           child: child,
@@ -264,35 +223,33 @@ class PremiumBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Gradient Mesh
+        // Base
+        Container(color: const Color(0xFFFFF0F5)), // Lavender Blush
+        
+        // Blobs
         Positioned(
-          top: -100,
-          right: -100,
+          top: -100, left: -50,
           child: Container(
-            width: 300,
-            height: 300,
+            width: 300, height: 300,
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFF818CF8).withOpacity(0.3),
-              boxShadow: [BoxShadow(blurRadius: 100, color: const Color(0xFF818CF8).withOpacity(0.3))],
+              color: const Color(0xFFC7CEEA).withOpacity(0.4), // Periwinkle
+              shape: BoxShape.circle
+            ),
+          ).animate().scale(duration: 5.seconds, curve: Curves.easeInOut).then().scale(begin: 1.0, end: 0.9),
+        ),
+        Positioned(
+          bottom: -50, right: -50,
+          child: Container(
+            width: 400, height: 400,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFDAC1).withOpacity(0.4), // Peach
+              shape: BoxShape.circle
             ),
           ),
         ),
-        Positioned(
-          bottom: 100,
-          left: -50,
-          child: Container(
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: const Color(0xFFF472B6).withOpacity(0.2),
-              boxShadow: [BoxShadow(blurRadius: 100, color: const Color(0xFFF472B6).withOpacity(0.2))],
-            ),
-          ),
-        ),
+        
         // Content
-        Positioned.fill(child: child),
+        SafeArea(child: child),
       ],
     );
   }
@@ -436,35 +393,20 @@ class HomeScreen extends ConsumerWidget {
                                 ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
                               ],
                             ),
-                            const SizedBox(height: 20),
-                            // Progress Bar
-                            ClipRRect(
-                               borderRadius: BorderRadius.circular(10),
-                               child: LinearProgressIndicator(value: stats.progress, minHeight: 8, backgroundColor: Colors.grey.withOpacity(0.1), color: const Color(0xFF4F46E5)),
-                            ),
-                            const SizedBox(height: 8),
-                            Align(alignment: Alignment.centerRight, child: Text("あと ${stats.pointsToNext.toInt()} XP でレベルアップ", style: TextStyle(fontSize: 12, color: Colors.grey[600]))),
-                            
-                            const Divider(height: 32),
-                            
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                 _Metric(label: "今日のポイント", value: "${stats.dailyPoints.toInt()}"),
-                                 _Metric(label: "集中時間(分)", value: "${stats.dailyMinutes}"),
-                              ],
-                            )
+                            _StatItem(label: "Level", value: "${stats.level}", icon: Icons.star, color: const Color(0xFFFFB7B2)),
+                            _StatItem(label: "XP", value: "${stats.totalPoints.toInt()}", icon: Icons.bolt, color: const Color(0xFFFFDAC1)),
+                            _StatItem(label: "Streak", value: "${stats.currentStreak}日", icon: Icons.local_fire_department, color: const Color(0xFFFF9AA2)),
                           ],
                         ),
                       ),
-                      loading: () => const GlassCard(child: SizedBox(height: 150, child: Center(child: CircularProgressIndicator()))),
+                      loading: () => const MokoCard(child: SizedBox(height: 150, child: Center(child: CircularProgressIndicator()))),
                       error: (e, _) => const SizedBox(),
                     ).animate().fadeIn().slideY(begin: 0.2, end: 0),
 
                     const SizedBox(height: 16),
                     
                     // Weekly Chart
-                    GlassCard(
+                    MokoCard(
                       padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,10 +460,11 @@ class HomeScreen extends ConsumerWidget {
                           spacing: 8, runSpacing: 8,
                           children: recentTitles.map((title) {
                              return ActionChip(
-                               elevation: 2,
-                               backgroundColor: Colors.white.withOpacity(0.8),
-                               avatar: const Icon(Icons.flash_on, size: 16, color: Colors.orange),
-                               label: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                               elevation: 0,
+                               backgroundColor: const Color(0xFFE2F0CB), // Tea Green
+                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                               avatar: const Icon(Icons.favorite, size: 16, color: Color(0xFFFF9AA2)), // Heart
+                               label: Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700])),
                                onPressed: () {
                                   ref.read(hapticsProvider.notifier).lightImpact();
                                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("「$title」をセットしました。長押しで開始！")));
@@ -556,29 +499,6 @@ class HomeScreen extends ConsumerWidget {
                data: (sessions) => SliverList(
                  delegate: SliverChildBuilderDelegate(
                    (context, index) {
-                     final s = sessions[index];
-                     return Padding(
-                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                       child: GlassCard(
-                         padding: const EdgeInsets.all(16),
-                         child: Row(
-                           children: [
-                             Container(
-                               padding: const EdgeInsets.all(10),
-                               decoration: BoxDecoration(color: Colors.blue.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-                               child: const Icon(Icons.check_circle, color: Color(0xFF4F46E5), size: 20),
-                             ),
-                             const SizedBox(width: 16),
-                             Expanded(
-                               child: Column(
-                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                 children: [
-                                   Text(s['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                                   Text("${s['minutes']} 分 • ${s['points']} pts", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                                 ],
-                               ),
-                             ),
-                             IconButton(icon: const Icon(Icons.more_horiz), onPressed: () => _editSession(context, s, ref)),
                            ],
                          ),
                        ).animate().fadeIn(delay: Duration(milliseconds: 50 * index)).slideX(),
@@ -634,10 +554,19 @@ class HomeScreen extends ConsumerWidget {
 class _Metric extends StatelessWidget {
   final String label;
   final String value;
-  const _Metric({required this.label, required this.value});
+  final IconData icon;
+  final Color color;
+  const _Metric({required this.label, required this.value, required this.icon, required this.color});
   @override
   Widget build(BuildContext context) {
-    return Column(children:[Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600]))]);
+    return Column(
+      children: [
+        Icon(icon, color: color, size: 28),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.grey[800])),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+      ],
+    );
   }
 }
 

@@ -90,12 +90,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final wakeLock = ref.watch(wakeLockProvider);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF5F6),
       body: PremiumBackground(
         child: Column(
           children: [
             AppBar(
-              title: const Text("設定", style: TextStyle(fontWeight: FontWeight.bold)),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF888888)),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text("設定", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF888888))),
               backgroundColor: Colors.transparent,
+              elevation: 0,
             ),
             
             Expanded(
@@ -103,29 +109,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                    const _SectionHeader(title: "一般"),
-                   GlassCard(
+                   MokoCard(
                      padding: EdgeInsets.zero,
                      child: Column(
                        children: [
                          SwitchListTile(
-                           title: const Text("画面を常時ONにする", style: TextStyle(fontWeight: FontWeight.bold)),
-                           subtitle: const Text("集中セッション中、スリープを無効化します"),
+                           title: const Text("画面を常時ONにする", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                           subtitle: const Text("集中セッション中、スリープを無効化します", style: TextStyle(color: Colors.grey)),
                            value: wakeLock, 
                            onChanged: _toggleWakeLock,
-                           activeColor: Colors.purpleAccent,
+                           activeColor: const Color(0xFFB5EAD7), // Mint
                          ),
-                         const Divider(),
+                         const Divider(height: 1),
                          Consumer(
                            builder: (context, ref, child) {
                              final hapticsEnabled = ref.watch(hapticsProvider);
                              return SwitchListTile(
-                               title: const Text("触覚フィードバック", style: TextStyle(fontWeight: FontWeight.bold)),
-                               subtitle: const Text("ボタン操作時などに振動します"),
+                               title: const Text("触覚フィードバック", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
+                               subtitle: const Text("ボタン操作時などに振動します", style: TextStyle(color: Colors.grey)),
                                value: hapticsEnabled,
                                onChanged: (value) {
                                  ref.read(hapticsProvider.notifier).toggle(value);
                                },
-                               activeColor: Colors.purpleAccent,
+                               activeColor: const Color(0xFFB5EAD7), // Mint
                              );
                            },
                          ),
@@ -135,36 +141,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                    const SizedBox(height: 24),
                    
                    const _SectionHeader(title: "データ管理"),
-                   GlassCard(
+                   MokoCard(
                      padding: EdgeInsets.zero,
-                      child: Column(
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.home, color: Colors.indigo),
-                            title: const Text("自宅の場所を設定"),
-                            subtitle: const Text("現在地を「自宅」として登録します"),
+                     child: Column(
+                       children: [
+                         ListTile(
+                            leading: const Icon(Icons.home, color: Color(0xFFFFB7B2)),
+                            title: const Text("自宅の場所を設定", style: TextStyle(color: Colors.black87)),
+                            subtitle: const Text("現在地を「自宅」として登録します", style: TextStyle(color: Colors.grey)),
                             onTap: () async {
                                await _setHomeLocation(context);
                             },
                           ),
-                          const Divider(),
+                          const Divider(height: 1),
                           ListTile(
-                            leading: const Icon(Icons.download, color: Colors.blue),
-                           title: const Text("データをエクスポート"),
+                           leading: const Icon(Icons.download, color: Color(0xFFC7CEEA)),
+                           title: const Text("データをエクスポート", style: TextStyle(color: Colors.black87)),
                            onTap: () async {
-                              await DatabaseHelper().exportData();
+                               await DatabaseHelper().exportData();
                            },
                          ),
-                         const Divider(),
+                         const Divider(height: 1),
                          ListTile(
-                           leading: const Icon(Icons.upload, color: Colors.orange),
-                           title: const Text("データをインポート (復元)"),
+                           leading: const Icon(Icons.upload, color: Color(0xFFFFDAC1)),
+                           title: const Text("データをインポート (復元)", style: TextStyle(color: Colors.black87)),
                            onTap: _importData,
                          ),
-                         const Divider(),
+                         const Divider(height: 1),
                          ListTile(
-                           leading: const Icon(Icons.delete_forever, color: Colors.red),
-                           title: const Text("データを全消去"),
+                           leading: const Icon(Icons.delete_forever, color: Color(0xFFFF9AA2)),
+                           title: const Text("データを全消去", style: TextStyle(color: Colors.black87)),
                            onTap: _resetData,
                          ),
                        ],
@@ -173,16 +179,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                    const SizedBox(height: 24),
 
                    const _SectionHeader(title: "アプリについて"),
-                   GlassCard(
+                   MokoCard(
                      padding: EdgeInsets.zero,
                      child: ListTile(
-                       title: const Text("バージョン"),
+                       title: const Text("バージョン", style: TextStyle(color: Colors.black87)),
                        trailing: Text(_version, style: const TextStyle(color: Colors.grey)),
                      ),
                    ),
                    const SizedBox(height: 20),
                    Center(
-                     child: Text("DaigakuAPP v2.1\nDesigned for Deep Work", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                     child: Text("DaigakuAPP v2.2\nMoko-Moko Edition", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
                    )
                 ],
               ),
