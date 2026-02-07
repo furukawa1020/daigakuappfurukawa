@@ -188,7 +188,7 @@ Future<LocationBonus> checkLocationBonus() async {
 final _router = GoRouter(
   initialLocation: '/',
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/', builder: (context, state) => HomeScreen()),
     GoRoute(path: '/calendar', builder: (context, state) => const CalendarScreen()),
     GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
@@ -270,7 +270,7 @@ class PremiumBackground extends StatelessWidget {
 // -----------------------------------------------------------------------------
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -373,7 +373,7 @@ class HomeScreen extends ConsumerWidget {
 
                     // Main Stats Card
                     statsAsync.when(
-                      data: (stats) => GlassCard(
+                      data: (stats) => MokoCard(
                         child: Column(
                           children: [
                             Row(
@@ -403,9 +403,9 @@ class HomeScreen extends ConsumerWidget {
                                 ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
                               ],
                             ),
-                            _StatItem(label: "Level", value: "${stats.level}", icon: Icons.star, color: const Color(0xFFFFB7B2)),
-                            _StatItem(label: "XP", value: "${stats.totalPoints.toInt()}", icon: Icons.bolt, color: const Color(0xFFFFDAC1)),
-                            _StatItem(label: "Streak", value: "${stats.currentStreak}日", icon: Icons.local_fire_department, color: const Color(0xFFFF9AA2)),
+                            StatItem(label: "Level", value: "${stats.level}", icon: Icons.star, color: const Color(0xFFFFB7B2)),
+                            StatItem(label: "XP", value: "${stats.totalPoints.toInt()}", icon: Icons.bolt, color: const Color(0xFFFFDAC1)),
+                            StatItem(label: "Streak", value: "${stats.currentStreak}日", icon: Icons.local_fire_department, color: const Color(0xFFFF9AA2)),
                           ],
                         ),
                       ),
@@ -509,9 +509,41 @@ class HomeScreen extends ConsumerWidget {
                data: (sessions) => SliverList(
                  delegate: SliverChildBuilderDelegate(
                    (context, index) {
-                           ],
-                         ),
-                       ).animate().fadeIn(delay: Duration(milliseconds: 50 * index)).slideX(),
+                     final s = sessions[index];
+                     return Padding(
+                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                       child: InkWell(
+                         onTap: () => _editSession(context, s, ref),
+                         child: MokoCard(
+                           padding: const EdgeInsets.all(16),
+                           child: Row(
+                             children: [
+                               Container(
+                                 width: 40, height: 40,
+                                 decoration: BoxDecoration(
+                                   color: Colors.blue.shade50,
+                                   borderRadius: BorderRadius.circular(12)
+                                 ),
+                                 child: const Icon(Icons.check, color: Colors.blue),
+                               ),
+                               const SizedBox(width: 16),
+                               Expanded(
+                                 child: Column(
+                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                   children: [
+                                     Text(s['title'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                     Text("${s['minutes']}分間 • ${s['points'].toStringAsFixed(0)} pts", style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                                   ],
+                                 ),
+                               ),
+                               Text(
+                                 DateTime.parse(s['startAt']).toLocal().toString().substring(11, 16),
+                                 style: TextStyle(color: Colors.grey[400], fontWeight: FontWeight.bold)
+                               ),
+                             ],
+                           ),
+                         ).animate().fadeIn(delay: Duration(milliseconds: 50 * index)).slideX(),
+                       ),
                      );
                    },
                    childCount: sessions.length
@@ -764,9 +796,9 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                  ),
                ],
              ),
-           )
+           ),
         ],
-      ),
+      )
     );
   }
 }
@@ -796,248 +828,101 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     "今日も世界を救いました",
     "ゆっくり休んでね。",
     "君ならできると信じてた！",
-    "圧倒的成長！",
-    "自分を褒めてあげて！",
-    "ナイスファイト！",
-    "輝いてるよ！",
   ];
 
   @override
   void initState() {
     super.initState();
-    _praiseMessage = (_praiseMessages..shuffle()).first;
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _confetti.play();
     
-    // Pre-fill from selectedTaskProvider
-    final selected = ref.read(selectedTaskProvider);
-    if (selected != null) {
-      _titleCtrl.text = selected;
-    }
+    // Play sound/haptics
+    ref.read(hapticsProvider.notifier).heavyImpact();
     
+    // Random Praise
+    _praiseMessage = _praiseMessages[Random().nextInt(_praiseMessages.length)];
+    
+    // Suggest next actions (Could be from API or local logic)
     _loadSuggestions();
   }
-  
+
   void _loadSuggestions() async {
-     final s = await DatabaseHelper().getSuggestions();
-     setState(() => _suggestions = s);
+    // Mock suggestions for now. In real app, analyze context or time.
+    setState(() {
+      _suggestions = [
+        {'title': 'レポート執筆', 'node_id': 'task_1'},
+        {'title': '読書', 'node_id': 'task_2'},
+        {'title': 'プログラミング', 'node_id': 'task_3'},
+        {'title': '休憩', 'node_id': 'task_break'},
+      ];
+    });
   }
 
   @override
   void dispose() {
     _confetti.dispose();
+    _titleCtrl.dispose();
     super.dispose();
   }
 
-  void _finish([String? nodeId]) async {
-     ref.read(hapticsProvider.notifier).mediumImpact();
+  void _finish(String? nodeId) async {
      final session = ref.read(sessionProvider);
-     if (session == null) return;
+     if (session != null) {
+        final title = _titleCtrl.text.isNotEmpty ? _titleCtrl.text : (nodeId != null ? _suggestions.firstWhere((s) => s['node_id'] == nodeId)['title'] : "無題のセッション");
+        final mins = session.durationMinutes ?? 0;
+        
+        await DatabaseHelper().insertSession({
+          'id': session.id ?? DateTime.now().toIso8601String(),
+          'title': title,
+          'startAt': session.startAt.toIso8601String(),
+          'minutes': mins,
+          'points': (mins * 10).toDouble(), // Simple point logic
+          'node_id': nodeId
+        });
+
+        // Update Stats
+        await DatabaseHelper().updateUserStats(mins, (mins * 10).toDouble());
+        
+        // Refresh Providers
+        ref.refresh(userStatsProvider);
+        ref.refresh(historyProvider);
+        ref.refresh(dailyAggProvider);
+        ref.refresh(weeklyAggProvider);
+        
+        // Check Achievements
+        final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
      
-     final mins = session.durationMinutes ?? 0;
-     final title = _titleCtrl.text;
-     final draftTitle = title.isEmpty ? "(No Title)" : title;
+        final newAchievements = await ref.read(achievementProvider.notifier).checkAchievements(mins, session.startAt, homeBonus);
      
-     await DatabaseHelper().insertSession(
-       startAt: session.startAt,
-       minutes: mins,
-       draftTitle: draftTitle,
-       nodeId: nodeId,
-       isOnCampus: false, // Updated to false as we removed local state, TODO: fix
-       // TODO: Add support for Home Bonus in DB points calculation if needed
-     );
-     
-     // Reset intent
-     ref.read(selectedTaskProvider.notifier).state = null;
-     
-     ref.refresh(historyProvider);
-     ref.refresh(userStatsProvider);
-     ref.refresh(dailyAggProvider);
-     ref.refresh(weeklyAggProvider);
-     
-     // Check Achievements
-     // Note: isOnCampus logic was temporarily hardcoded to false, we need to pass true context in future
-     // For now, let's just check based on available data
-     final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
-     
-     final newAchievements = await ref.read(achievementProvider).checkAchievements(mins, session.startAt, homeBonus);
-     
-     if (mounted) {
-        if (newAchievements.isNotEmpty) {
-           // Show Moko-Moko Dialog for Achievements
-           showDialog(
-             context: context,
-             builder: (c) => Dialog(
-               backgroundColor: Colors.transparent,
-               insetPadding: const EdgeInsets.all(20),
-               child: Stack(
-                 alignment: Alignment.center,
-                 children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [BoxShadow(color: const Color(0xFFFFB7B2).withOpacity(0.5), blurRadius: 30, spreadRadius: 5)]
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text("🎉 実績解除！", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFFB7B2))),
-                          const SizedBox(height: 16),
-                          ...newAchievements.map((ach) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: ach.color.withOpacity(0.3), shape: BoxShape.circle),
-                                  child: Icon(ach.icon, color: ach.color, size: 32),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(ach.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                      Text(ach.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                          )),
-                          const SizedBox(height: 24),
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFB5EAD7),
-                              foregroundColor: Colors.grey[800],
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                            ),
-                            onPressed: () {
-                              Navigator.pop(c);
-                              context.go('/');
-                            }, 
-                            child: const Text("やったね！")
-                          )
-                        ],
-                      ),
-                    ),
-                    // Confetti is already playing in background
-                 ],
-               ),
-             )
-           );
-        } else {
-           context.go('/');
+        if (mounted) {
+           if (newAchievements.isNotEmpty) {
+             // Show Achievement Dialog or SnackBar
+             for (var ach in newAchievements) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Row(children: [Icon(ach.icon, color: Colors.white), SizedBox(width:8), Text("実績解除: ${ach.title}")]),
+                  backgroundColor: ach.color,
+                ));
+             }
+           }
+           
+           // Show Notification (Local)
+           await showNotification("セッション完了", "お疲れ様でした！ $mins分間の集中を記録しました。");
+           
+           // Return home
+           if (context.canPop()) {
+              context.pop(); 
+              // We need to pop 'now' screen or go root. 
+              // Since we pushedReplacement to finish, we might need to go home explicitly.
+              context.go('/'); 
+           } else {
+              context.go('/');
+           }
         }
      }
   }
   
-  void _finish([String? nodeId]) async {
-     ref.read(hapticsProvider.notifier).mediumImpact();
-     final session = ref.read(sessionProvider);
-     if (session == null) return;
-     
-     final mins = session.durationMinutes ?? 0;
-     final title = _titleCtrl.text;
-     final draftTitle = title.isEmpty ? "(No Title)" : title;
-     
-     await DatabaseHelper().insertSession(
-       startAt: session.startAt,
-       minutes: mins,
-       draftTitle: draftTitle,
-       nodeId: nodeId,
-       isOnCampus: false, // Updated to false as we removed local state, TODO: fix
-       // TODO: Add support for Home Bonus in DB points calculation if needed
-     );
-     
-     // Reset intent
-     ref.read(selectedTaskProvider.notifier).state = null;
-     
-     ref.refresh(historyProvider);
-     ref.refresh(userStatsProvider);
-     ref.refresh(dailyAggProvider);
-     ref.refresh(weeklyAggProvider);
-     
-     // Check Achievements
-     // Note: isOnCampus logic was temporarily hardcoded to false, we need to pass true context in future
-     // For now, let's just check based on available data
-     final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
-     
-     final newAchievements = await ref.read(achievementProvider).checkAchievements(mins, session.startAt, homeBonus);
-     
-     if (mounted) {
-        if (newAchievements.isNotEmpty) {
-           // Show Moko-Moko Dialog for Achievements
-           showDialog(
-             context: context,
-             builder: (c) => Dialog(
-               backgroundColor: Colors.transparent,
-               insetPadding: const EdgeInsets.all(20),
-               child: Stack(
-                 alignment: Alignment.center,
-                 children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(30),
-                        boxShadow: [BoxShadow(color: const Color(0xFFFFB7B2).withOpacity(0.5), blurRadius: 30, spreadRadius: 5)]
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text("🎉 実績解除！", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFFFFB7B2))),
-                          const SizedBox(height: 16),
-                          ...newAchievements.map((ach) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(color: ach.color.withOpacity(0.3), shape: BoxShape.circle),
-                                  child: Icon(ach.icon, color: ach.color, size: 32),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(ach.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                      Text(ach.description, style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                                    ],
-                                  ),
-                                )
-                              ],
-                            ),
-                          )),
-                          const SizedBox(height: 24),
-                          FilledButton(
-                            style: FilledButton.styleFrom(
-                              backgroundColor: const Color(0xFFB5EAD7),
-                              foregroundColor: Colors.grey[800],
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                            ),
-                            onPressed: () {
-                              Navigator.pop(c);
-                              context.go('/');
-                            }, 
-                            child: const Text("やったね！")
-                          )
-                        ],
-                      ),
-                    ),
-                    // Confetti is already playing in background
-                 ],
-               ),
-             )
-           );
-        } else {
-           context.go('/');
-        }
-     }
-  }
+
+
 
   @override
   Widget build(BuildContext context) {
