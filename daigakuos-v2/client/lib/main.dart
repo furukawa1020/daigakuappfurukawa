@@ -17,6 +17,7 @@ import 'database_helper.dart';
 import 'calendar_screen.dart';
 import 'settings_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'haptics_service.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -304,7 +305,10 @@ class HomeScreen extends ConsumerWidget {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.settings),
-                  onPressed: () => context.push('/settings'),
+                  onPressed: () {
+                    ref.read(hapticsProvider.notifier).lightImpact();
+                    context.push('/settings');
+                  },
                 )
               ],
             ),
@@ -319,6 +323,7 @@ class HomeScreen extends ConsumerWidget {
                     Consumer(builder: (context, ref, _) {
                         return GestureDetector(
                           onTap: () async {
+                              ref.read(hapticsProvider.notifier).lightImpact();
                               bool on = await checkIfOnCampus();
                               ref.read(isOnCampusProvider.notifier).state = on;
                               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(on ? "キャンパス内にいます！ (1.5倍ボーナス)" : "位置情報を更新しました")));
@@ -450,7 +455,10 @@ class HomeScreen extends ConsumerWidget {
                     GlassCard(
                       padding: EdgeInsets.zero,
                       child: ListTile(
-                        onTap: () => context.push('/calendar'),
+                        onTap: () {
+                          ref.read(hapticsProvider.notifier).lightImpact();
+                          context.push('/calendar');
+                        },
                         leading: Container(
                            padding: const EdgeInsets.all(8),
                            decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
@@ -525,6 +533,7 @@ class HomeScreen extends ConsumerWidget {
           backgroundColor: Colors.transparent,
           elevation: 0,
           onPressed: () async {
+            ref.read(hapticsProvider.notifier).heavyImpact();
             // Check Location logic
             bool onCampus = await checkIfOnCampus();
             ref.read(isOnCampusProvider.notifier).state = onCampus;
@@ -573,6 +582,7 @@ Future<void> _editSession(BuildContext context, Map<String, dynamic> session, Wi
           ),
           FilledButton(
             onPressed: () async {
+               ref.read(hapticsProvider.notifier).mediumImpact();
                await DatabaseHelper().updateSessionTitle(session['id'], titleCtrl.text);
                ref.refresh(historyProvider);
                Navigator.pop(ctx);
@@ -702,6 +712,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                    padding: const EdgeInsets.all(40),
                    child: GestureDetector(
                      onTap: () {
+                        ref.read(hapticsProvider.notifier).heavyImpact();
                         // Complete logic
                         final s = ref.read(sessionProvider);
                         if (s != null) {
@@ -769,6 +780,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
   }
 
   void _finish([String? nodeId]) async {
+     ref.read(hapticsProvider.notifier).mediumImpact();
      final session = ref.read(sessionProvider);
      if (session == null) return;
      

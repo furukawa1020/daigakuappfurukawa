@@ -9,6 +9,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'main.dart';
 import 'database_helper.dart';
+import 'haptics_service.dart';
 
 // Providers for Settings
 final wakeLockProvider = StateProvider<bool>((ref) => true);
@@ -110,6 +111,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                            value: wakeLock, 
                            onChanged: _toggleWakeLock,
                            activeColor: Colors.purpleAccent,
+                         ),
+                         const Divider(),
+                         Consumer(
+                           builder: (context, ref, child) {
+                             final hapticsEnabled = ref.watch(hapticsProvider);
+                             return SwitchListTile(
+                               title: const Text("触覚フィードバック", style: TextStyle(fontWeight: FontWeight.bold)),
+                               subtitle: const Text("ボタン操作時などに振動します"),
+                               value: hapticsEnabled,
+                               onChanged: (value) {
+                                 ref.read(hapticsProvider.notifier).toggle(value);
+                               },
+                               activeColor: Colors.purpleAccent,
+                             );
+                           },
                          ),
                        ],
                      ),
