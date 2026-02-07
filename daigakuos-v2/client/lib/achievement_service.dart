@@ -65,8 +65,9 @@ const List<Achievement> ALL_ACHIEVEMENTS = [
   ),
 ];
 
-class AchievementService extends StateNotifier<List<Achievement>> {
-  AchievementService() : super([]);
+class AchievementService extends Notifier<List<Achievement>> {
+  @override
+  List<Achievement> build() => [];
 
   // Check for new achievements after a session
   Future<List<Achievement>> checkAchievements(int durationMinutes, DateTime startAt, bool isHome) async {
@@ -114,4 +115,4 @@ class AchievementService extends StateNotifier<List<Achievement>> {
   }
 }
 
-final achievementProvider = Provider((ref) => AchievementService());
+final achievementProvider = NotifierProvider<AchievementService, List<Achievement>>(AchievementService.new);
