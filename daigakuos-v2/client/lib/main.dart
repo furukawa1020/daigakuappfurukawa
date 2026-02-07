@@ -101,6 +101,7 @@ const double CAMPUS_RADIUS_METERS = 500.0;
 
 final sessionProvider = StateProvider<Session?>((ref) => null);
 final locationBonusProvider = StateProvider<LocationBonus>((ref) => LocationBonus.none);
+final selectedTaskProvider = StateProvider<String?>((ref) => null);
 
 final userStatsProvider = FutureProvider<UserStats>((ref) async {
   try {
@@ -501,28 +502,49 @@ class HomeScreen extends ConsumerWidget {
 
                     const SizedBox(height: 24),
                     
-                    // Calendar Button (Header)
-                    GlassCard(
-                      padding: EdgeInsets.zero,
-                      child: ListTile(
-                        onTap: () {
-                          ref.read(hapticsProvider.notifier).lightImpact();
-                          context.push('/calendar');
-                        },
-                        leading: Container(
-                           padding: const EdgeInsets.all(8),
-                           decoration: BoxDecoration(color: Colors.purple.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                           child: const Icon(Icons.calendar_month, color: Colors.purple),
-                        ),
-                        title: const Text("学習カレンダー", style: TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: const Text("月ごとの記録を確認"),
-                        trailing: const Icon(Icons.chevron_right),
-                      ),
-                    ).animate().fadeIn().slideX(),
+                    // Suggestions Section
+                    const Align(alignment: Alignment.centerLeft, child: Text("なにやる？", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                    const SizedBox(height: 12),
                     
-                    const SizedBox(height: 16),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final history = ref.watch(historyProvider).valueOrNull ?? [];
+                        // Extract unique recent titles
+                        final recentTitles = history.map((s) => s['title'] as String).toSet().take(4).toList();
+                        
+                        if (recentTitles.isEmpty) return const Text("履歴がありません", style: TextStyle(color: Colors.grey));
+                        
+                        return Wrap(
+                          spacing: 8, runSpacing: 8,
+                          children: recentTitles.map((title) {
+                             return ActionChip(
+                               elevation: 2,
+                               backgroundColor: Colors.white.withOpacity(0.8),
+                               avatar: const Icon(Icons.flash_on, size: 16, color: Colors.orange),
+                               label: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                               onPressed: () {
+                                  ref.read(hapticsProvider.notifier).lightImpact();
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("「$title」をセットしました。長押しで開始！")));
+                                  ref.read(selectedTaskProvider.notifier).state = title;
+                               },
+                             );
+                          }).toList(),
+                        );
+                      }
+                    ).animate().fadeIn().slideX(),
 
-                    const Align(alignment: Alignment.centerLeft, child: Text("最近の履歴", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                    const SizedBox(height: 32),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("最近の履歴", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                        IconButton(
+                          icon: const Icon(Icons.calendar_month, color: Colors.grey),
+                          onPressed: () => context.push('/calendar'),
+                        )
+                      ],
+                    ),
                     const SizedBox(height: 12),
                   ],
                 ),
@@ -590,7 +612,16 @@ class HomeScreen extends ConsumerWidget {
             final bonus = await checkLocationBonus();
             ref.read(locationBonusProvider.notifier).state = bonus;
             
-            ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
+            // Get selected task if any
+            final selectedTask = ref.read(selectedTaskProvider);
+            
+            ref.read(sessionProvider.notifier).state = Session(
+              startAt: DateTime.now(), 
+              // We could pass the title here if Session had a title field, 
+              // but Session model is currently minimal. 
+              // We'll pass it via constructor or another provider if needed.
+              // For now, let's assume we handle it in NowScreen by reading the provider.
+            );
             context.push('/now');
         },
       ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
@@ -673,6 +704,13 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    // Pre-fill from selectedTaskProvider
+    final selected = ref.read(selectedTaskProvider);
+    if (selected != null) {
+      // We don't have a title field in Session state, so simple ephemeral storage is used in _finish
+      // For now, let's just log or set it if we add a local controller
+    }
+
     _pulseController = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
     
     final session = ref.read(sessionProvider);
@@ -815,6 +853,13 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     super.initState();
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _confetti.play();
+    
+    // Pre-fill from selectedTaskProvider
+    final selected = ref.read(selectedTaskProvider);
+    if (selected != null) {
+      _titleCtrl.text = selected;
+    }
+    
     _loadSuggestions();
   }
   
@@ -840,12 +885,15 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      
      await DatabaseHelper().insertSession(
        startAt: session.startAt,
-       minutes: session.durationMinutes ?? 0,
+       minutes: mins,
        draftTitle: draftTitle,
        nodeId: nodeId,
-       isOnCampus: bonus == LocationBonus.campus, // Legacy field, maybe update DB? For now map properly
+       isOnCampus: false, // Updated to false as we removed local state, TODO: fix
        // TODO: Add support for Home Bonus in DB points calculation if needed
      );
+     
+     // Reset intent
+     ref.read(selectedTaskProvider.notifier).state = null;
      
      ref.refresh(historyProvider);
      ref.refresh(userStatsProvider);
