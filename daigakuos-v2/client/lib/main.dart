@@ -100,7 +100,7 @@ const double CAMPUS_LON = 136.6845;
 const double CAMPUS_RADIUS_METERS = 500.0;
 
 final sessionProvider = StateProvider<Session?>((ref) => null);
-final isOnCampusProvider = StateProvider<bool>((ref) => false);
+final locationBonusProvider = StateProvider<LocationBonus>((ref) => LocationBonus.none);
 
 final userStatsProvider = FutureProvider<UserStats>((ref) async {
   try {
@@ -131,7 +131,9 @@ final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async
   return await DatabaseHelper().getWeeklyAgg();
 });
 
-Future<bool> checkIfOnCampus() async {
+enum LocationBonus { none, campus, home }
+
+Future<LocationBonus> checkLocationBonus() async {
   try {
     // Check permission
     final permission = await Geolocator.checkPermission();
@@ -145,13 +147,28 @@ Future<bool> checkIfOnCampus() async {
       timeLimit: const Duration(seconds: 5)
     );
 
-    double distanceInMeters = Geolocator.distanceBetween(
+    // Check Campus
+    double distCampus = Geolocator.distanceBetween(
       CAMPUS_LAT, CAMPUS_LON, position.latitude, position.longitude,
     );
-    return distanceInMeters <= CAMPUS_RADIUS_METERS;
+    if (distCampus <= CAMPUS_RADIUS_METERS) return LocationBonus.campus;
+
+    // Check Home
+    final prefs = await SharedPreferences.getInstance();
+    final homeLat = prefs.getDouble('home_lat');
+    final homeLon = prefs.getDouble('home_lon');
+
+    if (homeLat != null && homeLon != null) {
+      double distHome = Geolocator.distanceBetween(
+        homeLat, homeLon, position.latitude, position.longitude,
+      );
+      if (distHome <= 100) return LocationBonus.home; // 100m radius for home
+    }
+
+    return LocationBonus.none;
   } catch (e) {
     print("Geo Error: $e");
-    return false;
+    return LocationBonus.none;
   }
 }
 
@@ -292,7 +309,7 @@ class HomeScreen extends ConsumerWidget {
     final statsAsync = ref.watch(userStatsProvider);
     final historyAsync = ref.watch(historyProvider);
     final weeklyAsync = ref.watch(weeklyAggProvider);
-    final isOnCampus = ref.watch(isOnCampusProvider);
+    // final bonus = ref.watch(locationBonusProvider); // Consumed in specific widget
 
     return Scaffold(
       body: PremiumBackground(
@@ -320,31 +337,63 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
-                    // Location Status Badge (Pill)
+                  // Location Status Badge (Pill)
                     Consumer(builder: (context, ref, _) {
+                        final bonus = ref.watch(locationBonusProvider);
+                        
+                        Color getBgColor() {
+                          switch (bonus) {
+                            case LocationBonus.campus: return Colors.green.shade100;
+                            case LocationBonus.home: return Colors.orange.shade100;
+                            default: return Colors.white.withOpacity(0.5);
+                          }
+                        }
+                        
+                        Color getFgColor() {
+                          switch (bonus) {
+                            case LocationBonus.campus: return Colors.green[800]!;
+                            case LocationBonus.home: return Colors.orange[800]!;
+                            default: return Colors.grey[700]!;
+                          }
+                        }
+                        
+                        String getText() {
+                           switch (bonus) {
+                            case LocationBonus.campus: return "キャンパス内 (1.5倍)";
+                            case LocationBonus.home: return "自宅警備中 (1.2倍)";
+                            default: return "キャンパス外";
+                          }
+                        }
+
                         return GestureDetector(
                           onTap: () async {
                               ref.read(hapticsProvider.notifier).lightImpact();
-                              bool on = await checkIfOnCampus();
-                              ref.read(isOnCampusProvider.notifier).state = on;
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(on ? "キャンパス内にいます！ (1.5倍ボーナス)" : "位置情報を更新しました")));
+                              final newBonus = await checkLocationBonus();
+                              ref.read(locationBonusProvider.notifier).state = newBonus;
+                              
+                              String msg;
+                              if (newBonus == LocationBonus.campus) msg = "キャンパス内にいます！ (1.5倍ボーナス)";
+                              else if (newBonus == LocationBonus.home) msg = "自宅警備モード！ (1.2倍ボーナス)";
+                              else msg = "位置情報を更新しました";
+                              
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
                           },
                           child: AnimatedContainer(
                             duration: 500.ms,
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                             decoration: BoxDecoration(
-                              color: isOnCampus ? Colors.green.shade100 : Colors.white.withOpacity(0.5),
+                              color: getBgColor(),
                               borderRadius: BorderRadius.circular(30),
-                              border: Border.all(color: isOnCampus ? Colors.green.withOpacity(0.3) : Colors.white),
+                              border: Border.all(color: getBgColor().withOpacity(1.0)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.location_on, size: 16, color: isOnCampus ? Colors.green[700] : Colors.grey),
+                                Icon(Icons.location_on, size: 16, color: getFgColor()),
                                 const SizedBox(width: 8),
                                 Text(
-                                  isOnCampus ? "キャンパス内 (1.5倍)" : "キャンパス外",
-                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isOnCampus ? Colors.green[800] : Colors.grey[700]),
+                                  getText(),
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: getFgColor()),
                                 )
                               ],
                             ),
@@ -538,8 +587,8 @@ class HomeScreen extends ConsumerWidget {
       floatingActionButton: HyperfocusButton(
         onComplete: () async {
             // Start Session Logic
-            bool onCampus = await checkIfOnCampus();
-            ref.read(isOnCampusProvider.notifier).state = onCampus;
+            final bonus = await checkLocationBonus();
+            ref.read(locationBonusProvider.notifier).state = bonus;
             
             ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
             context.push('/now');
@@ -788,14 +837,14 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      final mins = session.durationMinutes ?? 0;
      final title = _titleCtrl.text;
      final draftTitle = title.isEmpty ? "(No Title)" : title;
-     final isOnCampus = ref.read(isOnCampusProvider);
      
      await DatabaseHelper().insertSession(
        startAt: session.startAt,
        minutes: session.durationMinutes ?? 0,
        draftTitle: draftTitle,
        nodeId: nodeId,
-       isOnCampus: isOnCampus,
+       isOnCampus: bonus == LocationBonus.campus, // Legacy field, maybe update DB? For now map properly
+       // TODO: Add support for Home Bonus in DB points calculation if needed
      );
      
      ref.refresh(historyProvider);

@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/legacy.dart'; // For StateProvider in Riverpod 
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:geolocator/geolocator.dart';
 // import 'package:file_picker/file_picker.dart'; // Removed due to v1 embedding error
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:geolocator/geolocator.dart';
 import 'dart:io';
 import 'main.dart';
 import 'database_helper.dart';
@@ -135,10 +137,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                    const _SectionHeader(title: "データ管理"),
                    GlassCard(
                      padding: EdgeInsets.zero,
-                     child: Column(
-                       children: [
-                         ListTile(
-                           leading: const Icon(Icons.download, color: Colors.blue),
+                      child: Column(
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.home, color: Colors.indigo),
+                            title: const Text("自宅の場所を設定"),
+                            subtitle: const Text("現在地を「自宅」として登録します"),
+                            onTap: () async {
+                               await _setHomeLocation(context);
+                            },
+                          ),
+                          const Divider(),
+                          ListTile(
+                            leading: const Icon(Icons.download, color: Colors.blue),
                            title: const Text("データをエクスポート"),
                            onTap: () async {
                               await DatabaseHelper().exportData();
