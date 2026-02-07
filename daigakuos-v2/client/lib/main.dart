@@ -881,7 +881,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
         });
 
         // Update Stats
-        await DatabaseHelper().updateUserStats(mins, (mins * 10).toDouble());
+        // await DatabaseHelper().updateUserStats(mins, (mins * 10).toDouble()); // Removed: Stats are calculated dynamically from sessions
         
         // Refresh Providers
         ref.refresh(userStatsProvider);
