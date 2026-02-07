@@ -201,16 +201,18 @@ class DaigakuAPPApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      routerConfig: _router,
       title: 'DaigakuAPP v2',
       theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366F1), // Indigo
-          brightness: Brightness.light,
-            ],
-          ),
-          child: child,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFFFF5F6), // Pale Pink Background
+        primaryColor: const Color(0xFFB5EAD7), // Mint
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: const Color(0xFFFFB7B2), // Salmon Pink
+          surface: Colors.white,
         ),
+        fontFamily: 'Roboto', // Ideally rounded font
+        useMaterial3: true,
       ),
     );
   }
