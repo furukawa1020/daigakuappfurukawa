@@ -1,14 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final hapticsProvider = StateNotifierProvider<HapticsService, bool>((ref) {
-  return HapticsService();
-});
+final hapticsProvider = NotifierProvider<HapticsService, bool>(HapticsService.new);
 
-class HapticsService extends StateNotifier<bool> {
-  HapticsService() : super(true) {
+class HapticsService extends Notifier<bool> {
+  @override
+  bool build() {
     _loadSettings();
+    return true; 
   }
 
   Future<void> _loadSettings() async {
