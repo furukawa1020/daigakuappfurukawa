@@ -217,7 +217,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             // Calendar Card
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: GlassCard(
+              child: MokoCard(
                 child: eventsAsync.when(
                   data: (dates) => TableCalendar(
                     firstDay: DateTime.utc(2024, 1, 1),
@@ -280,7 +280,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               final s = sessions[index];
                               return Padding(
                                 padding: const EdgeInsets.only(bottom: 8.0),
-                                child: GlassCard(
+                                child: MokoCard(
                                   padding: const EdgeInsets.all(12),
                                   child: ListTile(
                                     title: Text(s['title'], style: const TextStyle(fontWeight: FontWeight.bold)),
