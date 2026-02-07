@@ -1,11 +1,11 @@
+```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart'; // Add go_router import
-import 'main.dart';
 import 'database_helper.dart';
+import 'package:intl/intl.dart';
+import 'widgets/moko_card.dart';
+import 'widgets/premium_background.dart';
 
 // Provider to fetch sessions for a specific day
 final sessionsForDayProvider = FutureProvider.family<List<Map<String, dynamic>>, DateTime>((ref, date) async {

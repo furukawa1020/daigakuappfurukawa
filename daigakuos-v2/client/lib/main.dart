@@ -9,17 +9,24 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart'; // For DateFormat
+import 'package:permission_handler/permission_handler.dart'; // For permission
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'database_helper.dart';
 import 'calendar_screen.dart';
 import 'settings_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'haptics_service.dart';
 import 'widgets/hyperfocus_button.dart';
 import 'achievement_service.dart';
+import 'widgets/moko_card.dart';
+import 'widgets/premium_background.dart';
+import 'widgets/stat_item.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State

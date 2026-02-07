@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart'; // For StateProvider in Riverpod v3
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:geolocator/geolocator.dart';
 // import 'package:file_picker/file_picker.dart'; // Removed due to v1 embedding error
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:geolocator/geolocator.dart';
 import 'dart:io';
-import 'main.dart';
 import 'database_helper.dart';
 import 'haptics_service.dart';
+import 'main.dart'; // accessing global providers like wakeLockProvider if needed
+import 'widgets/moko_card.dart';
+import 'widgets/premium_background.dart';
 
 // Providers for Settings
 final wakeLockProvider = StateProvider<bool>((ref) => true);
@@ -83,6 +84,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
        ref.refresh(userStatsProvider);
        ref.refresh(historyProvider);
     }
+  }
+
+  Future<void> _setHomeLocation(BuildContext context) async {
+      try {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (!serviceEnabled) throw "Location services are disabled.";
+
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+          if (permission == LocationPermission.denied) throw "Location permissions are denied";
+        }
+        
+        if (permission == LocationPermission.deniedForever) {
+          throw "Location permissions are permanently denied.";
+        }
+
+        final position = await Geolocator.getCurrentPosition();
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setDouble('home_lat', position.latitude);
+        await prefs.setDouble('home_lon', position.longitude);
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text("現在地を自宅に設定しました🏠"))
+          );
+          ref.read(hapticsProvider.notifier).mediumImpact();
+        }
+      } catch (e) {
+         if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
+         }
+      }
   }
 
   @override
