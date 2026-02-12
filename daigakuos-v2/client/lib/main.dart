@@ -325,76 +325,79 @@ class HomeScreen extends ConsumerWidget {
 
                     const SizedBox(height: 16),
                     
-                    // Weekly Chart
-                    MokoCard(
-                      padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("週間アクティビティ", style: TextStyle(fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            height: 120,
-                            child: weeklyAsync.when(
-                              data: (data) => BarChart(
-                                BarChartData(
-                                  titlesData: FlTitlesData(
-                                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (val, meta) {
-                                       if (val.toInt() >= 0 && val.toInt() < data.length) {
-                                         return Padding(padding: const EdgeInsets.only(top: 8), child: Text(data[val.toInt()]['day'].toString().substring(8), style: const TextStyle(fontSize: 10, color: Colors.grey)));
-                                       }
-                                       return const SizedBox();
-                                    })),
-                                  ),
-                                  gridData: FlGridData(show: false),
-                                  borderData: FlBorderData(show: false),
-                                  barGroups: data.asMap().entries.map((e) => BarChartGroupData(x: e.key, barRods: [BarChartRodData(toY: (e.value['points'] as num).toDouble(), color: const Color(0xFF6366F1), width: 12, borderRadius: BorderRadius.circular(4))])).toList(),
-                                )
-                              ),
-                              loading: () => const SizedBox(),
-                              error: (_,__) => const SizedBox(),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ).animate().fadeIn().slideY(begin: 0.2, end: 0, delay: 100.ms),
-
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 32),
                     
-                    // Suggestions Section
-                    const Align(alignment: Alignment.centerLeft, child: Text("なにやる？", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
-                    const SizedBox(height: 12),
-                    
+                    // "No-Pressure" One-Tap Start Section
                     Consumer(
                       builder: (context, ref, _) {
-                        final history = ref.watch(historyProvider).asData?.value ?? [];
-                        // Extract unique recent titles
-                        final recentTitles = history.map((s) => s['title'] as String).toSet().take(4).toList();
-                        
-                        if (recentTitles.isEmpty) return const Text("履歴がありません", style: TextStyle(color: Colors.grey));
-                        
-                        return Wrap(
-                          spacing: 8, runSpacing: 8,
-                          children: recentTitles.map((title) {
-                             return ActionChip(
-                               elevation: 0,
-                               backgroundColor: const Color(0xFFE2F0CB), // Tea Green
-                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                               avatar: const Icon(Icons.favorite, size: 16, color: Color(0xFFFF9AA2)), // Heart
-                               label: Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700])),
-                               onPressed: () {
-                                  ref.read(hapticsProvider.notifier).lightImpact();
-                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("「$title」をセットしました。長押しで開始！")));
-                                  ref.read(selectedTaskProvider.notifier).state = title;
-                               },
-                             );
-                          }).toList(),
-                        );
+                         final history = ref.watch(historyProvider).asData?.value ?? [];
+                         String? recentTitle;
+                         if (history.isNotEmpty) {
+                            // Find first valid title
+                            recentTitle = history.firstWhere((item) => (item['title'] as String).isNotEmpty, orElse: () => {'title': ''})['title'];
+                            if (recentTitle!.isEmpty) recentTitle = null;
+                         }
+
+                         return Column(
+                           crossAxisAlignment: CrossAxisAlignment.stretch,
+                           children: [
+                              Text(
+                                "さあ、始めましょう", // Let's get started
+                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.grey[800])
+                              ),
+                              const SizedBox(height: 12),
+                              
+                              if (recentTitle != null)
+                                GestureDetector(
+                                  onTap: () {
+                                     ref.read(hapticsProvider.notifier).heavyImpact();
+                                     ref.read(selectedTaskProvider.notifier).state = recentTitle!;
+                                     // "One-Tap" -> Immediate Launch
+                                     ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
+                                     context.push('/now');
+                                  },
+                                  child: MokoCard(
+                                    color: const Color(0xFFB5EAD7), // Mint
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(24),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                           const Icon(Icons.play_circle_fill, size: 48, color: Colors.white),
+                                           const SizedBox(height: 12),
+                                           Text(
+                                             recentTitle,
+                                             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white, shadows: [Shadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))]),
+                                             textAlign: TextAlign.center,
+                                           ),
+                                           const SizedBox(height: 8),
+                                           Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(12)),
+                                              child: const Text("前回の続きをやる", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12))
+                                           ),
+                                        ],
+                                      ),
+                                    ),
+                                  ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
+                                )
+                              else
+                                MokoCard(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Center(
+                                    child: Column(
+                                      children: [
+                                        const Icon(Icons.nature_people, size: 40, color: Color(0xFFFFB7B2)),
+                                        const SizedBox(height: 8),
+                                        const Text("まずは5分、\n何も考えずにやってみよう", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                           ],
+                         );
                       }
-                    ).animate().fadeIn().slideX(),
+                    ),
 
                     const SizedBox(height: 32),
 
@@ -627,6 +630,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     final minutes = twoDigits(_elapsed.inMinutes);
     final seconds = twoDigits(_elapsed.inSeconds % 60);
+    final taskTitle = ref.watch(selectedTaskProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF111827), // Dark Mode
@@ -669,7 +673,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                          Container(
                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                           child: const Text("DaigakuAPP 実行中...", style: TextStyle(color: Colors.white38, fontSize: 12)),
+                           child: Text(taskTitle ?? "DaigakuAPP 実行中...", style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
                          )
                        ],
                      ),
@@ -759,6 +763,12 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     
     // Play sound/haptics
     ref.read(hapticsProvider.notifier).heavyImpact();
+    
+    // Pre-fill title from provider
+    final selectedTask = ref.read(selectedTaskProvider);
+    if (selectedTask != null) {
+      _titleCtrl.text = selectedTask;
+    }
     
     // Random Praise
     _praiseMessage = _praiseMessages[Random().nextInt(_praiseMessages.length)];
