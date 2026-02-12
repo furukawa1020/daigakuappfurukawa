@@ -30,6 +30,7 @@ import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
+import 'widgets/daily_moko_message.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -259,6 +260,14 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         );
                     }),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Daily Encouragement
+                    const DailyMokoMessage(),
+                    
+                    // Quick Start
+                    const QuickStartButton(),
                     
                     const SizedBox(height: 24),
 
