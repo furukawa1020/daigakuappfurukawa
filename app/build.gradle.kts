@@ -8,6 +8,7 @@ plugins {
 android {
     namespace = "com.hatake.daigakuos"
     compileSdk = 34
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "com.hatake.daigakuos"
