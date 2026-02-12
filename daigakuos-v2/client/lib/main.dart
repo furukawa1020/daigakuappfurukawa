@@ -30,7 +30,6 @@ import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
-import 'widgets/daily_moko_message.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -260,14 +259,6 @@ class HomeScreen extends ConsumerWidget {
                           ),
                         );
                     }),
-                    
-                    const SizedBox(height: 16),
-                    
-                    // Daily Encouragement
-                    const DailyMokoMessage(),
-                    
-                    // Quick Start
-                    const QuickStartButton(),
                     
                     const SizedBox(height: 24),
 
@@ -728,6 +719,17 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     "今日も世界を救いました",
     "ゆっくり休んでね。",
     "君ならできると信じてた！",
+    "1分でも勝利です🎉",
+    "戻ってきてくれてありがとう✨",
+    "完璧じゃなくて大丈夫💕",
+    "あなたのペースが一番",
+    "今日もよくがんばった！",
+    "小さな一歩が素敵✨",
+    "休むのも大事だよ🌙",
+    "マイペースでOK💫", "またやれるよ！",
+    "あなたは十分がんばった",
+    "焦らなくていいからね",
+    "続けてるだけで偉い🌟",
   ];
 
   @override
