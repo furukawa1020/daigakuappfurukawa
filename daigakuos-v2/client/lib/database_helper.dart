@@ -29,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (
@@ -51,6 +51,16 @@ class DatabaseHelper {
             FOREIGN KEY(node_id) REFERENCES nodes(id)
           )
         ''');
+        await db.execute('''
+          CREATE TABLE rest_days (
+            day TEXT PRIMARY KEY
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('CREATE TABLE IF NOT EXISTS rest_days (day TEXT PRIMARY KEY)');
+        }
       },
     );
   }
@@ -152,6 +162,27 @@ class DatabaseHelper {
     await db.update('sessions', {'draft_title': newTitle}, where: 'id = ?', whereArgs: [id]);
   }
 
+  // -----------------------------------------------------------------------------
+  // REST DAYS
+  // -----------------------------------------------------------------------------
+
+  Future<void> toggleRestDay(String day) async {
+    final db = await database;
+    final res = await db.query('rest_days', where: 'day = ?', whereArgs: [day]);
+    if (res.isNotEmpty) {
+      await db.delete('rest_days', where: 'day = ?', whereArgs: [day]);
+    } else {
+      await db.insert('rest_days', {'day': day});
+    }
+  }
+
+  Future<bool> isRestDay(String day) async {
+    final db = await database;
+    final res = await db.query('rest_days', where: 'day = ?', whereArgs: [day]);
+    return res.isNotEmpty;
+  }
+
+
   Future<Map<String, dynamic>> getUserStats() async {
     final db = await database;
     final now = DateTime.now();
@@ -173,7 +204,6 @@ class DatabaseHelper {
     int totalMinutes = (totalMinsRes.first['total'] as num?)?.toInt() ?? 0;
 
     // 3. Level Calc (Sqrt Curve)
-    // Level = sqrt(Points / 100)
     double val = totalPoints / 100.0;
     int level = (sqrt(val)).toInt() + 1;
 
@@ -186,44 +216,44 @@ class DatabaseHelper {
     }
     if (progress > 1.0) progress = 1.0;
 
-    // 4. Streak Calculation
-    // Get unique days
-    final daysRes = await db.rawQuery(
-      "SELECT DISTINCT substr(start_at, 1, 10) as day FROM sessions ORDER BY day DESC"
+    // 4. Streak Calculation (ADHD-Special: 2-day grace + Rest Days)
+    // Get unique session days
+    final sessionDaysRes = await db.rawQuery(
+      "SELECT DISTINCT substr(start_at, 1, 10) as day FROM sessions"
     );
+    // Get unique rest days
+    final restDaysRes = await db.query('rest_days', columns: ['day']);
     
+    Set<String> allActiveDays = {
+      ...sessionDaysRes.map((e) => e['day'] as String),
+      ...restDaysRes.map((e) => e['day'] as String),
+    };
+    
+    List<DateTime> sortedDates = allActiveDays
+        .map((d) => DateTime.parse(d))
+        .toList()
+      ..sort((a, b) => b.compareTo(a)); // Descending
+
     int streak = 0;
-    List<String> days = daysRes.map((e) => e['day'] as String).toList();
-    
-    if (days.isNotEmpty) {
-      // Check today
-      if (days[0] == todayStr) {
+    if (sortedDates.isNotEmpty) {
+      DateTime latest = sortedDates.first;
+      int daysSinceLatest = now.difference(latest).inDays;
+      
+      // If latest activity is within 2 days (today, yesterday, or day before), continue
+      if (daysSinceLatest <= 2) {
         streak = 1;
-        // Check backwards
-        for (int i = 1; i < days.length; i++) {
-          final expected = now.subtract(Duration(days: i)).toIso8601String().substring(0, 10);
-          if (days[i] == expected) {
+        for (int i = 0; i < sortedDates.length - 1; i++) {
+          int gap = sortedDates[i].difference(sortedDates[i+1]).inDays;
+          if (gap <= 3) { // Allow skipping 2 days (X, skip, skip, Y -> diff is 3)
             streak++;
           } else {
-             break; 
+            break;
           }
-        }
-      } else {
-        // Check yesterday (grace period)
-        final yesterdayStr = now.subtract(const Duration(days: 1)).toIso8601String().substring(0, 10);
-        if (days[0] == yesterdayStr) {
-           streak = 1;
-           for (int i = 1; i < days.length; i++) {
-              final expected = now.subtract(Duration(days: i + 1)).toIso8601String().substring(0, 10);
-              if (days[i] == expected) {
-                streak++;
-              } else {
-                 break; 
-              }
-           }
         }
       }
     }
+
+    bool todayIsRest = await isRestDay(todayStr);
 
     return {
       'totalPoints': totalPoints,
@@ -234,6 +264,7 @@ class DatabaseHelper {
       'dailyPoints': dailyPoints,
       'dailyMinutes': dailyMinutes,
       'currentStreak': streak,
+      'isRestDay': todayIsRest,
     };
   }
 

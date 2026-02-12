@@ -16,13 +16,14 @@ class Session {
 
 class UserStats {
   final double totalPoints;
-  final int totalMinutes; // Added
+  final int totalMinutes;
   final int level;
   final double progress;
   final double pointsToNext;
   final double dailyPoints;
   final int dailyMinutes;
   final int currentStreak;
+  final bool isRestDay; // Added
 
   UserStats({
     required this.totalPoints,
@@ -33,18 +34,20 @@ class UserStats {
     required this.dailyPoints,
     required this.dailyMinutes,
     required this.currentStreak,
+    required this.isRestDay,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) {
     return UserStats(
       totalPoints: (json['totalPoints'] as num).toDouble(),
-      totalMinutes: (json['totalMinutes'] as num?)?.toInt() ?? ((json['totalPoints'] as num).toDouble() ~/ 30), // Facback
+      totalMinutes: (json['totalMinutes'] as num?)?.toInt() ?? ((json['totalPoints'] as num).toDouble() ~/ 30),
       level: json['level'] as int,
       progress: (json['progress'] as num).toDouble(),
       pointsToNext: (json['pointsToNext'] as num).toDouble(),
       dailyPoints: (json['dailyPoints'] as num).toDouble(),
       dailyMinutes: json['dailyMinutes'] as int,
       currentStreak: json['currentStreak'] as int,
+      isRestDay: json['isRestDay'] as bool? ?? false,
     );
   }
 }
@@ -85,7 +88,8 @@ final userStatsProvider = FutureProvider<UserStats>((ref) async {
       pointsToNext: 100, 
       dailyPoints: 0, 
       dailyMinutes: 0, 
-      currentStreak: 0
+      currentStreak: 0,
+      isRestDay: false,
     );
   }
 });

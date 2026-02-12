@@ -180,7 +180,17 @@ class HomeScreen extends ConsumerWidget {
     final statsAsync = ref.watch(userStatsProvider);
     final historyAsync = ref.watch(historyProvider);
     final weeklyAsync = ref.watch(weeklyAggProvider);
-    // final bonus = ref.watch(locationBonusProvider); // Consumed in specific widget
+
+    // Level Up Check
+    ref.listen<AsyncValue<UserStats>>(userStatsProvider, (previous, next) async {
+      final oldLevel = previous?.asData?.value.level;
+      final newLevel = next.asData?.value.level;
+      if (oldLevel != null && newLevel != null && newLevel > oldLevel) {
+         final prefs = await SharedPreferences.getInstance();
+         await prefs.setInt('last_seen_level', newLevel);
+         _showLevelUpDialog(context, newLevel, ref);
+      }
+    });
 
     return Scaffold(
       body: PremiumBackground(
@@ -215,6 +225,40 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Column(
                   children: [
+                  // Daily Moko Message (ADHD Deep Dive)
+                    Consumer(builder: (context, ref, _) {
+                       final messages = [
+                         "今日もよろしくね✨",
+                         "マイペースでいこう💫",
+                         "1分でも十分だよ🌟",
+                         "あなたならできる！",
+                         "焦らなくて大丈夫",
+                         "小さな一歩が大事",
+                         "今日のあなたが最高",
+                         "完璧じゃなくてOK💕",
+                       ];
+                       final today = DateTime.now().day;
+                       final message = messages[today % messages.length];
+                       
+                       return MokoCard(
+                         color: const Color(0xFFFFE5EC), // Light pink
+                         child: Row(
+                           children: [
+                             const Text("💌", style: TextStyle(fontSize: 32)),
+                             const SizedBox(width: 12),
+                             Expanded(
+                               child: Text(
+                                 message,
+                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF666666)),
+                               ),
+                             ),
+                           ],
+                         ),
+                       ).animate().fadeIn().slideX();
+                    }),
+                    
+                    const SizedBox(height: 16),
+                    
                   // Location Status Badge (Pill)
                     Consumer(builder: (context, ref, _) {
                         final bonus = ref.watch(locationBonusProvider);
@@ -279,6 +323,50 @@ class HomeScreen extends ConsumerWidget {
                         );
                     }),
                     
+                    const SizedBox(height: 12),
+
+                    // Rest Day Toggle (ADHD Deep Dive)
+                    statsAsync.when(
+                      data: (stats) => GestureDetector(
+                        onTap: () async {
+                          ref.read(hapticsProvider.notifier).mediumImpact();
+                          final today = DateTime.now().toIso8601String().substring(0, 10);
+                          await DatabaseHelper().toggleRestDay(today);
+                          ref.refresh(userStatsProvider);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(stats.isRestDay ? "しっかり休んでね！🌟" : "今日の休みを取り消しました。"),
+                              duration: const Duration(seconds: 2),
+                            )
+                          );
+                        },
+                        child: AnimatedContainer(
+                          duration: 400.ms,
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: stats.isRestDay ? const Color(0xFFC7CEEA) : Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [BoxShadow(color: (stats.isRestDay ? const Color(0xFFC7CEEA) : Colors.black).withOpacity(0.1), blurRadius: 10)]
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                               Text(stats.isRestDay ? "⛱️ 今日は休み！" : "💤 今日を休みにする", 
+                                 style: TextStyle(
+                                   fontWeight: FontWeight.bold, 
+                                   color: stats.isRestDay ? Colors.white : Colors.grey[600],
+                                   fontSize: 13
+                                 )
+                               ),
+                            ],
+                          ),
+                        ).animate(target: stats.isRestDay ? 1 : 0).shimmer(duration: 2.seconds),
+                      ),
+                      loading: () => const SizedBox(),
+                      error: (_,__) => const SizedBox(),
+                    ),
+
+                    
                     const SizedBox(height: 24),
 
                     // Main Stats Card
@@ -289,14 +377,36 @@ class HomeScreen extends ConsumerWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text("LEVEL ${stats.level}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.blueAccent)),
-                                    const SizedBox(height: 4),
-                                    Text("${stats.totalPoints.toInt()} XP", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
-                                  ],
-                                ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("LEVEL ${stats.level}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.blueAccent)),
+                                      const SizedBox(height: 4),
+                                      Text("${stats.totalPoints.toInt()} XP", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+                                      const SizedBox(height: 8),
+                                      Column(
+                                        children: [
+                                          SizedBox(
+                                            width: 140,
+                                            height: 8,
+                                            child: ClipRRect(
+                                              borderRadius: BorderRadius.circular(4),
+                                              child: LinearProgressIndicator(
+                                                value: stats.levelProgress,
+                                                backgroundColor: Colors.blue.withOpacity(0.1),
+                                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "あと ${(stats.nextLevelPoints - stats.totalPoints).toInt()} XP で Level Up!",
+                                            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 // Streak Ring
                                 Container(
                                   width: 60, height: 60,
@@ -380,7 +490,7 @@ class HomeScreen extends ConsumerWidget {
                                       ),
                                     ),
                                   ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
-                                )
+                                ),
                               else
                                 MokoCard(
                                   padding: const EdgeInsets.all(24),
@@ -394,6 +504,44 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
+                                
+                              // One-Minute Mode (ADHD Deep Dive)
+                              const SizedBox(height: 12),
+                              GestureDetector(
+                                onTap: () {
+                                   ref.read(hapticsProvider.notifier).mediumImpact();
+                                   ref.read(selectedTaskProvider.notifier).state = "1分チャレンジ";
+                                   ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
+                                   context.push('/now');
+                                   
+                                   // Show encouraging message
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                     const SnackBar(
+                                       content: Text("1分だけでOK！やめたくなったらやめてOK💫"),
+                                       duration: Duration(seconds: 2),
+                                     )
+                                   );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFF0F5), // Lavender blush
+                                    borderRadius: BorderRadius.circular(25),
+                                    border: Border.all(color: const Color(0xFFFFB7B2), width: 2),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.timer, size: 20, color: Color(0xFFFF9AA2)),
+                                      const SizedBox(width: 8),
+                                      const Text(
+                                        "1分だけやる",
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF666666), fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                ).animate().fadeIn(delay: 300.ms).slideX(),
+                              ),
                            ],
                          );
                       }
@@ -937,3 +1085,63 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     );
   }
 }
+
+// -----------------------------------------------------------------------------
+// LEVEL UP DIALOG
+// -----------------------------------------------------------------------------
+
+void _showLevelUpDialog(BuildContext context, int level, WidgetRef ref) {
+  ref.read(hapticsProvider.notifier).heavyImpact();
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          width: 300,
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 20)],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("🌟 LEVEL UP 🌟", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueAccent, letterSpacing: 2)),
+              const SizedBox(height: 20),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                   Container(
+                     width: 100, height: 100,
+                     decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.blueAccent.withOpacity(0.1)),
+                   ).animate(onPlay:(c)=>c.repeat()).scale(duration: 1.seconds, curve: Curves.easeInOut),
+                   Text("$level", style: const TextStyle(fontSize: 60, fontWeight: FontWeight.w900, color: Colors.blueAccent)),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const Text("すごいです！", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text("新しい高みに到達しました。", style: TextStyle(color: Colors.grey)),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: const Text("やったね！", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ).animate().scale(curve: Curves.elasticOut, duration: 800.ms).fadeIn(),
+      ),
+    ),
+  );
+}
+
