@@ -39,6 +39,87 @@ sdk.dir=C:\\Users\\hatake\\AppData\\Local\\Android\\Sdk
 
 ## アーキテクチャ
 
+### システムアーキテクチャ図
+
+```mermaid
+graph TB
+    subgraph "UI Layer"
+        HomeScreen[🏠 HomeScreen]
+        NowScreen[⏱️ NowScreen]
+        FinishScreen[✅ FinishScreen]
+        StatsScreen[📊 StatsScreen]
+        TreeScreen[🌳 TreeScreen]
+        SettingsScreen[⚙️ SettingsScreen]
+    end
+    
+    subgraph "ViewModel Layer"
+        HomeVM[HomeViewModel]
+        NowVM[NowViewModel]
+        FinishVM[FinishViewModel]
+        StatsVM[StatsViewModel]
+        TreeVM[TreeViewModel]
+        SettingsVM[SettingsViewModel]
+    end
+    
+    subgraph "Domain Layer"
+        UseCases[UseCases]
+        PointCalc[PointCalculator]
+        Repo[Repository Interface]
+    end
+    
+    subgraph "Data Layer"
+        RepoImpl[Repository Implementation]
+        AppDB[(Room Database)]
+        DAOs[DAOs]
+        Entities[Entities]
+    end
+    
+    subgraph "Utils & Services"
+        GeoManager[📍 GeofenceManager]
+        GeoBroadcast[GeofenceBroadcastReceiver]
+    end
+    
+    subgraph "DI"
+        Hilt[🔧 Hilt Module]
+    end
+    
+    HomeScreen --> HomeVM
+    NowScreen --> NowVM
+    FinishScreen --> FinishVM
+    StatsScreen --> StatsVM
+    TreeScreen --> TreeVM
+    SettingsScreen --> SettingsVM
+    
+    HomeVM --> UseCases
+    NowVM --> UseCases
+    FinishVM --> UseCases
+    StatsVM --> UseCases
+    TreeVM --> UseCases
+    SettingsVM --> UseCases
+    
+    UseCases --> Repo
+    UseCases --> PointCalc
+    
+    Repo --> RepoImpl
+    RepoImpl --> AppDB
+    AppDB --> DAOs
+    DAOs --> Entities
+    
+    NowVM --> GeoManager
+    GeoManager --> GeoBroadcast
+    
+    Hilt -.provides.-> UseCases
+    Hilt -.provides.-> RepoImpl
+    Hilt -.provides.-> GeoManager
+    
+    style HomeScreen fill:#4F46E5
+    style NowScreen fill:#EC4899
+    style AppDB fill:#10B981
+    style GeoManager fill:#F59E0B
+```
+
+### レイヤー構成
+
 - **Domain**: `PointCalculator.kt` (あなたの計算式に基づいてスコアを計算)
 - **Data**: `AppDatabase` (Room), `GeofenceManager` (位置情報)
 - **UI**: Jetpack Compose (`HomeScreen`, `NowScreen`)
