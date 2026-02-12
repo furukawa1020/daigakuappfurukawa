@@ -29,6 +29,7 @@ import 'moko_collection_screen.dart';
 import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
+import 'widgets/quick_start_button.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
