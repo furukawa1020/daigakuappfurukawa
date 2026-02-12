@@ -805,11 +805,57 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
            SafeArea(
              child: Column(
                children: [
-                 const SizedBox(height: 20),
-                 const Text("Deep Focus", style: TextStyle(color: Colors.white54, letterSpacing: 4, fontSize: 14)),
-                 
-                 Expanded(
-                   child: Center(
+                  const SizedBox(height: 20),
+                  const Text("Deep Focus", style: TextStyle(color: Colors.white54, letterSpacing: 4, fontSize: 14)),
+                  
+                  // Mood Selector (v3)
+                  const SizedBox(height: 24),
+                  Consumer(builder: (context, ref, _) {
+                    final session = ref.watch(sessionProvider);
+                    if (session?.moodPre != null) return const SizedBox();
+                    
+                    final moods = [
+                      {'e': '😃', 'l': 'Energetic'},
+                      {'e': '🙂', 'l': 'Good'},
+                      {'e': '😐', 'l': 'Neutral'},
+                      {'e': '😔', 'l': 'Tired'},
+                      {'e': '😫', 'l': 'Stressed'},
+                    ];
+                    
+                    return Column(
+                      children: [
+                        const Text("今の気分は？", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: moods.map((m) => GestureDetector(
+                            onTap: () {
+                              ref.read(hapticsProvider.notifier).lightImpact();
+                              ref.read(sessionProvider.notifier).state = Session(
+                                id: session?.id,
+                                startAt: session?.startAt ?? DateTime.now(),
+                                durationMinutes: session?.durationMinutes,
+                                moodPre: m['e'],
+                                moodPost: session?.moodPost,
+                              );
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.05),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Text(m['e']!, style: const TextStyle(fontSize: 24)),
+                            ),
+                          )).toList(),
+                        ),
+                      ],
+                    ).animate().fadeIn().slideY(begin: -0.2, end: 0);
+                  }),
+
+                  Expanded(
+                    child: Center(
                      child: Column(
                        mainAxisSize: MainAxisSize.min,
                        children: [
@@ -955,7 +1001,9 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
           startAt: session.startAt,
           minutes: mins,
           isOnCampus: ref.read(locationBonusProvider) == LocationBonus.campus,
-          nodeId: nodeId
+          nodeId: nodeId,
+          moodPre: session.moodPre,
+          moodPost: session.moodPost,
         );
 
         // Update Stats
@@ -1037,6 +1085,42 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                          Text(_praiseMessage, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey[800]), textAlign: TextAlign.center),
                          const SizedBox(height: 8),
                          Text("$mins分間の集中", style: TextStyle(color: Colors.grey[500])),
+                         
+                         // Post-session Mood Selector
+                         const SizedBox(height: 24),
+                         const Text("今の気分を教えてね ✨", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                         const SizedBox(height: 12),
+                         Consumer(builder: (context, ref, _) {
+                           final session = ref.watch(sessionProvider);
+                           final moods = ['😃', '🙂', '😐', '😔', '😫'];
+                           
+                           return Row(
+                             mainAxisAlignment: MainAxisAlignment.center,
+                             children: moods.map((m) => GestureDetector(
+                               onTap: () {
+                                 ref.read(hapticsProvider.notifier).lightImpact();
+                                 ref.read(sessionProvider.notifier).state = Session(
+                                   id: session?.id,
+                                   startAt: session?.startAt ?? DateTime.now(),
+                                   durationMinutes: session?.durationMinutes,
+                                   moodPre: session?.moodPre,
+                                   moodPost: m,
+                                 );
+                               },
+                               child: Container(
+                                 margin: const EdgeInsets.symmetric(horizontal: 6),
+                                 padding: const EdgeInsets.all(10),
+                                 decoration: BoxDecoration(
+                                   color: session?.moodPost == m ? const Color(0xFFC7CEEA).withOpacity(0.5) : Colors.grey[100],
+                                   shape: BoxShape.circle,
+                                   border: session?.moodPost == m ? Border.all(color: const Color(0xFFC7CEEA), width: 2) : null,
+                                 ),
+                                 child: Text(m, style: const TextStyle(fontSize: 24)),
+                               ),
+                             )).toList(),
+                           );
+                         }),
+
                          const SizedBox(height: 24),
                          TextField(
                            controller: _titleCtrl,

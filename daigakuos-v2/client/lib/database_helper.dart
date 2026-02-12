@@ -29,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (
@@ -48,6 +48,8 @@ class DatabaseHelper {
             points REAL,
             focus INTEGER,
             is_on_campus INTEGER,
+            mood_pre TEXT,
+            mood_post TEXT,
             FOREIGN KEY(node_id) REFERENCES nodes(id)
           )
         ''');
@@ -61,6 +63,10 @@ class DatabaseHelper {
         if (oldVersion < 2) {
           await db.execute('CREATE TABLE IF NOT EXISTS rest_days (day TEXT PRIMARY KEY)');
         }
+        if (oldVersion < 3) {
+           await db.execute('ALTER TABLE sessions ADD COLUMN mood_pre TEXT');
+           await db.execute('ALTER TABLE sessions ADD COLUMN mood_post TEXT');
+        }
       },
     );
   }
@@ -73,6 +79,8 @@ class DatabaseHelper {
     required String draftTitle,
     String? nodeId,
     required bool isOnCampus,
+    String? moodPre,
+    String? moodPost,
   }) async {
     final db = await database;
     final now = DateTime.now();
@@ -132,6 +140,8 @@ class DatabaseHelper {
       'points': finalPoints,
       'focus': 3, // Default Focus
       'is_on_campus': isOnCampus ? 1 : 0,
+      'mood_pre': moodPre,
+      'mood_post': moodPost,
     });
   }
 

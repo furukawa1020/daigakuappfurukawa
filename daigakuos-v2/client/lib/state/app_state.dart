@@ -10,8 +10,10 @@ class Session {
   final String? id;
   final DateTime startAt;
   final int? durationMinutes;
+  final String? moodPre; // Added
+  final String? moodPost; // Added
 
-  Session({this.id, required this.startAt, this.durationMinutes});
+  Session({this.id, required this.startAt, this.durationMinutes, this.moodPre, this.moodPost});
 }
 
 class UserStats {
