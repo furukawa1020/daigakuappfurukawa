@@ -15,8 +15,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:confetti/confetti.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:workmanager/workmanager.dart';
+// import 'package:workmanager/workmanager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'state/app_state.dart';
 
 import 'database_helper.dart';
 import 'calendar_screen.dart';
@@ -24,6 +25,7 @@ import 'settings_screen.dart';
 import 'haptics_service.dart';
 import 'widgets/hyperfocus_button.dart';
 import 'achievement_service.dart';
+import 'moko_collection_screen.dart';
 import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
@@ -53,94 +55,12 @@ Future<void> showNotification(String title, String body) async {
 }
 
 
-class Session {
-  final String? id;
-  final DateTime startAt;
-  final int? durationMinutes;
-
-  Session({this.id, required this.startAt, this.durationMinutes});
-}
-
-class UserStats {
-  final double totalPoints;
-  final int level;
-  final double progress;
-  final double pointsToNext;
-  final double dailyPoints;
-  final int dailyMinutes;
-  final int currentStreak;
-
-  UserStats({
-    required this.totalPoints,
-    required this.level,
-    required this.progress,
-    required this.pointsToNext,
-    required this.dailyPoints,
-    required this.dailyMinutes,
-    required this.currentStreak,
-  });
-
-  factory UserStats.fromJson(Map<String, dynamic> json) {
-    return UserStats(
-      totalPoints: (json['totalPoints'] as num).toDouble(),
-      level: json['level'] as int,
-      progress: (json['progress'] as num).toDouble(),
-      pointsToNext: (json['pointsToNext'] as num).toDouble(),
-      dailyPoints: (json['dailyPoints'] as num).toDouble(),
-      dailyMinutes: json['dailyMinutes'] as int,
-      currentStreak: json['currentStreak'] as int,
-    );
-  }
-}
-
-class DailyAgg {
-  final double totalPoints;
-  final int totalMinutes;
-  final int sessionCount;
-  
-  DailyAgg({required this.totalPoints, required this.totalMinutes, required this.sessionCount});
-}
-
-// Global Providers
+// Models and Providers moved to state/app_state.dart
 
 const double CAMPUS_LAT = 36.5639;
 const double CAMPUS_LON = 136.6845;
 const double CAMPUS_RADIUS_METERS = 500.0;
 
-final sessionProvider = StateProvider<Session?>((ref) => null);
-final locationBonusProvider = StateProvider<LocationBonus>((ref) => LocationBonus.none);
-final selectedTaskProvider = StateProvider<String?>((ref) => null);
-
-final userStatsProvider = FutureProvider<UserStats>((ref) async {
-  try {
-    final data = await DatabaseHelper().getUserStats();
-    return UserStats.fromJson(data);
-  } catch (e) {
-    print("Stats Error: $e");
-    return UserStats(totalPoints: 0, level: 1, progress: 0, pointsToNext: 100, dailyPoints: 0, dailyMinutes: 0, currentStreak: 0);
-  }
-});
-
-final dailyAggProvider = FutureProvider<DailyAgg>((ref) async {
-  try {
-    final data = await DatabaseHelper().getDailyAgg();
-    return DailyAgg(
-      totalPoints: (data['totalPoints'] as num?)?.toDouble() ?? 0.0,
-      totalMinutes: (data['totalMinutes'] as num?)?.toInt() ?? 0,
-      sessionCount: 0
-    );
-  } catch (e) { return DailyAgg(totalPoints: 0, totalMinutes: 0, sessionCount: 0); }
-});
-
-final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  return await DatabaseHelper().getSessions();
-});
-
-final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  return await DatabaseHelper().getWeeklyAgg();
-});
-
-enum LocationBonus { none, campus, home }
 
 Future<LocationBonus> checkLocationBonus() async {
   try {
@@ -193,6 +113,7 @@ final _router = GoRouter(
     GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
+    GoRoute(path: '/collection', builder: (context, state) => const MokoCollectionScreen()),
   ],
 );
 
@@ -250,7 +171,14 @@ class HomeScreen extends ConsumerWidget {
               title: const Text("DaigakuAPP", style: TextStyle(fontWeight: FontWeight.w800)),
               centerTitle: false,
               backgroundColor: Colors.transparent,
-              actions: [
+            actions: [
+                IconButton(
+                  icon: const Icon(Icons.collections_bookmark, color: Colors.brown),
+                  onPressed: () {
+                    ref.read(hapticsProvider.notifier).lightImpact();
+                    context.push('/collection');
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.settings),
                   onPressed: () {

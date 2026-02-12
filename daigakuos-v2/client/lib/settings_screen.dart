@@ -11,7 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'database_helper.dart';
 import 'haptics_service.dart';
-import 'main.dart'; // accessing global providers like wakeLockProvider if needed
+import 'state/app_state.dart';
 import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
 

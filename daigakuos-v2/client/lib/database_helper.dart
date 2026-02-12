@@ -167,6 +167,10 @@ class DatabaseHelper {
     );
     double dailyPoints = (dailyRes.first['pts'] as num?)?.toDouble() ?? 0.0;
     int dailyMinutes = (dailyRes.first['mins'] as num?)?.toInt() ?? 0;
+    
+    // 2.5 Total Minutes
+    final totalMinsRes = await db.rawQuery('SELECT SUM(minutes) as total FROM sessions');
+    int totalMinutes = (totalMinsRes.first['total'] as num?)?.toInt() ?? 0;
 
     // 3. Level Calc (Sqrt Curve)
     // Level = sqrt(Points / 100)
@@ -223,6 +227,7 @@ class DatabaseHelper {
 
     return {
       'totalPoints': totalPoints,
+      'totalMinutes': totalMinutes,
       'level': level,
       'progress': progress,
       'pointsToNext': pointsToNext,
