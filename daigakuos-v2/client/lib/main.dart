@@ -143,6 +143,25 @@ class DaigakuAPPApp extends StatelessWidget {
         fontFamily: 'Roboto', // Ideally rounded font
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF000000), // Pure Black for OLED
+        primaryColor: const Color(0xFF7DBAA0), // Softer Mint
+        colorScheme: ColorScheme.dark(
+          primary: const Color(0xFF7DBAA0),
+          secondary: const Color(0xFFFF9D97), // Softer Salmon
+          surface: const Color(0xFF121212), // Very Dark Gray
+          background: const Color(0xFF000000),
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: const Color(0xFFE0E0E0), // Gentle white
+          onBackground: const Color(0xFFE0E0E0),
+        ),
+        cardColor: const Color(0xFF1E1E1E),
+        fontFamily: 'Roboto',
+        useMaterial3: true,
+      ),
+      themeMode: ThemeMode.system, // Auto-switch based on system
     );
   }
 }
