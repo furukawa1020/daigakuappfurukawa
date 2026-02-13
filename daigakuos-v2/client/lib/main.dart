@@ -911,6 +911,139 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                       ],
                     ).animate().fadeIn().slideY(begin: -0.2, end: 0);
                   }),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Pet Display Card (Phase 14)
+                  Consumer(builder: (context, ref, _) {
+                    final petState = ref.watch(petProvider);
+                    
+                    return MokoCard(
+                      child: Row(
+                        children: [
+                          Text(
+                            petState.emoji,
+                            style: const TextStyle(fontSize: 56),
+                          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(duration: 2.seconds),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  petState.name,
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "累計 ${(petState.totalMinutes / 60).toStringAsFixed(1)} 時間",
+                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                                ),
+                                const SizedBox(height: 8),
+                                if (petState.stage != PetStage.master) ...[
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: LinearProgressIndicator(
+                                      value: petState.progressToNextStage.clamp(0.0, 1.0),
+                                      backgroundColor: Colors.grey[200],
+                                      valueColor: const AlwaysStoppedAnimation(Color(0xFFB5EAD7)),
+                                      minHeight: 6,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "次の進化まで ${petState.minutesUntilNextStage ~/ 60}時間",
+                                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                  ),
+                                ] else ...[
+                                  const Text(
+                                    "⭐ MAX LEVEL ⭐",
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0);
+                  }),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Currency Display (Phase 14)
+                  Consumer(builder: (context, ref, _) {
+                    final currencies = ref.watch(currencyProvider);
+                    
+                    return MokoCard(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Column(
+                            children: [
+                              const Text("💰", style: TextStyle(fontSize: 24)),
+                              const SizedBox(height: 4),
+                              Text("${currencies.mokoCoins}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text("コイン", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            ],
+                          ),
+                          Container(width: 1, height: 40, color: Colors.grey[300]),
+                          Column(
+                            children: [
+                              const Text("⭐", style: TextStyle(fontSize: 24)),
+                              const SizedBox(height: 4),
+                              Text("${currencies.starCrystals}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text("スター", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            ],
+                          ),
+                          Container(width: 1, height: 40, color: Colors.grey[300]),
+                          Column(
+                            children: [
+                              const Text("💎", style: TextStyle(fontSize: 24)),
+                              const SizedBox(height: 4),
+                              Text("${currencies.campusGems}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                              const Text("ジェム", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
+                  }),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Quick Action Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => context.go('/collection'),
+                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          label: const Text("コレクション"),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFB5EAD7),
+                            foregroundColor: Colors.brown,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton.icon(
+                          onPressed: () => context.go('/shop'),
+                          icon: const Icon(Icons.shopping_bag, size: 18),
+                          label: const Text("ショップ"),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFFFB7B2),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ).animate().fadeIn(delay: 300.ms),
+                  
+                  const SizedBox(height: 24),
 
                   Expanded(
                     child: Center(
