@@ -325,6 +325,21 @@ class DatabaseHelper {
           where: 'day = ?',
           whereArgs: [todayStr]
         );
+        
+        // AWARD BONUS XP (Insert special session)
+        await db.insert('sessions', {
+          'id': 'bonus_${now.millisecondsSinceEpoch}',
+          'node_id': null,
+          'draft_title': 'デイリーチャレンジ達成: ${challenge.title}',
+          'start_at': now.toIso8601String(),
+          'minutes': 0,
+          'points': challenge.bonusXP.toDouble(),
+          'focus': 5,
+          'is_on_campus': 0,
+          'mood_pre': '🏆',
+          'mood_post': '🎉',
+        });
+        
         return true;
       }
       return false;

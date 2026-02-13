@@ -259,6 +259,65 @@ class HomeScreen extends ConsumerWidget {
                     
                     const SizedBox(height: 16),
                     
+                    // Daily Challenge Card (ADHD Deep Dive)
+                    Consumer(builder: (context, ref, _) {
+                      final challengeAsync = ref.watch(dailyChallengeProvider);
+                      
+                      return challengeAsync.when(
+                        data: (challenge) => MokoCard(
+                          color: challenge.isCompleted ? const Color(0xFFFFD700).withOpacity(0.2) : Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          onTap: () {
+                             ref.read(hapticsProvider.notifier).lightImpact();
+                             showDialog(context: context, builder: (_) => AlertDialog(
+                               title: Text(challenge.title),
+                               content: Text("${challenge.description}\n\n報酬: ${challenge.bonusXP} XP"),
+                               actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("OK"))]
+                             ));
+                          },
+                          child: Row(
+                            children: [
+                              Icon(
+                                challenge.isCompleted ? Icons.emoji_events : Icons.flag, 
+                                color: challenge.isCompleted ? Colors.amber : Colors.blueGrey,
+                                size: 32
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      challenge.title, 
+                                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[800], decoration: challenge.isCompleted ? TextDecoration.lineThrough : null)
+                                    ),
+                                    const SizedBox(height: 4),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: challenge.progress,
+                                        backgroundColor: Colors.grey[200],
+                                        valueColor: AlwaysStoppedAnimation<Color>(challenge.isCompleted ? Colors.amber : Colors.blueAccent),
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (challenge.isCompleted)
+                                const Text("CLEAR!", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 12))
+                              else
+                                Text("${(challenge.progress * 100).toInt()}%", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                        loading: () => const SizedBox(), 
+                        error: (_,__) => const SizedBox(),
+                      );
+                    }),
+                    
+                    const SizedBox(height: 16),
+
                   // Location Status Badge (Pill)
                     Consumer(builder: (context, ref, _) {
                         final bonus = ref.watch(locationBonusProvider);
@@ -1019,6 +1078,20 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
         final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
      
         final newAchievements = await ref.read(achievementProvider.notifier).checkAchievements(mins, session.startAt, homeBonus);
+
+        // Check Daily Challenge
+        final challengeCompleted = await DatabaseHelper().checkChallengeCompletion();
+        if (challengeCompleted && mounted) {
+           showDialog(
+             context: context,
+             builder: (_) => AlertDialog(
+               title: const Text("🎉 デイリーチャレンジ達成！"),
+               content: const Text("ボーナス 100 XPを獲得しました！"),
+               actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("やったね！"))]
+             )
+           );
+           ref.refresh(dailyChallengeProvider);
+        }
      
         if (mounted) {
            if (newAchievements.isNotEmpty) {

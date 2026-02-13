@@ -62,6 +62,25 @@ class DailyAgg {
   DailyAgg({required this.totalPoints, required this.totalMinutes, required this.sessionCount});
 }
 
+class DailyChallenge {
+  final String id;
+  final String title;
+  final String description;
+  final int bonusXP;
+  final bool isCompleted;
+  final double progress; // 0.0 to 1.0
+
+  DailyChallenge({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.bonusXP,
+    this.isCompleted = false,
+    this.progress = 0.0,
+  });
+}
+
+
 // -----------------------------------------------------------------------------
 // Providers
 // -----------------------------------------------------------------------------
@@ -114,3 +133,8 @@ final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
 final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   return await DatabaseHelper().getWeeklyAgg();
 });
+
+final dailyChallengeProvider = FutureProvider<DailyChallenge>((ref) async {
+  return await DatabaseHelper().getDailyChallenge();
+});
+
