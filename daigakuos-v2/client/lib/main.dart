@@ -26,6 +26,7 @@ import 'haptics_service.dart';
 import 'widgets/hyperfocus_button.dart';
 import 'achievement_service.dart';
 import 'moko_collection_screen.dart';
+import 'shop_screen.dart';
 import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
@@ -115,6 +116,7 @@ final _router = GoRouter(
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
     GoRoute(path: '/collection', builder: (context, state) => const MokoCollectionScreen()),
+    GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
   ],
 );
 
