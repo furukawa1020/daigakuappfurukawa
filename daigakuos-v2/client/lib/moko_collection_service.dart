@@ -115,6 +115,34 @@ class MokoCollectionService extends Notifier<List<String>> {
   List<MokoItem> getUnlockedItemsList() {
     return ALL_MOKO_ITEMS.where((i) => state.contains(i.id)).toList();
   }
+  
+  // Collection Stats for Phase 13
+  Map<String, dynamic> getCollectionStats() {
+    final total = ALL_MOKO_ITEMS.length;
+    final unlocked = state.length;
+    
+    final commonTotal = ALL_MOKO_ITEMS.where((i) => i.rarity == MokoRarity.common).length;
+    final rareTotal = ALL_MOKO_ITEMS.where((i) => i.rarity == MokoRarity.rare).length;
+    final legendaryTotal = ALL_MOKO_ITEMS.where((i) => i.rarity == MokoRarity.legendary).length;
+    
+    final commonUnlocked = ALL_MOKO_ITEMS.where((i) => i.rarity == MokoRarity.common && state.contains(i.id)).length;
+    final rareUnlocked = ALL_MOKO_ITEMS.where((i) => i.rarity == MokoRarity.rare && state.contains(i.id)).length;
+    final legendaryUnlocked = ALL_MOKO_ITEMS.where((i) => i.rarity == MokoRarity.legendary && state.contains(i.id)).length;
+    
+    return {
+      'total': total,
+      'unlocked': unlocked,
+      'percentage': total > 0 ? (unlocked / total) : 0.0,
+      'common': {'total': commonTotal, 'unlocked': commonUnlocked},
+      'rare': {'total': rareTotal, 'unlocked': rareUnlocked},
+      'legendary': {'total': legendaryTotal, 'unlocked': legendaryUnlocked},
+    };
+  }
+  
+  double getCompletionPercentage() {
+    final stats = getCollectionStats();
+    return stats['percentage'] as double;
+  }
 }
 
 

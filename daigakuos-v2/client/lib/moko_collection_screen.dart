@@ -58,6 +58,80 @@ class MokoCollectionScreen extends ConsumerWidget {
           
           return Column(
             children: [
+              // Collection Completion Stats (Phase 13 Feature 1)
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFB5EAD7), Color(0xFFC7CEEA)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [BoxShadow(color: Colors.blue.withOpacity(0.2), blurRadius: 15, offset: const Offset(0, 8))],
+                ),
+                child: Builder(builder: (context) {
+                  final collectionStats = notifier.getCollectionStats();
+                  final percentage = collectionStats['percentage'] as double;
+                  final unlocked = collectionStats['unlocked'] as int;
+                  final total = collectionStats['total'] as int;
+                  final common = collectionStats['common'] as Map<String, dynamic>;
+                  final rare = collectionStats['rare'] as Map<String, dynamic>;
+                  final legendary = collectionStats['legendary'] as Map<String, dynamic>;
+                  
+                  return Column(
+                    children: [
+                      Row(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: 70,
+                                height: 70,
+                                child: CircularProgressIndicator(
+                                  value: percentage,
+                                  strokeWidth: 6,
+                                  backgroundColor: Colors.white.withOpacity(0.3),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              Text(
+                                "${(percentage * 100).toInt()}%",
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text("図鑑完成度", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const SizedBox(height: 4),
+                                Text("$unlocked / $total コレクション", style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9))),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(color: Colors.white, thickness: 1),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _rarityBadge("Common", common['unlocked'], common['total'], const Color(0xFFE0E0E0)),
+                          _rarityBadge("Rare", rare['unlocked'], rare['total'], const Color(0xFF64B5F6)),
+                          _rarityBadge("Legendary", legendary['unlocked'], legendary['total'], const Color(0xFFFFD54F)),
+                        ],
+                      ),
+                    ],
+                  );
+                }),
+              ),
+              
               // Gacha Header
               Container(
                 margin: const EdgeInsets.all(16),
@@ -172,6 +246,29 @@ class MokoCollectionScreen extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => GachaRevealDialog(ref: ref, totalMinutes: totalMinutes),
+    );
+  }
+  
+  Widget _rarityBadge(String label, int unlocked, int total, Color color) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          "$unlocked / $total",
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+      ],
     );
   }
 }
