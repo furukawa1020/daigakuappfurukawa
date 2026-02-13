@@ -4,6 +4,7 @@ import '../database_helper.dart';
 export '../services/achievement_service.dart';
 export '../services/haptics_service.dart';
 export '../services/currency_service.dart';
+export '../services/pet_service.dart';
 
 // -----------------------------------------------------------------------------
 // Models
