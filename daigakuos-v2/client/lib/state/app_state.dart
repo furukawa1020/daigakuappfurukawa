@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart'; // For StateProvider if needed? No, generic Riverpod is fine.
 import '../database_helper.dart';
+export '../services/achievement_service.dart';
+export '../services/haptics_service.dart';
 
 // -----------------------------------------------------------------------------
 // Models
