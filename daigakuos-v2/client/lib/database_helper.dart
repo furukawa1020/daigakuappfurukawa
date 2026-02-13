@@ -30,7 +30,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 5,
+      version: 6,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (
@@ -73,6 +73,13 @@ class DatabaseHelper {
             unlocked_at TEXT
           )
         ''');
+        await db.execute('''
+          CREATE TABLE milestones (
+            id TEXT PRIMARY KEY,
+            unlocked_at TEXT,
+            hours INTEGER
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -97,6 +104,15 @@ class DatabaseHelper {
             CREATE TABLE IF NOT EXISTS user_achievements (
               id TEXT PRIMARY KEY,
               unlocked_at TEXT
+            )
+          ''');
+        }
+        if (oldVersion < 6) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS milestones (
+              id TEXT PRIMARY KEY,
+              unlocked_at TEXT,
+              hours INTEGER
             )
           ''');
         }
