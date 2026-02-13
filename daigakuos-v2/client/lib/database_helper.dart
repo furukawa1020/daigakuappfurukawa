@@ -30,7 +30,127 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE nodes (
+            id TEXT PRIMARY KEY,
+            title TEXT,
+            updated_at TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE sessions (
+            id TEXT PRIMARY KEY,
+            node_id TEXT,
+            draft_title TEXT,
+            start_at TEXT,
+            minutes INTEGER,
+            points REAL,
+            focus INTEGER,
+            is_on_campus INTEGER,
+            mood_pre TEXT,
+            mood_post TEXT,
+            FOREIGN KEY(node_id) REFERENCES nodes(id)
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE rest_days (
+            day TEXT PRIMARY KEY
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE daily_status (
+            day TEXT PRIMARY KEY,
+            challenge_id TEXT,
+            is_completed INTEGER,
+            awarded_at TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE user_achievements (
+            id TEXT PRIMARY KEY,
+            unlocked_at TEXT
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE milestones (
+            id TEXT PRIMARY KEY,
+            unlocked_at TEXT,
+            hours INTEGER
+          )
+        ''');
+        await db.execute('''
+          CREATE TABLE currencies (
+            user_id TEXT PRIMARY KEY DEFAULT 'default',
+            moko_coins INTEGER DEFAULT 0,
+            star_crystals INTEGER DEFAULT 0,
+            campus_gems INTEGER DEFAULT 0
+          )
+        ''');
+        // Initialize default user currencies
+        await db.insert('currencies', {
+          'user_id': 'default',
+          'moko_coins': 0,
+          'star_crystals': 0,
+          'campus_gems': 0,
+        });
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('CREATE TABLE IF NOT EXISTS rest_days (day TEXT PRIMARY KEY)');
+        }
+        if (oldVersion < 3) {
+           await db.execute('ALTER TABLE sessions ADD COLUMN mood_pre TEXT');
+           await db.execute('ALTER TABLE sessions ADD COLUMN mood_post TEXT');
+        }
+        if (oldVersion < 4) {
+           await db.execute('''
+             CREATE TABLE IF NOT EXISTS daily_status (
+               day TEXT PRIMARY KEY,
+               challenge_id TEXT,
+               is_completed INTEGER,
+               awarded_at TEXT
+             )
+           ''');
+        }
+        if (oldVersion < 5) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS user_achievements (
+              id TEXT PRIMARY KEY,
+              unlocked_at TEXT
+            )
+          ''');
+        }
+        if (oldVersion < 6) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS milestones (
+              id TEXT PRIMARY KEY,
+              unlocked_at TEXT,
+              hours INTEGER
+            )
+          ''');
+        }
+        if (oldVersion < 7) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS currencies (
+              user_id TEXT PRIMARY KEY DEFAULT 'default',
+              moko_coins INTEGER DEFAULT 0,
+              star_crystals INTEGER DEFAULT 0,
+              campus_gems INTEGER DEFAULT 0
+            )
+          ''');
+          // Initialize for existing users
+          await db.insert('currencies', {
+            'user_id': 'default',
+            'moko_coins': 0,
+            'star_crystals': 0,
+            'campus_gems': 0,
+          }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+      },
+    );
+  }
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (

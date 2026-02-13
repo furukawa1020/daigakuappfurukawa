@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/legacy.dart'; // For StateProvider if needed? N
 import '../database_helper.dart';
 export '../services/achievement_service.dart';
 export '../services/haptics_service.dart';
+export '../services/currency_service.dart';
 
 // -----------------------------------------------------------------------------
 // Models
