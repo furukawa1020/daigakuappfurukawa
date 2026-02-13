@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'database_helper.dart';
 import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
+import 'widgets/heatmap_calendar.dart';
 
 // Provider to fetch sessions for a specific day
 final sessionsForDayProvider = FutureProvider.family<List<Map<String, dynamic>>, DateTime>((ref, date) async {
@@ -16,6 +17,11 @@ final sessionsForDayProvider = FutureProvider.family<List<Map<String, dynamic>>,
 // Provider to get all session dates for markers
 final sessionDatesProvider = FutureProvider<List<DateTime>>((ref) async {
   return await DatabaseHelper().getSessionDates();
+});
+
+// Provider for heatmap data (Phase 13)
+final heatmapDataProvider = FutureProvider<Map<String, int>>((ref) async {
+  return await DatabaseHelper().getDailyMinutesMap();
 });
 
 class CalendarScreen extends ConsumerStatefulWidget {
@@ -39,6 +45,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     // Watch markers (events)
     final eventsAsync = ref.watch(sessionDatesProvider);
+    final heatmapAsync = ref.watch(heatmapDataProvider);
 
     return Scaffold(
       body: PremiumBackground(
@@ -58,6 +65,28 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 )
               ],
             ),
+            
+            // Heatmap Calendar (Phase 13 Feature 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: MokoCard(
+                child: heatmapAsync.when(
+                  data: (dailyMinutes) {
+                    final now = DateTime.now();
+                    final oneYearAgo = now.subtract(const Duration(days: 365));
+                    return HeatmapCalendar(
+                      dailyMinutes: dailyMinutes,
+                      startDate: oneYearAgo,
+                      endDate: now,
+                    );
+                  },
+                  loading: () => const SizedBox(height: 150, child: Center(child: CircularProgressIndicator())),
+                  error: (e, _) => const SizedBox(height: 150, child: Center(child: Text("ヒートマップ読み込みエラー"))),
+                ),
+              ).animate().fadeIn().slideY(begin: -0.2, end: 0),
+            ),
+            
+            const SizedBox(height: 16),
             
             // Calendar Card
             Padding(

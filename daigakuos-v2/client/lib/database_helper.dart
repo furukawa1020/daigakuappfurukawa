@@ -222,6 +222,63 @@ class DatabaseHelper {
   }
 
   // -----------------------------------------------------------------------------
+  // DATA EXPORT
+  // -----------------------------------------------------------------------------
+  
+  Future<String> exportData() async {
+    final db = await database;
+    final sessions = await db.query('sessions', orderBy: 'start_at DESC');
+    final nodes = await db.query('nodes');
+    
+    final exportMap = {
+      'sessions': sessions,
+      'nodes': nodes,
+      'exported_at': DateTime.now().toIso8601String(),
+    };
+    
+    return const JsonEncoder.withIndent('  ').convert(exportMap);
+  }
+  
+  Future<void> importData(String jsonStr) async {
+    final data = json.decode(jsonStr) as Map<String, dynamic>;
+    final db = await database;
+    
+    // Import sessions
+    for (var session in data['sessions'] as List) {
+      await db.insert('sessions', session as Map<String, dynamic>, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+    
+    // Import nodes
+    for (var node in data['nodes'] as List) {
+      await db.insert('nodes', node as Map<String, dynamic>, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+  
+  // Phase 13 Feature 3: Heatmap Calendar Data
+  Future<Map<String, int>> getDailyMinutesMap() async {
+    final db = await database;
+    
+    // Query all sessions grouped by day
+    final res = await db.rawQuery('''
+      SELECT 
+        DATE(start_at) as day,
+        SUM(minutes) as total_minutes
+      FROM sessions
+      GROUP BY day
+      ORDER BY day
+    ''');
+    
+    final Map<String, int> dailyMap = {};
+    for (var row in res) {
+      final day = row['day'] as String;
+      final minutes = (row['total_minutes'] as num?)?.toInt() ?? 0;
+      dailyMap[day] = minutes;
+    }
+    
+    return dailyMap;
+  }
+
+  // -----------------------------------------------------------------------------
   // REST DAYS
   // -----------------------------------------------------------------------------
 
