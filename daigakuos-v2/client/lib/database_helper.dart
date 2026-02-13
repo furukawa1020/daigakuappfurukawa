@@ -23,13 +23,14 @@ class DatabaseHelper {
     return _database!;
   }
 
+
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'daigaku_app.db');
 
     return await openDatabase(
       path,
-      version: 4,
+      version: 5,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (
@@ -66,6 +67,12 @@ class DatabaseHelper {
             awarded_at TEXT
           )
         ''');
+        await db.execute('''
+          CREATE TABLE user_achievements (
+            id TEXT PRIMARY KEY,
+            unlocked_at TEXT
+          )
+        ''');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
@@ -84,6 +91,14 @@ class DatabaseHelper {
                awarded_at TEXT
              )
            ''');
+        }
+        if (oldVersion < 5) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS user_achievements (
+              id TEXT PRIMARY KEY,
+              unlocked_at TEXT
+            )
+          ''');
         }
       },
     );

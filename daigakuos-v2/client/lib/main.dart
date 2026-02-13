@@ -436,34 +436,31 @@ class HomeScreen extends ConsumerWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text("LEVEL ${stats.level}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.blueAccent)),
-                                      const SizedBox(height: 4),
-                                      Text("${stats.totalPoints.toInt()} XP", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
-                                      const SizedBox(height: 8),
-                                      Column(
-                                        children: [
-                                          SizedBox(
-                                            width: 140,
-                                            height: 8,
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(4),
-                                              child: LinearProgressIndicator(
-                                                value: stats.levelProgress,
-                                                backgroundColor: Colors.blue.withOpacity(0.1),
-                                                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            "あと ${(stats.nextLevelPoints - stats.totalPoints).toInt()} XP で Level Up!",
-                                            style: TextStyle(fontSize: 10, color: Colors.grey[600]),
-                                          ),
-                                        ],
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("LEVEL ${stats.level}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.blueAccent)),
+                                    const SizedBox(height: 4),
+                                    Text("${stats.totalPoints.toInt()} XP", style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900)),
+                                    const SizedBox(height: 8),
+                                    SizedBox(
+                                      width: 140,
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: stats.progress,
+                                          backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                                          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                                          minHeight: 8,
+                                        ),
                                       ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "あと ${(stats.pointsToNext).toInt()} XP で Level Up!",
+                                      style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+                                    ),
+                                  ],
+                                ),
                                     ],
                                   ),
                                 // Streak Ring
