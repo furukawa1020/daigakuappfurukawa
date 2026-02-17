@@ -32,6 +32,7 @@ import 'widgets/pet_display.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
+import 'stats_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -118,6 +119,7 @@ final _router = GoRouter(
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
     GoRoute(path: '/collection', builder: (context, state) => const MokoCollectionScreen()),
     GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
+    GoRoute(path: '/stats', builder: (context, state) => const StatsScreen()),
   ],
 );
 
@@ -205,6 +207,14 @@ class HomeScreen extends ConsumerWidget {
               centerTitle: false,
               backgroundColor: Colors.transparent,
             actions: [
+                IconButton(
+                  icon: const Icon(Icons.bar_chart, color: Colors.brown),
+                  onPressed: () => context.push('/stats'),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_month, color: Colors.brown),
+                  onPressed: () => context.push('/calendar'),
+                ),
                 IconButton(
                   icon: const Icon(Icons.collections_bookmark, color: Colors.brown),
                   onPressed: () {
@@ -439,6 +449,7 @@ class HomeScreen extends ConsumerWidget {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
+                                  Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text("LEVEL ${stats.level}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.blueAccent)),
@@ -464,8 +475,6 @@ class HomeScreen extends ConsumerWidget {
                                     ),
                                   ],
                                 ),
-                                    ],
-                                  ),
                                 // Streak Ring
                                 Container(
                                   width: 60, height: 60,
