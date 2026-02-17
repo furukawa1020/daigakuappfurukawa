@@ -1224,6 +1224,28 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
            );
            ref.refresh(dailyChallengeProvider);
         }
+
+        // AWARD CURRENCY (Phase 14)
+        final currencyService = ref.read(currencyProvider.notifier);
+        int earnedCoins = 0;
+        int earnedGems = 0;
+        int earnedCrystals = 0;
+
+        // 1. MokoCoins: 1 per 10 mins
+        earnedCoins = (mins / 10).floor();
+        if (earnedCoins > 0) await currencyService.addMokoCoins(earnedCoins);
+        
+        // 2. CampusGems: 1 per 20 mins if on Campus
+        if (ref.read(locationBonusProvider) == LocationBonus.campus) {
+             earnedGems = (mins / 20).floor();
+             if (earnedGems > 0) await currencyService.addCampusGems(earnedGems);
+        }
+        
+        // 3. StarCrystals: 1 if session > 45 mins
+        if (mins >= 45) {
+             earnedCrystals = 1;
+             await currencyService.addStarCrystals(1);
+        }
      
         if (mounted) {
            if (newAchievements.isNotEmpty) {
@@ -1237,7 +1259,20 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
            }
            
            // Show Notification (Local)
-           await showNotification("セッション完了", "お疲れ様でした！ $mins分間の集中を記録しました。");
+           String rewardMsg = "";
+           if (earnedCoins > 0) rewardMsg += " +$earnedCoinsコイン";
+           if (earnedGems > 0) rewardMsg += " +$earnedGemsジェム";
+           if (earnedCrystals > 0) rewardMsg += " +$earnedCrystalsスター";
+           
+           await showNotification("セッション完了", "お疲れ様でした！ $mins分間の集中を記録しました。$rewardMsg");
+
+           if (mounted && (earnedCoins > 0 || earnedGems > 0 || earnedCrystals > 0)) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text("報酬獲得！$rewardMsg"),
+                  backgroundColor: Colors.amber[700],
+                  behavior: SnackBarBehavior.floating,
+              ));
+           }
            
            // Return home
            if (context.canPop()) {
