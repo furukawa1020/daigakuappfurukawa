@@ -1249,13 +1249,8 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
      
         if (mounted) {
            if (newAchievements.isNotEmpty) {
-             // Show Achievement Dialog or SnackBar
-             for (var ach in newAchievements) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Row(children: [Icon(ach.icon, color: Colors.white), SizedBox(width:8), Text("実績解除: ${ach.title}")]),
-                  backgroundColor: ach.color,
-                ));
-             }
+             // Show Achievement Dialog
+             _showAchievementDialog(context, newAchievements, ref);
            }
            
            // Show Notification (Local)
