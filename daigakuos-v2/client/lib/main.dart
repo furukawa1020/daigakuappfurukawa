@@ -28,6 +28,7 @@ import 'achievement_service.dart';
 import 'moko_collection_screen.dart';
 import 'shop_screen.dart';
 import 'widgets/moko_card.dart';
+import 'widgets/pet_display.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
@@ -915,59 +916,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                   const SizedBox(height: 16),
                   
                   // Pet Display Card (Phase 14)
-                  Consumer(builder: (context, ref, _) {
-                    final petState = ref.watch(petProvider);
-                    
-                    return MokoCard(
-                      child: Row(
-                        children: [
-                          Text(
-                            petState.emoji,
-                            style: const TextStyle(fontSize: 56),
-                          ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(duration: 2.seconds),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  petState.name,
-                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "累計 ${(petState.totalMinutes / 60).toStringAsFixed(1)} 時間",
-                                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 8),
-                                if (petState.stage != PetStage.master) ...[
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: LinearProgressIndicator(
-                                      value: petState.progressToNextStage.clamp(0.0, 1.0),
-                                      backgroundColor: Colors.grey[200],
-                                      valueColor: const AlwaysStoppedAnimation(Color(0xFFB5EAD7)),
-                                      minHeight: 6,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    "次の進化まで ${petState.minutesUntilNextStage ~/ 60}時間",
-                                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                                  ),
-                                ] else ...[
-                                  const Text(
-                                    "⭐ MAX LEVEL ⭐",
-                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0);
-                  }),
+                  const PetDisplay().animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0),
                   
                   const SizedBox(height: 16),
                   
