@@ -697,25 +697,53 @@ class HomeScreen extends ConsumerWidget {
           ],
         ),
       ),
-      floatingActionButton: HyperfocusButton(
-        onComplete: () async {
-            // Start Session Logic
-            final bonus = await checkLocationBonus();
-            ref.read(locationBonusProvider.notifier).state = bonus;
-            
-            // Get selected task if any
-            final selectedTask = ref.read(selectedTaskProvider);
-            
-            ref.read(sessionProvider.notifier).state = Session(
-              startAt: DateTime.now(), 
-              // We could pass the title here if Session had a title field, 
-              // but Session model is currently minimal. 
-              // We'll pass it via constructor or another provider if needed.
-              // For now, let's assume we handle it in NowScreen by reading the provider.
-            );
-            context.push('/now');
-        },
-      ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Just 5 Min Button
+          Padding(
+            padding: const EdgeInsets.only(right: 20, bottom: 10),
+            child: FloatingActionButton.extended(
+              heroTag: 'just5min',
+              elevation: 4,
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFFFFB7B2),
+              icon: const Icon(Icons.timer_outlined),
+              label: const Text("とりあえず5分", style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () async {
+                 ref.read(hapticsProvider.notifier).mediumImpact();
+                 
+                 // Start Session (Target = 5)
+                 final bonus = await checkLocationBonus();
+                 ref.read(locationBonusProvider.notifier).state = bonus;
+                 
+                 ref.read(sessionProvider.notifier).state = Session(
+                   startAt: DateTime.now(),
+                   targetMinutes: 5, // Just 5 Minutes Mode
+                 );
+                 if (context.mounted) context.push('/now');
+              },
+            ).animate().slideX(begin: -0.5, end: 0, delay: 200.ms).fadeIn(),
+          ),
+
+          // Main Charge Button
+          HyperfocusButton(
+            onComplete: () async {
+                // Start Session Logic (Unlimited)
+                final bonus = await checkLocationBonus();
+                ref.read(locationBonusProvider.notifier).state = bonus;
+                
+                final selectedTask = ref.read(selectedTaskProvider);
+                
+                ref.read(sessionProvider.notifier).state = Session(
+                  startAt: DateTime.now(), 
+                  targetMinutes: null, // Unlimited
+                );
+                if (context.mounted) context.push('/now');
+            },
+          ).animate().scale(delay: 500.ms, curve: Curves.elasticOut),
+        ],
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       extendBody: true, // For better visual integration
     );
@@ -819,7 +847,17 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
     }
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       final s = ref.read(sessionProvider);
-      if (s != null) setState(() => _elapsed = DateTime.now().difference(s.startAt));
+      if (s != null) {
+        final now = DateTime.now();
+        final diff = now.difference(s.startAt);
+        setState(() => _elapsed = diff);
+
+        // Just 5 Minutes Mode Logic
+        if (s.targetMinutes != null && diff.inMinutes >= s.targetMinutes!) {
+          _timer.cancel();
+          _showTimeUpDialog(context, ref);
+        }
+      }
     });
 
     // Enable WakeLock if setting is true
@@ -1056,6 +1094,106 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
            ),
         ],
       )
+    );
+  }
+
+  Future<void> _showTimeUpDialog(BuildContext context, WidgetRef ref) async {
+    ref.read(hapticsProvider.notifier).heavyImpact();
+    
+    if (!context.mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: const Text("5分経過！"),
+          content: const Text("お疲れ様です。どうしますか？"),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsOverflowDirection: VerticalDirection.up,
+          actions: [
+            // Option 3: Unlimited
+            TextButton(
+              onPressed: () {
+                final s = ref.read(sessionProvider);
+                if (s != null) {
+                  ref.read(sessionProvider.notifier).state = Session(
+                    id: s.id,
+                    startAt: s.startAt,
+                    targetMinutes: null, // Remove limit
+                    moodPre: s.moodPre,
+                  );
+                }
+                Navigator.pop(ctx);
+                // Restart timer
+                _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+                   final s = ref.read(sessionProvider);
+                   if (s != null) {
+                      final now = DateTime.now();
+                      final diff = now.difference(s.startAt);
+                      setState(() => _elapsed = diff);
+                   }
+                });
+              }, 
+              child: const Text("ゾーン突入 (制限なしで続行)")
+            ),
+            
+            // Option 2: Extend +5
+            TextButton(
+              onPressed: () {
+                 final s = ref.read(sessionProvider);
+                 if (s != null) {
+                   ref.read(sessionProvider.notifier).state = Session(
+                     id: s.id,
+                     startAt: s.startAt,
+                     targetMinutes: (s.targetMinutes ?? 0) + 5,
+                     moodPre: s.moodPre,
+                   );
+                 }
+                 Navigator.pop(ctx);
+                 // Restart timer with new check
+                 _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+                   final s = ref.read(sessionProvider);
+                   if (s != null) {
+                      final now = DateTime.now();
+                      final diff = now.difference(s.startAt);
+                      setState(() => _elapsed = diff);
+                      if (s.targetMinutes != null && diff.inMinutes >= s.targetMinutes!) {
+                        _timer.cancel();
+                        if (context.mounted) _showTimeUpDialog(context, ref);
+                      }
+                   }
+                 });
+              },
+              child: const Text("あと5分だけ延長")
+            ),
+            
+            // Option 1: Finish
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                
+                // Finish Logic copied from build
+                ref.read(hapticsProvider.notifier).heavyImpact();
+                final s = ref.read(sessionProvider);
+                if (s != null) {
+                   int duration = _elapsed.inMinutes;
+                   if (duration < 1) duration = 1;
+                   ref.read(sessionProvider.notifier).state = Session(id: s.id, startAt: s.startAt, durationMinutes: duration);
+                }
+                if (context.mounted) context.pushReplacement('/finish');
+              },
+              icon: const Icon(Icons.check),
+              label: const Text("終わり！ (記録して終了)", style: TextStyle(fontWeight: FontWeight.bold)),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.orange,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
