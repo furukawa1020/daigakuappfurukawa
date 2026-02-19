@@ -28,6 +28,7 @@ import 'achievement_service.dart';
 import 'moko_collection_screen.dart';
 import 'shop_screen.dart';
 import 'widgets/moko_card.dart';
+import 'widgets/task_roulette_dialog.dart';
 import 'widgets/pet_display.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
@@ -593,9 +594,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                          return Column(
                            crossAxisAlignment: CrossAxisAlignment.stretch,
                            children: [
-                              Text(
-                                "さあ、始めましょう", // Let's get started
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.grey[800])
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "さあ、始めましょう", // Let's get started
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.grey[800])
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () {
+                                      ref.read(hapticsProvider.notifier).lightImpact();
+                                      showDialog(context: context, builder: (_) => const TaskRouletteDialog());
+                                    },
+                                    icon: const Icon(Icons.casino, size: 20, color: Colors.orange),
+                                    label: const Text("迷ったらSpin", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      backgroundColor: Colors.orange.withOpacity(0.1),
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 12),
                               
