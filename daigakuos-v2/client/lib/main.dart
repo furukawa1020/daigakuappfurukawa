@@ -38,25 +38,9 @@ import 'stats_screen.dart';
 // 1. Models & State
 // -----------------------------------------------------------------------------
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+import 'services/notification_service.dart';
 
-Future<void> initNotifications() async {
-  const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-  const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-}
-
-Future<void> showNotification(String title, String body) async {
-  const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
-    'daigaku_channel', 
-    'DaigakuAPP Notifications',
-    channelDescription: 'Notifications for study session completion',
-    importance: Importance.max,
-    priority: Priority.high,
-  );
-  const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
-  await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
-}
+// Models and Providers moved to state/app_state.dart
 
 
 // Models and Providers moved to state/app_state.dart
@@ -125,12 +109,41 @@ final _router = GoRouter(
 
 void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
-  await initNotifications(); // Init notifications
+  await NotificationService().init(); // Init notifications
   runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
-class DaigakuAPPApp extends StatelessWidget {
+class DaigakuAPPApp extends StatefulWidget {
   const DaigakuAPPApp({super.key});
+
+  @override
+  State<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
+}
+
+class _DaigakuAPPAppState extends State<DaigakuAPPApp> with WidgetsBindingObserver {
+  
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      // Schedule invitation when app goes to background
+      NotificationService().scheduleMokoInvitation();
+    } else if (state == AppLifecycleState.resumed) {
+      // Cancel when app comes back
+      NotificationService().cancelAll();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -177,11 +190,68 @@ class DaigakuAPPApp extends StatelessWidget {
 // 4. Screens
 // -----------------------------------------------------------------------------
 
-class HomeScreen extends ConsumerWidget {
-  HomeScreen({super.key});
+class HomeScreen extends ConsumerStatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  Timer? _idleTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _resetIdleTimer();
+  }
+
+  @override
+  void dispose() {
+    _idleTimer?.cancel();
+    super.dispose();
+  }
+
+  void _resetIdleTimer() {
+    _idleTimer?.cancel();
+    _idleTimer = Timer(const Duration(seconds: 10), () {
+      if (mounted) _showMokoInvitation();
+    });
+  }
+
+  void _showMokoInvitation() {
+    ref.read(hapticsProvider.notifier).lightImpact();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("ねぇ..."),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+             const Icon(Icons.sentiment_neutral, size: 48, color: Color(0xFFFFB7B2)),
+             const SizedBox(height: 16),
+             const Text("10秒くらい止まってたけど、\n何から始めるか迷ってる？", textAlign: TextAlign.center),
+             const SizedBox(height: 16),
+             FilledButton(
+               onPressed: () {
+                 Navigator.pop(ctx);
+                 ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now(), targetMinutes: 5);
+                 context.push('/now');
+               },
+               child: const Text("とりあえず5分やる")
+             ),
+             TextButton(
+               onPressed: () => Navigator.pop(ctx),
+               child: const Text("ちょっと考え中")
+             )
+          ],
+        )
+      )
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(userStatsProvider);
     final historyAsync = ref.watch(historyProvider);
     final weeklyAsync = ref.watch(weeklyAggProvider);
@@ -197,7 +267,11 @@ class HomeScreen extends ConsumerWidget {
       }
     });
 
-    return Scaffold(
+    return Listener(
+      onPointerDown: (_) => _resetIdleTimer(),
+      onPointerMove: (_) => _resetIdleTimer(),
+      onPointerHover: (_) => _resetIdleTimer(),
+      child: Scaffold(
       body: PremiumBackground(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -746,7 +820,7 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       extendBody: true, // For better visual integration
-    );
+    ));
   }
 }
 
