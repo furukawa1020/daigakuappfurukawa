@@ -151,94 +151,7 @@ class DatabaseHelper {
       },
     );
   }
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE nodes (
-            id TEXT PRIMARY KEY,
-            title TEXT,
-            updated_at TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE sessions (
-            id TEXT PRIMARY KEY,
-            node_id TEXT,
-            draft_title TEXT,
-            start_at TEXT,
-            minutes INTEGER,
-            points REAL,
-            focus INTEGER,
-            is_on_campus INTEGER,
-            mood_pre TEXT,
-            mood_post TEXT,
-            FOREIGN KEY(node_id) REFERENCES nodes(id)
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE rest_days (
-            day TEXT PRIMARY KEY
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE daily_status (
-            day TEXT PRIMARY KEY,
-            challenge_id TEXT,
-            is_completed INTEGER,
-            awarded_at TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE user_achievements (
-            id TEXT PRIMARY KEY,
-            unlocked_at TEXT
-          )
-        ''');
-        await db.execute('''
-          CREATE TABLE milestones (
-            id TEXT PRIMARY KEY,
-            unlocked_at TEXT,
-            hours INTEGER
-          )
-        ''');
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await db.execute('CREATE TABLE IF NOT EXISTS rest_days (day TEXT PRIMARY KEY)');
-        }
-        if (oldVersion < 3) {
-           await db.execute('ALTER TABLE sessions ADD COLUMN mood_pre TEXT');
-           await db.execute('ALTER TABLE sessions ADD COLUMN mood_post TEXT');
-        }
-        if (oldVersion < 4) {
-           await db.execute('''
-             CREATE TABLE IF NOT EXISTS daily_status (
-               day TEXT PRIMARY KEY,
-               challenge_id TEXT,
-               is_completed INTEGER,
-               awarded_at TEXT
-             )
-           ''');
-        }
-        if (oldVersion < 5) {
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS user_achievements (
-              id TEXT PRIMARY KEY,
-              unlocked_at TEXT
-            )
-          ''');
-        }
-        if (oldVersion < 6) {
-          await db.execute('''
-            CREATE TABLE IF NOT EXISTS milestones (
-              id TEXT PRIMARY KEY,
-              unlocked_at TEXT,
-              hours INTEGER
-            )
-          ''');
-        }
-      },
-    );
-  }
+
 
   // --- Logic ---
 
@@ -341,38 +254,7 @@ class DatabaseHelper {
     await db.update('sessions', {'draft_title': newTitle}, where: 'id = ?', whereArgs: [id]);
   }
 
-  // -----------------------------------------------------------------------------
-  // DATA EXPORT
-  // -----------------------------------------------------------------------------
-  
-  Future<String> exportData() async {
-    final db = await database;
-    final sessions = await db.query('sessions', orderBy: 'start_at DESC');
-    final nodes = await db.query('nodes');
-    
-    final exportMap = {
-      'sessions': sessions,
-      'nodes': nodes,
-      'exported_at': DateTime.now().toIso8601String(),
-    };
-    
-    return const JsonEncoder.withIndent('  ').convert(exportMap);
-  }
-  
-  Future<void> importData(String jsonStr) async {
-    final data = json.decode(jsonStr) as Map<String, dynamic>;
-    final db = await database;
-    
-    // Import sessions
-    for (var session in data['sessions'] as List) {
-      await db.insert('sessions', session as Map<String, dynamic>, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-    
-    // Import nodes
-    for (var node in data['nodes'] as List) {
-      await db.insert('nodes', node as Map<String, dynamic>, conflictAlgorithm: ConflictAlgorithm.replace);
-    }
-  }
+
   
   // Phase 13 Feature 3: Heatmap Calendar Data
   Future<Map<String, int>> getDailyMinutesMap() async {
@@ -419,139 +301,6 @@ class DatabaseHelper {
   }
 
 
-  // -----------------------------------------------------------------------------
-  // DAILY CHALLENGES
-  // -----------------------------------------------------------------------------
-
-  Future<DailyChallenge?> getDailyChallenge() async {
-    final db = await database;
-    final now = DateTime.now();
-    final todayStr = now.toIso8601String().substring(0, 10);
-
-    // 1. Get or Create Status
-    final res = await db.query('daily_status', where: 'day = ?', whereArgs: [todayStr]);
-    
-    String challengeId;
-    bool isCompleted = false;
-    
-    if (res.isNotEmpty) {
-      challengeId = res.first['challenge_id'] as String;
-      isCompleted = (res.first['is_completed'] as int) == 1;
-    } else {
-      // Generate daily challenge deterministically based on date hash
-      final seed = todayStr.hashCode;
-      final rand = Random(seed);
-      final types = ['tiny_focus', 'double_tap', 'early_bird'];
-      challengeId = types[rand.nextInt(types.length)];
-      
-      await db.insert('daily_status', {
-        'day': todayStr,
-        'challenge_id': challengeId,
-        'is_completed': 0,
-        'awarded_at': null,
-      });
-    }
-
-    // 2. Calculate Progress
-    double progress = 0.0;
-    
-    // Query today's sessions
-    final sessionsRes = await db.rawQuery(
-      "SELECT * FROM sessions WHERE start_at LIKE '$todayStr%'"
-    );
-    
-    if (challengeId == 'tiny_focus') {
-      // Goal: 15 mins total
-      int totalMins = 0;
-      for (var s in sessionsRes) {
-        totalMins += (s['minutes'] as num).toInt();
-      }
-      progress = totalMins / 15.0;
-    } else if (challengeId == 'double_tap') {
-      // Goal: 2 sessions
-      progress = sessionsRes.length / 2.0;
-    } else if (challengeId == 'early_bird') {
-      // Goal: Start before 10AM
-      // If any session started < 10:00, progress = 1.0
-      bool hit = false;
-      for (var s in sessionsRes) {
-        final startAt = DateTime.parse(s['start_at'] as String);
-        if (startAt.hour < 10) {
-          hit = true; 
-          break;
-        }
-      }
-      progress = hit ? 1.0 : 0.0;
-    }
-
-    if (progress > 1.0) progress = 1.0;
-    // Auto-complete if progress is 100% but not marked yet? 
-    // We'll let checkChallengeCompletion handle the DB update/reward to allow for "Event" handling.
-
-    return DailyChallenge(
-      id: challengeId,
-      title: _getChallengeTitle(challengeId),
-      description: _getChallengeDesc(challengeId),
-      bonusXP: 100, // Fixed for now
-      isCompleted: isCompleted,
-      progress: progress,
-    );
-  }
-
-  String _getChallengeTitle(String id) {
-    switch(id) {
-      case 'tiny_focus': return 'プチ集中チャレンジ';
-      case 'double_tap': return 'ダブルタップ';
-      case 'early_bird': return '朝活ボーナス';
-      default: return 'デイリーチャレンジ';
-    }
-  }
-
-  String _getChallengeDesc(String id) {
-    switch(id) {
-      case 'tiny_focus': return '今日合計15分集中しよう';
-      case 'double_tap': return 'セッションを2回完了しよう';
-      case 'early_bird': return '朝10時までに開始しよう';
-      default: return '目標を達成しよう';
-    }
-  }
-  
-  // Call this after session finish. Returns true if NEWLY completed.
-  Future<bool> checkChallengeCompletion() async {
-      final challenge = await getDailyChallenge();
-      if (challenge == null) return false;
-      if (challenge.isCompleted) return false; // Already done
-
-      if (challenge.progress >= 1.0) {
-        final db = await database;
-        final now = DateTime.now();
-        final todayStr = now.toIso8601String().substring(0, 10);
-        
-        await db.update(
-          'daily_status', 
-          {'is_completed': 1, 'awarded_at': now.toIso8601String()},
-          where: 'day = ?',
-          whereArgs: [todayStr]
-        );
-        
-        // AWARD BONUS XP (Insert special session)
-        await db.insert('sessions', {
-          'id': 'bonus_${now.millisecondsSinceEpoch}',
-          'node_id': null,
-          'draft_title': 'デイリーチャレンジ達成: ${challenge.title}',
-          'start_at': now.toIso8601String(),
-          'minutes': 0,
-          'points': challenge.bonusXP.toDouble(),
-          'focus': 5,
-          'is_on_campus': 0,
-          'mood_pre': '🏆',
-          'mood_post': '🎉',
-        });
-        
-        return true;
-      }
-      return false;
-  }
 
   Future<Map<String, dynamic>> getUserStats() async {
     final db = await database;
@@ -667,7 +416,6 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getSuggestions() async {
     final db = await database;
-    final hour = DateTime.now().hour;
     // Simple logic: return most updated nodes
     // Ideal: Filter by time of day like backend, but simple is fine for now
     
@@ -716,6 +464,7 @@ class DatabaseHelper {
       'generated_at': DateTime.now().toIso8601String(),
       'sessions': sessions,
       'nodes': nodes,
+      'exported_at': DateTime.now().toIso8601String(),
     };
     
     final jsonStr = jsonEncode(data);
@@ -747,7 +496,7 @@ class DatabaseHelper {
         await db.insert('sessions', s as Map<String, dynamic>);
       }
     } catch (e) {
-      print("Import Error: $e");
+      // print("Import Error: $e");
       throw Exception("データの復元に失敗しました。ファイル形式を確認してください。");
     }
   }
@@ -756,5 +505,182 @@ class DatabaseHelper {
     final db = await database;
     await db.delete('sessions');
     await db.delete('nodes');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Daily Challenge Logic
+  // ---------------------------------------------------------------------------
+
+  final List<Map<String, dynamic>> _challengePool = [
+    {
+      'id': 'tiny_focus',
+      'title': 'まずは15分',
+      'description': '今日合計で15分間集中しよう',
+      'bonusXP': 100,
+      'target_minutes': 15,
+      'type': 'minutes'
+    },
+    {
+      'id': 'double_tap',
+      'title': 'ダブル・タップ',
+      'description': '今日2回セッションを完了しよう',
+      'bonusXP': 100,
+      'target_count': 2,
+      'type': 'count'
+    },
+    {
+      'id': 'early_bird',
+      'title': '朝活チャレンジ',
+      'description': '午前10時までにセッションを開始しよう',
+      'bonusXP': 150,
+      'type': 'time_limit',
+      'limit_hour': 10
+    },
+    {
+      'id': 'night_owl',
+      'title': '夜の集中',
+      'description': '21時以降に集中しよう',
+      'bonusXP': 120,
+      'type': 'time_start',
+      'start_hour': 21
+    },
+    {
+      'id': 'deep_dive',
+      'title': '深く潜る',
+      'description': '1回で30分以上集中しよう',
+      'bonusXP': 200,
+      'type': 'single_session_minutes',
+      'target_minutes': 30
+    },
+  ];
+
+  Future<Map<String, dynamic>> getDailyChallenge() async {
+    final db = await database;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    
+    // 1. Check if exists for today
+    final List<Map<String, dynamic>> existing = await db.query(
+      'daily_status',
+      where: 'day = ?',
+      whereArgs: [today]
+    );
+
+    Map<String, dynamic> challengeDef;
+    bool isCompleted = false;
+
+    if (existing.isNotEmpty) {
+      // Load existing
+      final saved = existing.first;
+      final challengeId = saved['challenge_id'] as String;
+      isCompleted = (saved['is_completed'] as int) == 1;
+      
+      // Find definition
+      challengeDef = _challengePool.firstWhere(
+        (c) => c['id'] == challengeId, 
+        orElse: () => _challengePool.first
+      );
+    } else {
+      // Create new random challenge
+      final random = Random();
+      challengeDef = _challengePool[random.nextInt(_challengePool.length)];
+      
+      await db.insert('daily_status', {
+        'day': today,
+        'challenge_id': challengeDef['id'],
+        'is_completed': 0,
+        'awarded_at': null
+      });
+    }
+
+    // 2. Calculate Progress (if not completed)
+    double progress = isCompleted ? 1.0 : 0.0;
+    bool justCompleted = false;
+    
+    if (!isCompleted) {
+      final sessions = await getSessionsForDate(DateTime.now());
+      
+      switch (challengeDef['type']) {
+        case 'minutes':
+          final totalMins = sessions.fold<int>(0, (sum, s) => sum + (s['minutes'] as int));
+          final target = challengeDef['target_minutes'] as int;
+          progress = (totalMins / target).clamp(0.0, 1.0);
+          break;
+          
+        case 'count':
+          final count = sessions.length;
+          final target = challengeDef['target_count'] as int;
+          progress = (count / target).clamp(0.0, 1.0);
+          break;
+          
+        case 'time_limit':
+          final limit = challengeDef['limit_hour'] as int;
+          bool achieved = sessions.any((s) {
+            final start = DateTime.parse(s['startAt'] as String);
+            return start.hour < limit;
+          });
+          if (achieved) progress = 1.0;
+          break;
+
+        case 'time_start':
+          final startHour = challengeDef['start_hour'] as int;
+          bool achieved = sessions.any((s) {
+             final start = DateTime.parse(s['startAt'] as String);
+             return start.hour >= startHour;
+          });
+          if (achieved) progress = 1.0;
+          break;
+
+        case 'single_session_minutes':
+          final target = challengeDef['target_minutes'] as int;
+          bool achieved = sessions.any((s) => (s['minutes'] as int) >= target);
+           if (achieved) progress = 1.0;
+          break;
+      }
+      
+      // Completion Check
+      if (progress >= 1.0) {
+        await _completeChallenge(today, challengeDef['bonusXP'] as int);
+        justCompleted = true;
+      }
+    }
+
+    return {
+      'id': challengeDef['id'],
+      'title': challengeDef['title'],
+      'description': challengeDef['description'],
+      'bonusXP': challengeDef['bonusXP'],
+      'isCompleted': isCompleted || justCompleted,
+      'justCompleted': justCompleted,
+      'progress': progress,
+    };
+  }
+  
+  // Wrapper for compatibility with main.dart
+  Future<bool> checkChallengeCompletion() async {
+    final result = await getDailyChallenge();
+    return result['justCompleted'] as bool? ?? false;
+  }
+
+  Future<void> _completeChallenge(String day, int bonusXP) async {
+    final db = await database;
+    await db.update(
+      'daily_status', 
+      {'is_completed': 1, 'awarded_at': DateTime.now().toIso8601String()},
+      where: 'day = ?',
+      whereArgs: [day]
+    );
+    
+    await db.insert('sessions', {
+      'id': 'bonus_${DateTime.now().millisecondsSinceEpoch}',
+      'node_id': 'system_bonus',
+      'draft_title': 'デイリーチャレンジ達成',
+      'start_at': DateTime.now().toIso8601String(),
+      'minutes': 0,
+      'points': bonusXP,
+      'focus': 100,
+      'is_on_campus': 0,
+      'mood_pre': '🎉',
+      'mood_post': '🎉',
+    });
   }
 }

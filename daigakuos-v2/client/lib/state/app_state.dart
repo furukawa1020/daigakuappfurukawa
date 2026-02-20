@@ -83,6 +83,17 @@ class DailyChallenge {
     this.isCompleted = false,
     this.progress = 0.0,
   });
+
+  factory DailyChallenge.fromJson(Map<String, dynamic> json) {
+    return DailyChallenge(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      bonusXP: json['bonusXP'] as int,
+      isCompleted: json['isCompleted'] as bool,
+      progress: (json['progress'] as num).toDouble(),
+    );
+  }
 }
 
 
@@ -105,7 +116,7 @@ final userStatsProvider = FutureProvider<UserStats>((ref) async {
     final data = await DatabaseHelper().getUserStats();
     return UserStats.fromJson(data);
   } catch (e) {
-    print("Stats Error: $e");
+    // print("Stats Error: $e");
     return UserStats(
       totalPoints: 0, 
       totalMinutes: 0,
@@ -140,6 +151,6 @@ final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async
 });
 
 final dailyChallengeProvider = FutureProvider<DailyChallenge>((ref) async {
-  return await DatabaseHelper().getDailyChallenge();
+  final data = await DatabaseHelper().getDailyChallenge();
+  return DailyChallenge.fromJson(data);
 });
-
