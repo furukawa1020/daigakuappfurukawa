@@ -1,6 +1,5 @@
 package com.hatake.daigakuos.domain.logic
 
-import com.hatake.daigakuos.data.local.entity.ProjectType
 import javax.inject.Inject
 
 /**

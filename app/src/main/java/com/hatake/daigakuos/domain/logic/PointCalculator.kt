@@ -1,7 +1,7 @@
 package com.hatake.daigakuos.domain.logic
 
 import com.hatake.daigakuos.data.local.entity.NodeEventEntity
-import com.hatake.daigakuos.data.local.entity.ProjectType
+import com.hatake.daigakuos.data.local.entity.NodeType
 import javax.inject.Inject
 
 /**
@@ -10,7 +10,7 @@ import javax.inject.Inject
 class PointCalculator @Inject constructor() {
 
     data class Inputs(
-        val completedNodeTypesToday: List<ProjectType>, // For Diversity
+        val completedNodeTypesToday: List<NodeType>, // For Diversity
         val isOnCampus: Boolean, // For Awareness
         val focusLevel: Int, // 1-5, For Awareness
         val estimateMinutes: Int, // For granularity check (Awareness)

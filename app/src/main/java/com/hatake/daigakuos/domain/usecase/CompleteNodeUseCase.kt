@@ -20,8 +20,13 @@ class CompleteNodeUseCase @Inject constructor(
         // 1. Gather Context Data
         val todayTypes = statsRepository.getTodayCompletedTypes()
         // Add current node type to the list for calculation (simulating it being part of today)
-        val updatedTypes = todayTypes.toMutableList().apply { add(node.type) }
-        
+        val updatedTypes = todayTypes.toMutableList().apply { 
+             try {
+                 add(com.hatake.daigakuos.data.local.entity.NodeType.valueOf(node.type))
+             } catch (e: Exception) {
+                 // Ignore parsing error or fallback
+             }
+        }
         val recentRecovery = statsRepository.getRecentRecoveryCount()
         val streak = statsRepository.getStreak()
 

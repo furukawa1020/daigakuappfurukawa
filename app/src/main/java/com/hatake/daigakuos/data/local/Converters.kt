@@ -5,9 +5,9 @@ import com.hatake.daigakuos.data.local.entity.*
 
 class Converters {
     @TypeConverter
-    fun fromProjectType(value: ProjectType): String = value.name
+    fun fromNodeType(value: NodeType): String = value.name
     @TypeConverter
-    fun toProjectType(value: String): ProjectType = ProjectType.valueOf(value)
+    fun toNodeType(value: String): NodeType = NodeType.valueOf(value)
 
     @TypeConverter
     fun fromNodeStatus(value: NodeStatus): String = value.name

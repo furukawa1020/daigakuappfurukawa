@@ -1,9 +1,9 @@
 package com.hatake.daigakuos.domain.repository
 
-import com.hatake.daigakuos.data.local.entity.ProjectType
+import com.hatake.daigakuos.data.local.entity.NodeType
 
 interface StatsRepository {
-    suspend fun getTodayCompletedTypes(): List<ProjectType>
+    suspend fun getTodayCompletedTypes(): List<NodeType>
     suspend fun getRecentRecoveryCount(): Int
     suspend fun getStreak(): Int
     fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float>

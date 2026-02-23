@@ -2,7 +2,7 @@ package com.hatake.daigakuos.data.repository
 
 import com.hatake.daigakuos.data.local.dao.SessionDao
 import com.hatake.daigakuos.data.local.dao.AggDao
-import com.hatake.daigakuos.data.local.entity.ProjectType
+import com.hatake.daigakuos.data.local.entity.NodeType
 import com.hatake.daigakuos.domain.repository.StatsRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -16,7 +16,7 @@ class StatsRepositoryImpl @Inject constructor(
     private val userContextRepository: com.hatake.daigakuos.domain.repository.UserContextRepository
 ) : StatsRepository {
 
-    override suspend fun getTodayCompletedTypes(): List<ProjectType> {
+    override suspend fun getTodayCompletedTypes(): List<NodeType> {
        return emptyList() 
     }
 
