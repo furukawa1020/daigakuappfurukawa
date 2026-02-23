@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -126,12 +127,12 @@ fun SessionHistoryList(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = session.draftTitle.ifBlank { "名称未設定" },
+                            text = session.draftTitle?.ifBlank { "名称未設定" } ?: "名称未設定",
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "${session.minutes}分 · ${String.format("%.1f", session.points)} pts",
+                            text = "${session.selfReportMin ?: 0}分 · ${String.format("%.1f", session.points ?: 0.0)} pts",
                             style = MaterialTheme.typography.bodySmall,
                             color = Color.Gray
                         )
@@ -154,7 +155,7 @@ fun EditSessionDialog(
     onUpdate: (String) -> Unit,
     onDelete: () -> Unit
 ) {
-    var title by remember { mutableStateOf(session.draftTitle) }
+    var title by remember { mutableStateOf(session.draftTitle ?: "") }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     if (showDeleteConfirm) {

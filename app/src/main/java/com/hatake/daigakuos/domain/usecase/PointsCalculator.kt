@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 class PointsCalculator @Inject constructor() {
 
-    inline fun computePoints(
+    fun computePoints(
         base: Double = 1.0,
         selfReportMin: Int?,
         focus: Int?,

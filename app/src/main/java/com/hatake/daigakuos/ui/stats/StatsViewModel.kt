@@ -7,6 +7,7 @@ import com.hatake.daigakuos.data.local.dao.SessionDao
 import com.hatake.daigakuos.data.local.entity.DailyAggEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class StatsUiState(

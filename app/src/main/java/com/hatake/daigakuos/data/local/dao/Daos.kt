@@ -38,6 +38,15 @@ interface NodeDao {
 
     @Query("SELECT * FROM nodes WHERE id = :nodeId")
     suspend fun getNodeById(nodeId: String): NodeEntity?
+
+    @Update
+    suspend fun updateNode(node: NodeEntity)
+
+    @Query("SELECT * FROM nodes WHERE status != 'ARCHIVED' AND status != 'DONE'")
+    fun getActiveNodes(): Flow<List<NodeEntity>>
+
+    @Query("SELECT * FROM nodes WHERE projectId = :projectId AND (parentId = :parentId OR (:parentId IS NULL AND parentId IS NULL))")
+    fun getNodesByParent(projectId: String, parentId: String?): Flow<List<NodeEntity>>
 }
 
 @Dao

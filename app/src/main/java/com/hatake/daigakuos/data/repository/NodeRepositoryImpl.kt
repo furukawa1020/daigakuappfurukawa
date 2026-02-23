@@ -17,12 +17,12 @@ class NodeRepositoryImpl @Inject constructor(
         return nodeDao.getActiveNodes()
     }
 
-    override fun getNodesByParent(projectId: Long, parentId: Long?): Flow<List<NodeEntity>> {
+    override fun getNodesByParent(projectId: String, parentId: String?): Flow<List<NodeEntity>> {
         return nodeDao.getNodesByParent(projectId, parentId)
     }
 
-    override suspend fun insertNode(node: NodeEntity): Long {
-        return nodeDao.insertNode(node)
+    override suspend fun insertNode(node: NodeEntity) {
+        nodeDao.insertNode(node)
     }
 
     override suspend fun updateNode(node: NodeEntity) {
@@ -30,19 +30,16 @@ class NodeRepositoryImpl @Inject constructor(
     }
 
     override suspend fun completeNode(
-        nodeId: Long,
+        nodeId: String,
         actualMinutes: Int,
         focusLevel: Int,
         isOnCampus: Boolean,
         streakDays: Int
     ) {
         // Business Logic for completion
-        // 1. Calculate points (Simplified for now, real logic in UseCase or here)
         val timestamp = System.currentTimeMillis()
         
         // 2. Mark as done in DB
-        nodeDao.markAsDone(nodeId, timestamp)
-        
-        // 3. (Optional) Create Event log here or via EventRepository
+        nodeDao.markDone(nodeId, timestamp)
     }
 }
