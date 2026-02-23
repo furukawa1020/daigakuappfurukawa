@@ -14,12 +14,20 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
+import com.hatake.daigakuos.domain.repository.ThemePreference
+import com.hatake.daigakuos.domain.repository.UserSettingsRepository
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var userContextRepository: com.hatake.daigakuos.domain.repository.UserContextRepository
+    
+    @Inject
+    lateinit var userSettingsRepository: UserSettingsRepository
 
     // Kanazawa University Natural Science and Technology Hall 2
     private val GEOFENCE_LAT = 36.5447
@@ -49,7 +57,15 @@ class MainActivity : ComponentActivity() {
         checkPermissionsAndAddGeofence()
 
         setContent {
-            DaigakuOSTheme {
+            val themePreference by userSettingsRepository.themePreferenceFlow.collectAsState(initial = ThemePreference.SYSTEM)
+            val isSystemDark = isSystemInDarkTheme()
+            val useDarkTheme = when (themePreference) {
+                ThemePreference.DARK -> true
+                ThemePreference.LIGHT -> false
+                ThemePreference.SYSTEM -> isSystemDark
+            }
+
+            DaigakuOSTheme(darkTheme = useDarkTheme) {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),

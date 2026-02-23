@@ -80,4 +80,10 @@ object AppModule {
     fun provideUserContextRepository(impl: UserContextRepositoryImpl): UserContextRepository {
         return impl
     }
+
+    @Provides
+    @Singleton
+    fun provideUserSettingsRepository(@ApplicationContext context: Context): com.hatake.daigakuos.domain.repository.UserSettingsRepository {
+        return com.hatake.daigakuos.domain.repository.UserSettingsRepository(context)
+    }
 }
