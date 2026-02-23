@@ -1,6 +1,5 @@
 package com.hatake.daigakuos.domain.logic
 
-import com.hatake.daigakuos.data.local.entity.NodeEventEntity
 import com.hatake.daigakuos.data.local.entity.NodeType
 import javax.inject.Inject
 
