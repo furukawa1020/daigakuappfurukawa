@@ -20,7 +20,7 @@ class CompleteNodeUseCase @Inject constructor(
         // 1. Gather Context Data
         val todayTypes = statsRepository.getTodayCompletedTypes()
         // Add current node type to the list for calculation (simulating it being part of today)
-        val updatedTypes = todayTypes + node.type
+        val updatedTypes = todayTypes.toMutableList().apply { add(node.type) }
         
         val recentRecovery = statsRepository.getRecentRecoveryCount()
         val streak = statsRepository.getStreak()
@@ -31,7 +31,7 @@ class CompleteNodeUseCase @Inject constructor(
                 completedNodeTypesToday = updatedTypes,
                 isOnCampus = isOnCampus,
                 focusLevel = focusLevel,
-                estimateMinutes = node.estimateMinutes,
+                estimateMinutes = node.estimateMin ?: 25,
                 recentRecoveryCount = recentRecovery,
                 currentStreakDays = streak
             )
