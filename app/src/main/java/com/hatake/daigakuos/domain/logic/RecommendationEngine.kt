@@ -1,7 +1,7 @@
 package com.hatake.daigakuos.domain.logic
 
 import com.hatake.daigakuos.data.local.entity.NodeEntity
-import com.hatake.daigakuos.data.local.entity.ProjectType
+import com.hatake.daigakuos.data.local.entity.NodeType
 import javax.inject.Inject
 
 class RecommendationEngine @Inject constructor() {
@@ -10,7 +10,7 @@ class RecommendationEngine @Inject constructor() {
         val isOnCampus: Boolean,
         val recentRecoveryCount: Int,
         val currentStreakDays: Int,
-        val completedNodeTypesToday: List<ProjectType>
+        val completedNodeTypesToday: List<NodeType>
     )
 
     fun rankNodes(nodes: List<NodeEntity>, context: Context): List<NodeEntity> {
@@ -29,16 +29,17 @@ class RecommendationEngine @Inject constructor() {
         var score = 0.0
 
         // 1. Campus Multiplier
-        if (context.isOnCampus && (node.type == ProjectType.STUDY || node.type == ProjectType.RESEARCH)) {
+        if (context.isOnCampus && (node.type == NodeType.STUDY.name || node.type == NodeType.RESEARCH.name)) {
             score += 10.0
         }
 
         // 2. Deadline Pressure (if deadline exists)
-        node.deadline?.let { deadline ->
-            val hoursUntil = (deadline - System.currentTimeMillis()) / (1000 * 60 * 60)
-            if (hoursUntil < 24) score += 20.0
-            else if (hoursUntil < 72) score += 10.0
-        }
+        // TODO: Implement deadline logic if NodeEntity adds a deadline property
+        // node.deadline?.let { deadline ->
+        //     val hoursUntil = (deadline - System.currentTimeMillis()) / (1000 * 60 * 60)
+        //     if (hoursUntil < 24) score += 20.0
+        //     else if (hoursUntil < 72) score += 10.0
+        // }
 
         return score
     }
