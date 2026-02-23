@@ -89,6 +89,27 @@ fun SettingsScreen(
             Divider()
             Spacer(modifier = Modifier.height(24.dp))
             
+            Text("テーマ設定", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Theme selection UI
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                com.hatake.daigakuos.domain.repository.ThemePreference.values().forEach { theme ->
+                    FilterChip(
+                        selected = uiState.themePreference == theme,
+                        onClick = { viewModel.saveThemePreference(theme) },
+                        label = { Text(theme.name) }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
             Text("目標設定", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             

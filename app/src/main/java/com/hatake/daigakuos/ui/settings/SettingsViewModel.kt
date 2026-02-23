@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hatake.daigakuos.data.local.dao.SettingsDao
 import com.hatake.daigakuos.data.local.entity.SettingsEntity
+import com.hatake.daigakuos.domain.repository.ThemePreference
+import com.hatake.daigakuos.domain.repository.UserSettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,12 +18,14 @@ data class SettingsUiState(
     val campusLat: Double = 36.5447,
     val campusLng: Double = 136.6963,
     val campusRadiusM: Float = 120f,
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val themePreference: ThemePreference = ThemePreference.SYSTEM
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsDao: SettingsDao
+    private val settingsDao: SettingsDao,
+    private val userSettingsRepository: UserSettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -29,13 +33,22 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadSettings()
+        observeTheme()
+    }
+
+    private fun observeTheme() {
+        viewModelScope.launch {
+            userSettingsRepository.themePreferenceFlow.collect { theme ->
+                _uiState.value = _uiState.value.copy(themePreference = theme)
+            }
+        }
     }
 
     private fun loadSettings() {
         viewModelScope.launch {
             val settings = settingsDao.getSettings()
             if (settings != null) {
-                _uiState.value = SettingsUiState(
+                _uiState.value = _uiState.value.copy(
                     weeklyHourTarget = settings.weeklyHourTarget,
                     campusLat = settings.campusLat,
                     campusLng = settings.campusLng,
@@ -46,8 +59,14 @@ class SettingsViewModel @Inject constructor(
                 // Initialize Default
                 val default = SettingsEntity()
                 settingsDao.insertSettings(default)
-                _uiState.value = SettingsUiState(isLoading = false)
+                _uiState.value = _uiState.value.copy(isLoading = false)
             }
+        }
+    }
+
+    fun saveThemePreference(theme: ThemePreference) {
+        viewModelScope.launch {
+            userSettingsRepository.setThemePreference(theme)
         }
     }
 
@@ -69,7 +88,7 @@ class SettingsViewModel @Inject constructor(
             settingsDao.insertSettings(updated)
             
             // update state
-            _uiState.value = SettingsUiState(
+            _uiState.value = _uiState.value.copy(
                 weeklyHourTarget = target,
                 campusLat = lat,
                 campusLng = lng,
