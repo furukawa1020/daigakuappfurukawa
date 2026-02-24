@@ -13,7 +13,8 @@ import javax.inject.Singleton
 
 @Singleton
 class SoundManager @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    private val userSettingsRepository: com.hatake.daigakuos.domain.repository.UserSettingsRepository
 ) {
     private var soundPool: SoundPool? = null
     
