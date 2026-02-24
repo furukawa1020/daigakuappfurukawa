@@ -22,7 +22,8 @@ class NowViewModel @Inject constructor(
     private val startSessionUseCase: com.hatake.daigakuos.domain.usecase.StartSessionUseCase,
     private val userContextRepository: UserContextRepository,
     private val nodeDao: NodeDao,
-    private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao
+    private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao,
+    private val soundManager: com.hatake.daigakuos.utils.SoundManager
 ) : ViewModel() {
 
     var currentSessionId: String? = null
@@ -32,6 +33,8 @@ class NowViewModel @Inject constructor(
 
     fun startSession(nodeId: String?) {
         viewModelScope.launch {
+            soundManager.playClick()
+            
             // 1. Fetch Node Title
             if (nodeId != null) {
                 val node = nodeDao.getNodeById(nodeId)

@@ -19,7 +19,8 @@ data class SettingsUiState(
     val campusLng: Double = 136.6963,
     val campusRadiusM: Float = 120f,
     val isLoading: Boolean = true,
-    val themePreference: ThemePreference = ThemePreference.SYSTEM
+    val themePreference: ThemePreference = ThemePreference.SYSTEM,
+    val isSoundEnabled: Boolean = true
 )
 
 @HiltViewModel
@@ -33,13 +34,18 @@ class SettingsViewModel @Inject constructor(
 
     init {
         loadSettings()
-        observeTheme()
+        observePreferences()
     }
 
-    private fun observeTheme() {
+    private fun observePreferences() {
         viewModelScope.launch {
             userSettingsRepository.themePreferenceFlow.collect { theme ->
                 _uiState.value = _uiState.value.copy(themePreference = theme)
+            }
+        }
+        viewModelScope.launch {
+            userSettingsRepository.isSoundEnabledFlow.collect { enabled ->
+                _uiState.value = _uiState.value.copy(isSoundEnabled = enabled)
             }
         }
     }
@@ -67,6 +73,12 @@ class SettingsViewModel @Inject constructor(
     fun saveThemePreference(theme: ThemePreference) {
         viewModelScope.launch {
             userSettingsRepository.setThemePreference(theme)
+        }
+    }
+
+    fun toggleSoundEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            userSettingsRepository.setSoundEnabled(enabled)
         }
     }
 

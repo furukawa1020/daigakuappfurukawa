@@ -19,10 +19,14 @@ data class HomeUiState(
 class HomeViewModel @Inject constructor(
     private val getRecommendedNodesUseCase: com.hatake.daigakuos.domain.usecase.GetRecommendedNodesUseCase,
     private val userContextRepository: UserContextRepository,
-    private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao
+    private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao,
+    private val organismGrowthLogic: com.hatake.daigakuos.domain.logic.OrganismGrowthLogic,
+    private val soundManager: com.hatake.daigakuos.utils.SoundManager
 ) : ViewModel() {
 
     private val _recommendedNodes = MutableStateFlow<List<NodeEntity>>(emptyList())
+    
+    private var previousLevel = -1
 
     // Combined UI State
     val uiState: StateFlow<HomeUiState> = combine(
@@ -31,6 +35,13 @@ class HomeViewModel @Inject constructor(
         userContextRepository.currentMode,
         sessionDao.getTotalPointsFlow().map { it.toFloat() }
     ) { nodes, onCampus, mode, points ->
+        // For Organism Level calculation
+        val state = organismGrowthLogic.calculateGrowth(points, points, points) // Using total points as a proxy for all
+        if (previousLevel != -1 && state.level > previousLevel) {
+            soundManager.playLevelUp()
+        }
+        previousLevel = state.level
+        
         HomeUiState(
             currentPoints = points,
             isOnCampus = onCampus,

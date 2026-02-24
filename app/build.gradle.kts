@@ -90,6 +90,10 @@ dependencies {
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // Jetpack Glance (App Widget)
+    implementation("androidx.glance:glance-appwidget:1.0.0")
+    implementation("androidx.glance:glance-material3:1.0.0")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

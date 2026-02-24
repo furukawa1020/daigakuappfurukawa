@@ -21,7 +21,8 @@ data class FinishUiState(
 @HiltViewModel
 class FinishViewModel @Inject constructor(
     private val finalizeSessionUseCase: FinalizeSessionUseCase,
-    private val getFinishSuggestionsUseCase: GetFinishSuggestionsUseCase
+    private val getFinishSuggestionsUseCase: GetFinishSuggestionsUseCase,
+    private val soundManager: com.hatake.daigakuos.utils.SoundManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(FinishUiState())
@@ -57,6 +58,7 @@ class FinishViewModel @Inject constructor(
                 focus = focus
             )
             _uiState.value = _uiState.value.copy(isLoading = false)
+            soundManager.playSessionComplete()
             onSuccess()
         }
     }

@@ -110,6 +110,22 @@ fun SettingsScreen(
             Divider()
             Spacer(modifier = Modifier.height(24.dp))
             
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                Text("サウンドエフェクト", style = MaterialTheme.typography.titleMedium)
+                Switch(
+                    checked = uiState.isSoundEnabled,
+                    onCheckedChange = { viewModel.toggleSoundEnabled(it) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider()
+            Spacer(modifier = Modifier.height(24.dp))
+            
             Text("目標設定", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             

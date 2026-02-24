@@ -18,6 +18,7 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 class UserSettingsRepository(private val context: Context) {
 
     private val THEME_KEY = stringPreferencesKey("theme_preference")
+    private val SOUND_KEY = androidx.datastore.preferences.core.booleanPreferencesKey("sound_enabled")
 
     val themePreferenceFlow: Flow<ThemePreference> = context.dataStore.data
         .map { preferences ->
@@ -29,9 +30,20 @@ class UserSettingsRepository(private val context: Context) {
             }
         }
 
+    val isSoundEnabledFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[SOUND_KEY] ?: true // Sound enabled by default
+        }
+
     suspend fun setThemePreference(theme: ThemePreference) {
         context.dataStore.edit { preferences ->
             preferences[THEME_KEY] = theme.name
+        }
+    }
+
+    suspend fun setSoundEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[SOUND_KEY] = enabled
         }
     }
 }
