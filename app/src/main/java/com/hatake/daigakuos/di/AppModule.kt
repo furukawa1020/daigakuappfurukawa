@@ -89,7 +89,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSoundManager(@ApplicationContext context: Context): com.hatake.daigakuos.utils.SoundManager {
-        return com.hatake.daigakuos.utils.SoundManager(context)
+    fun provideSoundManager(
+        @ApplicationContext context: Context,
+        userSettingsRepository: com.hatake.daigakuos.domain.repository.UserSettingsRepository
+    ): com.hatake.daigakuos.utils.SoundManager {
+        return com.hatake.daigakuos.utils.SoundManager(context, userSettingsRepository)
     }
 }
