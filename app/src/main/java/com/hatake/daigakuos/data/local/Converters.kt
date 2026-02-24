@@ -19,8 +19,4 @@ class Converters {
     @TypeConverter
     fun toMode(value: String): Mode = Mode.valueOf(value)
 
-    @TypeConverter
-    fun fromRecoveryType(value: RecoveryType): String = value.name
-    @TypeConverter
-    fun toRecoveryType(value: String): RecoveryType = RecoveryType.valueOf(value)
 }
