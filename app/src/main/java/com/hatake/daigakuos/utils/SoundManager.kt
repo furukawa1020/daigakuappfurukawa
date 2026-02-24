@@ -46,6 +46,12 @@ class SoundManager @Inject constructor(
                 // If files are dummy or missing, it might throw, so we catch it
             }
         }
+        
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            userSettingsRepository.isSoundEnabledFlow.collect { enabled ->
+                _isSoundEnabled.value = enabled
+            }
+        }
     }
 
     fun setSoundEnabled(enabled: Boolean) {
