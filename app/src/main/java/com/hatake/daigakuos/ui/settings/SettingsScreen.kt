@@ -39,6 +39,19 @@ fun SettingsScreen(
         }
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.exportJsonEvent.collect { jsonStr ->
+            val sendIntent = android.content.Intent().apply {
+                action = android.content.Intent.ACTION_SEND
+                putExtra(android.content.Intent.EXTRA_TEXT, jsonStr)
+                type = "application/json"
+            }
+            val shareIntent = android.content.Intent.createChooser(sendIntent, "Export Data")
+            context.startActivity(shareIntent)
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -138,6 +151,15 @@ fun SettingsScreen(
             )
             
             Spacer(modifier = Modifier.height(32.dp))
+            
+            OutlinedButton(
+                onClick = { viewModel.exportData() },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("データをエクスポート (JSON)")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
             
             Button(
                 onClick = {
