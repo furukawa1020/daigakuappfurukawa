@@ -127,3 +127,12 @@ data class DailyAggEntity(
 data class CampusVisitEntity(
   @PrimaryKey val yyyymmdd: Int
 )
+
+// 6. ウォレット（通貨）
+@Entity(tableName = "wallet")
+data class WalletEntity(
+    @PrimaryKey val id: String = "singleton",
+    val mokoCoins: Int = 0,
+    val starCrystals: Int = 0,
+    val campusGems: Int = 0
+)

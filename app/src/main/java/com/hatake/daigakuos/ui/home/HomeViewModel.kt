@@ -9,11 +9,16 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import com.hatake.daigakuos.data.local.entity.WalletEntity
+
 data class HomeUiState(
     val currentPoints: Float = 1250f,
     val isOnCampus: Boolean = true,
     val recommendations: List<NodeEntity> = emptyList(),
-    val organismState: com.hatake.daigakuos.domain.logic.OrganismGrowthLogic.OrganismState? = null
+    val organismState: com.hatake.daigakuos.domain.logic.OrganismGrowthLogic.OrganismState? = null,
+    val mokoCoins: Int = 0,
+    val starCrystals: Int = 0,
+    val campusGems: Int = 0
 )
 
 @HiltViewModel
@@ -21,6 +26,7 @@ class HomeViewModel @Inject constructor(
     private val getRecommendedNodesUseCase: com.hatake.daigakuos.domain.usecase.GetRecommendedNodesUseCase,
     private val userContextRepository: UserContextRepository,
     private val sessionDao: com.hatake.daigakuos.data.local.dao.SessionDao,
+    private val walletDao: com.hatake.daigakuos.data.local.dao.WalletDao,
     private val organismGrowthLogic: com.hatake.daigakuos.domain.logic.OrganismGrowthLogic,
     private val soundManager: com.hatake.daigakuos.utils.SoundManager
 ) : ViewModel() {
@@ -34,8 +40,9 @@ class HomeViewModel @Inject constructor(
         _recommendedNodes,
         userContextRepository.isOnCampus,
         userContextRepository.currentMode,
-        sessionDao.getTotalPointsFlow().map { it.toFloat() }
-    ) { nodes, onCampus, mode, points ->
+        sessionDao.getTotalPointsFlow().map { it.toFloat() },
+        walletDao.getWallet().map { it ?: WalletEntity() }
+    ) { nodes, onCampus, mode, points, wallet ->
         // For Organism Level calculation
         val state = organismGrowthLogic.calculateGrowth(points, points, points) // Using total points as a proxy for all
         if (previousLevel != -1 && state.level > previousLevel) {
@@ -47,7 +54,10 @@ class HomeViewModel @Inject constructor(
             currentPoints = points,
             isOnCampus = onCampus,
             recommendations = nodes,
-            organismState = state
+            organismState = state,
+            mokoCoins = wallet.mokoCoins,
+            starCrystals = wallet.starCrystals,
+            campusGems = wallet.campusGems
         )
     }.stateIn(
         scope = viewModelScope,
@@ -56,6 +66,7 @@ class HomeViewModel @Inject constructor(
     )
 
     init {
+        viewModelScope.launch { walletDao.initWallet() }
         refreshRecommendations()
     }
 

@@ -104,6 +104,18 @@ fun HomeScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Currency Bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                CurrencyBadge("💰", uiState.mokoCoins)
+                CurrencyBadge("✨", uiState.starCrystals)
+                CurrencyBadge("💎", uiState.campusGems)
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
             
             // "Do Now" Button (Zero Input Start)

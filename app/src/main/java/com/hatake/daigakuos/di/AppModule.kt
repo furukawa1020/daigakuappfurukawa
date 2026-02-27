@@ -41,7 +41,7 @@ object AppModule {
             AppDatabase::class.java,
             "daigaku_os.db"
         )
-        .addMigrations(com.hatake.daigakuos.data.local.MIGRATION_2_3)
+        .addMigrations(com.hatake.daigakuos.data.local.MIGRATION_2_3, com.hatake.daigakuos.data.local.MIGRATION_3_4)
         // Database Migration Strategy:
         // - Version 2 is the first production version (no migration from v1 needed)
         // - Version 3 adds index on sessions.points for better query performance
@@ -58,6 +58,9 @@ object AppModule {
 
     @Provides
     fun provideProjectDao(db: AppDatabase): ProjectDao = db.projectDao()
+
+    @Provides
+    fun provideWalletDao(db: AppDatabase): WalletDao = db.walletDao()
 
     @Provides
     fun provideNodeDao(db: AppDatabase): NodeDao = db.nodeDao()

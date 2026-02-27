@@ -51,5 +51,17 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
  * }
  * 
  * Then in AppModule.kt:
- * .addMigrations(MIGRATION_2_3, MIGRATION_3_4)
- */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS wallet (
+                id TEXT PRIMARY KEY NOT NULL,
+                mokoCoins INTEGER NOT NULL DEFAULT 0,
+                starCrystals INTEGER NOT NULL DEFAULT 0,
+                campusGems INTEGER NOT NULL DEFAULT 0
+            )
+        """.trimIndent())
+        // Insert initial row
+        database.execSQL("INSERT OR IGNORE INTO wallet (id, mokoCoins, starCrystals, campusGems) VALUES ('singleton', 0, 0, 0)")
+    }
+}
