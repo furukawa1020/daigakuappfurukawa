@@ -46,4 +46,18 @@ class UserSettingsRepository(private val context: Context) {
             preferences[SOUND_KEY] = enabled
         }
     }
+
+    private val UNLOCKED_MOKO_KEY = androidx.datastore.preferences.core.stringSetPreferencesKey("unlocked_moko_items")
+
+    val unlockedMokoItemsFlow: Flow<Set<String>> = context.dataStore.data
+        .map { preferences ->
+            preferences[UNLOCKED_MOKO_KEY] ?: emptySet()
+        }
+
+    suspend fun unlockMokoItem(itemId: String) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[UNLOCKED_MOKO_KEY] ?: emptySet()
+            preferences[UNLOCKED_MOKO_KEY] = current + itemId
+        }
+    }
 }

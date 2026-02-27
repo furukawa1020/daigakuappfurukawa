@@ -27,6 +27,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 
+import androidx.compose.material.icons.filled.Face
+
 @Composable
 fun HomeScreen(
     uiState: com.hatake.daigakuos.ui.home.HomeUiState,
@@ -34,6 +36,7 @@ fun HomeScreen(
     onNavigateToTree: () -> Unit,
     onNavigateToStats: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToCollection: () -> Unit,
     onModeChange: (com.hatake.daigakuos.data.local.entity.Mode) -> Unit
 ) {
     val currentPoints = uiState.currentPoints
@@ -87,6 +90,13 @@ fun HomeScreen(
                 
                 // Actions: Help & Settings
                 Row {
+                    IconButton(onClick = onNavigateToCollection) {
+                        Icon(
+                            imageVector = Icons.Filled.Face,
+                            contentDescription = "Collection",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                     IconButton(onClick = { showTutorial = true }) {
                         Icon(
                             imageVector = Icons.Filled.Info,

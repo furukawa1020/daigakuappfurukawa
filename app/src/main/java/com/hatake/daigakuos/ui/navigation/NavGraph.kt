@@ -20,6 +20,7 @@ sealed class Screen(val route: String) {
     object Tree : Screen("tree")
     object Stats : Screen("stats")
     object Settings : Screen("settings")
+    object Collection : Screen("collection")
 }
 
 @Composable
@@ -33,6 +34,7 @@ fun UniversityNavGraph(navController: NavHostController) {
                 onNavigateToTree = { navController.navigate(Screen.Tree.route) },
                 onNavigateToStats = { navController.navigate(Screen.Stats.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                onNavigateToCollection = { navController.navigate(Screen.Collection.route) },
                 onModeChange = viewModel::setMode
             )
         }
@@ -83,6 +85,12 @@ fun UniversityNavGraph(navController: NavHostController) {
 
         composable(Screen.Settings.route) {
             com.hatake.daigakuos.ui.settings.SettingsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.Collection.route) {
+            com.hatake.daigakuos.ui.collection.MokoCollectionScreen(
                 onBack = { navController.popBackStack() }
             )
         }
