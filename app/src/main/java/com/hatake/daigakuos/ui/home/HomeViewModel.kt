@@ -12,7 +12,8 @@ import javax.inject.Inject
 data class HomeUiState(
     val currentPoints: Float = 1250f,
     val isOnCampus: Boolean = true,
-    val recommendations: List<NodeEntity> = emptyList()
+    val recommendations: List<NodeEntity> = emptyList(),
+    val organismState: com.hatake.daigakuos.domain.logic.OrganismGrowthLogic.OrganismState? = null
 )
 
 @HiltViewModel
@@ -45,7 +46,8 @@ class HomeViewModel @Inject constructor(
         HomeUiState(
             currentPoints = points,
             isOnCampus = onCampus,
-            recommendations = nodes
+            recommendations = nodes,
+            organismState = state
         )
     }.stateIn(
         scope = viewModelScope,

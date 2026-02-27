@@ -140,16 +140,29 @@ fun HomeScreen(
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val petEmoji = when(uiState.organismState?.level ?: 1) {
+                        1 -> "🥚"
+                        in 2..3 -> "🐣"
+                        in 4..5 -> "🐥"
+                        in 6..10 -> "🐔"
+                        in 11..20 -> "🐲"
+                        else -> "🐉"
+                    }
                     Text(
-                        text = "${currentPoints.toInt()}",
-                        style = MaterialTheme.typography.displayLarge,
-                        fontWeight = FontWeight.Light,
+                        text = petEmoji,
+                        fontSize = 72.sp
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Lv.${uiState.organismState?.level ?: 1} Moko",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "ポイント",
-                        style = MaterialTheme.typography.labelMedium,
-                        letterSpacing = 2.sp,
+                        text = "${currentPoints.toInt()} XP",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Light,
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
