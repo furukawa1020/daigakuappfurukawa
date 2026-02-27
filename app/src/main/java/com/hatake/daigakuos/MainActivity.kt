@@ -75,10 +75,12 @@ class MainActivity : ComponentActivity() {
             val useDarkTheme = when (themePreference) {
                 ThemePreference.DARK -> true
                 ThemePreference.LIGHT -> false
+                ThemePreference.SAKURA -> false
+                ThemePreference.OCEAN -> false
                 ThemePreference.SYSTEM -> isSystemDark
             }
 
-            DaigakuOSTheme(darkTheme = useDarkTheme) {
+            DaigakuOSTheme(darkTheme = useDarkTheme, themePreference = themePreference) {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),

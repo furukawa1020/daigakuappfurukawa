@@ -32,20 +32,36 @@ private val LightColorScheme = lightColorScheme(
     surface = NeutralSurface
 )
 
+private val SakuraColorScheme = lightColorScheme(
+    primary = Color(0xFFD81B60), // Deep Pink
+    secondary = Color(0xFFF48FB1), // Light Pink
+    tertiary = Color(0xFFFFC107), // Amber accent
+    background = Color(0xFFFCE4EC), // Very Light Pink
+    surface = Color(0xFFF8BBD0) // Pink Surface
+)
+
+private val OceanColorScheme = lightColorScheme(
+    primary = Color(0xFF0277BD), // Deep Blue
+    secondary = Color(0xFF4FC3F7), // Light Blue
+    tertiary = Color(0xFF00E5FF), // Cyan accent
+    background = Color(0xFFE1F5FE), // Very Light Blue
+    surface = Color(0xFFB3E5FC) // Blue Surface
+)
+
 @Composable
 fun DaigakuOSTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    themePreference: com.hatake.daigakuos.domain.repository.ThemePreference = com.hatake.daigakuos.domain.repository.ThemePreference.SYSTEM,
     // Disable dynamic color to enforce sophisticated branding
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val colorScheme = when (themePreference) {
+        com.hatake.daigakuos.domain.repository.ThemePreference.SAKURA -> SakuraColorScheme
+        com.hatake.daigakuos.domain.repository.ThemePreference.OCEAN -> OceanColorScheme
+        com.hatake.daigakuos.domain.repository.ThemePreference.DARK -> DarkColorScheme
+        com.hatake.daigakuos.domain.repository.ThemePreference.LIGHT -> LightColorScheme
+        else -> if (darkTheme) DarkColorScheme else LightColorScheme
     }
     val view = LocalView.current
     if (!view.isInEditMode) {
