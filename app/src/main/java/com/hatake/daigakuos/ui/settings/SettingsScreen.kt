@@ -107,8 +107,10 @@ fun SettingsScreen(
             
             // Theme selection UI
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 com.hatake.daigakuos.domain.repository.ThemePreference.values().forEach { theme ->
                     FilterChip(
