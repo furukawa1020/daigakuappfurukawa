@@ -270,3 +270,25 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
         }
     }
 }
+
+@Composable
+fun CurrencyBadge(emoji: String, amount: Int) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = emoji, fontSize = 16.sp)
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "$amount",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
