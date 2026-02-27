@@ -9,6 +9,13 @@ import com.hatake.daigakuos.data.local.entity.SettingsEntity
 import java.util.UUID
 import javax.inject.Inject
 
+data class SessionResult(
+    val node: NodeEntity,
+    val points: Double,
+    val isOnCampus: Boolean,
+    val streak: Int
+)
+
 class FinalizeSessionUseCase @Inject constructor(
     private val sessionDao: SessionDao,
     private val settingsDao: SettingsDao,
@@ -24,7 +31,7 @@ class FinalizeSessionUseCase @Inject constructor(
         newNodeType: NodeType?,
         selfReportMin: Int,
         focus: Int
-    ) {
+    ): SessionResult? {
         val endAt = System.currentTimeMillis()
         val finalizedAt = System.currentTimeMillis()
         
@@ -82,8 +89,19 @@ class FinalizeSessionUseCase @Inject constructor(
         updateDailyAggregationUseCase(finalNodeId, points, selfReportMin)
         
         // 6. Mark Node as Updated
+        var finalNodeObj: NodeEntity? = null
         if (finalNodeId != null) {
             nodeDao.markDone(finalNodeId, finalizedAt)
+            finalNodeObj = nodeDao.getNodeById(finalNodeId)
+        }
+        
+        return finalNodeObj?.let {
+            SessionResult(
+                node = it,
+                points = points,
+                isOnCampus = onCampus,
+                streak = 1 // Placeholder for MVP
+            )
         }
     }
 }

@@ -30,26 +30,73 @@ fun FinishScreen(
     var finalMinutes by remember { mutableIntStateOf(elapsedMinutes) }
     var finalFocus by remember { mutableIntStateOf(3) }
     
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     Scaffold(
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    val isNew = selectedNodeId == null && newTaskTitle.isNotBlank()
-                    if (selectedNodeId != null || isNew) {
-                        viewModel.finalizeSession(
-                            sessionId = sessionId,
-                            selectedNodeId = selectedNodeId,
-                            newNodeTitle = if (isNew) newTaskTitle else null,
-                            newNodeType = if (isNew) newTaskType else null,
-                            minutes = finalMinutes,
-                            focus = finalFocus,
-                            onSuccess = onFinish
-                        )
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 8.dp
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val isNew = selectedNodeId == null && newTaskTitle.isNotBlank()
+                            if (selectedNodeId != null || isNew) {
+                                viewModel.finalizeSession(
+                                    sessionId = sessionId,
+                                    selectedNodeId = selectedNodeId,
+                                    newNodeTitle = if (isNew) newTaskTitle else null,
+                                    newNodeType = if (isNew) newTaskType else null,
+                                    minutes = finalMinutes,
+                                    focus = finalFocus,
+                                    onSuccess = { onFinish() }
+                                )
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("完了", style = MaterialTheme.typography.labelLarge)
                     }
-                },
-                icon = { Icon(Icons.Default.Check, "Done") },
-                text = { Text("成果を記録") }
-            )
+
+                    Button(
+                        onClick = {
+                            val isNew = selectedNodeId == null && newTaskTitle.isNotBlank()
+                            if (selectedNodeId != null || isNew) {
+                                viewModel.finalizeSession(
+                                    sessionId = sessionId,
+                                    selectedNodeId = selectedNodeId,
+                                    newNodeTitle = if (isNew) newTaskTitle else null,
+                                    newNodeType = if (isNew) newTaskType else null,
+                                    minutes = finalMinutes,
+                                    focus = finalFocus,
+                                    onSuccess = { result ->
+                                        if (result != null) {
+                                            val shareIntent = com.hatake.daigakuos.utils.ShareUtils.createShareIntent(
+                                                context = context,
+                                                completedNode = result.node,
+                                                pointsGained = result.points.toFloat(),
+                                                streak = result.streak,
+                                                isOnCampus = result.isOnCampus
+                                            )
+                                            context.startActivity(shareIntent)
+                                        }
+                                        onFinish()
+                                    }
+                                )
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Default.Check, "Done")
+                        Spacer(Modifier.width(8.dp))
+                        Text("完了＆シェア")
+                    }
+                }
+            }
         }
     ) { padding ->
         LazyColumn(

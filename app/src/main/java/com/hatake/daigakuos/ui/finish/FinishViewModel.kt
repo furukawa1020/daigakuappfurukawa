@@ -45,11 +45,11 @@ class FinishViewModel @Inject constructor(
         newNodeType: NodeType?,
         minutes: Int,
         focus: Int,
-        onSuccess: () -> Unit
+        onSuccess: (com.hatake.daigakuos.domain.usecase.SessionResult?) -> Unit
     ) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
-            finalizeSessionUseCase(
+            val result = finalizeSessionUseCase(
                 sessionId = sessionId,
                 selectedNodeId = selectedNodeId,
                 newNodeTitle = newNodeTitle,
@@ -59,7 +59,7 @@ class FinishViewModel @Inject constructor(
             )
             _uiState.value = _uiState.value.copy(isLoading = false)
             soundManager.playSessionComplete()
-            onSuccess()
+            onSuccess(result)
         }
     }
 }
