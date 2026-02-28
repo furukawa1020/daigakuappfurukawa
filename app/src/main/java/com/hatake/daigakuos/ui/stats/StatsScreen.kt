@@ -2,9 +2,8 @@ package com.hatake.daigakuos.ui.stats
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -249,29 +248,54 @@ fun CreatureCard(stage: CreatureStage, points: Double) {
 
 @Composable
 fun GrassGrid(aggs: List<DailyAggEntity>) {
-    // Determine color intensity based on totalPoints in day
-    // Simple 7x(Weeks) grid or just linear for MVP?
-    // Let's do a simple grid of boxes.
-    
-    // Sort logic handled in Dao usually, but list is mostly ordered.
-    // For MVP, just display last 100 days as boxes
-    
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 20.dp),
+    val today = LocalDate.now()
+    val startDate = today.minusDays(364) // Last 365 days
+
+    // Create a map for quick lookup by date string (e.g. "YYYY-MM-DD")
+    val aggsMap = aggs.associateBy { it.dateString }
+
+    // Day of week ranges from 1 (Monday) to 7 (Sunday)
+    // We want Sunday at the top (row 0), Monday at row 1, etc.
+    val startDayOfWeek = if (startDate.dayOfWeek.value == 7) 0 else startDate.dayOfWeek.value
+
+    val totalCells = startDayOfWeek + 365
+
+    // A horizontal grid with 7 rows
+    LazyHorizontalGrid(
+        rows = GridCells.Fixed(7),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.height(180.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height((20 * 7 + 4 * 6).dp) // Exactly height for 7 boxes + spacing
     ) {
-        items(aggs) { agg ->
-            val intensity = (agg.pointsTotal / 100.0).coerceIn(0.1, 1.0).toFloat()
-            Box(
-                modifier = Modifier
-                    .size(20.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = intensity),
-                        shape = RoundedCornerShape(4.dp)
-                    )
-            )
+        items(totalCells) { index ->
+            if (index < startDayOfWeek) {
+                // Invisible padding box so the dates align to the correct week day
+                Box(modifier = Modifier.size(20.dp))
+            } else {
+                val dateOffset = index - startDayOfWeek
+                val currentDate = startDate.plusDays(dateOffset.toLong())
+                val dateStr = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+
+                val agg = aggsMap[dateStr]
+                val points = agg?.pointsTotal ?: 0.0
+
+                // Intensity scales from 0.3 to 1.0 based on points (assuming 100+ is max green)
+                val intensity = if (points > 0) {
+                    (0.3 + (points / 150.0) * 0.7).coerceIn(0.3, 1.0).toFloat()
+                } else 0f
+
+                Box(
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(
+                            color = if (points > 0) MaterialTheme.colorScheme.primary.copy(alpha = intensity)
+                            else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
+            }
         }
     }
 }
