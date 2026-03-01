@@ -5,6 +5,7 @@
 
 package com.hatake.daigakuos.ui.home
 
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -162,18 +164,7 @@ fun HomeScreen(
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val petEmoji = when(uiState.organismState?.level ?: 1) {
-                        1 -> "🥚"
-                        in 2..3 -> "🐣"
-                        in 4..5 -> "🐥"
-                        in 6..10 -> "🐔"
-                        in 11..20 -> "🐲"
-                        else -> "🐉"
-                    }
-                    Text(
-                        text = petEmoji,
-                        fontSize = 72.sp
-                    )
+                    AnimatedPetPlaceholder(level = uiState.organismState?.level ?: 1)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Lv.${uiState.organismState?.level ?: 1} Moko",
@@ -301,4 +292,22 @@ fun CurrencyBadge(emoji: String, amount: Int) {
             )
         }
     }
+}
+
+import com.hatake.daigakuos.ui.common.AnimatedPet
+
+@Composable
+fun AnimatedPetPlaceholder(level: Int) {
+    // We already moved AnimatedPet to common, 
+    // so we can just use it here by passing in the emoji
+    val petEmoji = when(level) {
+        1 -> "🥚"
+        in 2..3 -> "🐣"
+        in 4..5 -> "🐥"
+        in 6..10 -> "🐔"
+        in 11..20 -> "🐲"
+        else -> "🐉"
+    }
+
+    AnimatedPet(emoji = petEmoji)
 }

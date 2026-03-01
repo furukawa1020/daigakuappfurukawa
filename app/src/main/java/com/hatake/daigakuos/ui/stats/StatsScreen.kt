@@ -230,7 +230,11 @@ fun CreatureCard(stage: CreatureStage, points: Double) {
                     CreatureStage.ADULT -> "🦅"
                     CreatureStage.MASTER -> "🐲"
                 }
-                Text(text = icon, style = MaterialTheme.typography.displayLarge)
+                
+                com.hatake.daigakuos.ui.common.AnimatedPet(
+                    emoji = icon,
+                    fontSize = MaterialTheme.typography.displayLarge.fontSize
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stage.name, 
