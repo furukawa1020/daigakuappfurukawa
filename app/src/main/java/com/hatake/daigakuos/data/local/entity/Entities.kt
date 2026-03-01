@@ -136,3 +136,18 @@ data class WalletEntity(
     val starCrystals: Int = 0,
     val campusGems: Int = 0
 )
+
+// 7. ウィークリーチャレンジ（セルフリーダーボード）
+@Entity(tableName = "weekly_challenges")
+data class WeeklyChallengeEntity(
+    @PrimaryKey val id: String, // Example: "2026-W09-TARGET_POINTS"
+    val yearWeek: String,       // Example: "2026-W09"
+    val type: String,           // Enums/Strings: TARGET_POINTS, ACTIVE_DAYS
+    val targetValue: Double,
+    val currentValue: Double = 0.0,
+    val isCompleted: Boolean = false,
+    val isRewardClaimed: Boolean = false,
+    val rewardCoins: Int = 0,
+    val rewardCrystals: Int = 0,
+    val createdAt: Long = System.currentTimeMillis()
+)

@@ -65,3 +65,22 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
         database.execSQL("INSERT OR IGNORE INTO wallet (id, mokoCoins, starCrystals, campusGems) VALUES ('singleton', 0, 0, 0)")
     }
 }
+
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(database: SupportSQLiteDatabase) {
+        database.execSQL("""
+            CREATE TABLE IF NOT EXISTS weekly_challenges (
+                id TEXT PRIMARY KEY NOT NULL,
+                yearWeek TEXT NOT NULL,
+                type TEXT NOT NULL,
+                targetValue REAL NOT NULL,
+                currentValue REAL NOT NULL DEFAULT 0.0,
+                isCompleted INTEGER NOT NULL DEFAULT 0,
+                isRewardClaimed INTEGER NOT NULL DEFAULT 0,
+                rewardCoins INTEGER NOT NULL DEFAULT 0,
+                rewardCrystals INTEGER NOT NULL DEFAULT 0,
+                createdAt INTEGER NOT NULL
+            )
+        """.trimIndent())
+    }
+}

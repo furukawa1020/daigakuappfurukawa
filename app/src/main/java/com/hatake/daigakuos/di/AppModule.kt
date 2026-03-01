@@ -41,7 +41,11 @@ object AppModule {
             AppDatabase::class.java,
             "daigaku_os.db"
         )
-        .addMigrations(com.hatake.daigakuos.data.local.MIGRATION_2_3, com.hatake.daigakuos.data.local.MIGRATION_3_4)
+        .addMigrations(
+            com.hatake.daigakuos.data.local.MIGRATION_2_3,
+            com.hatake.daigakuos.data.local.MIGRATION_3_4,
+            com.hatake.daigakuos.data.local.MIGRATION_4_5
+        )
         // Database Migration Strategy:
         // - Version 2 is the first production version (no migration from v1 needed)
         // - Version 3 adds index on sessions.points for better query performance
@@ -77,10 +81,19 @@ object AppModule {
     @Provides
     fun provideCampusVisitDao(db: AppDatabase): CampusVisitDao = db.campusVisitDao()
 
+    @Provides
+    fun provideWeeklyChallengeDao(db: AppDatabase): WeeklyChallengeDao = db.weeklyChallengeDao()
+
     // Repositories
     @Provides
     @Singleton
     fun provideUserContextRepository(impl: UserContextRepositoryImpl): UserContextRepository {
+        return impl
+    }
+
+    @Provides
+    @Singleton
+    fun provideWeeklyChallengeRepository(impl: com.hatake.daigakuos.data.repository.WeeklyChallengeRepositoryImpl): com.hatake.daigakuos.domain.repository.WeeklyChallengeRepository {
         return impl
     }
 

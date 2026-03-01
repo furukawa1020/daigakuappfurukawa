@@ -92,6 +92,9 @@ interface AggDao {
     
     @Query("SELECT * FROM daily_agg ORDER BY yyyymmdd DESC LIMIT :limit")
     fun getAggRange(limit: Int): Flow<List<DailyAggEntity>>
+
+    @Query("SELECT * FROM daily_agg WHERE yyyymmdd BETWEEN :start AND :end")
+    suspend fun getAggsInRange(start: Int, end: Int): List<DailyAggEntity>
     
     /**
      * Atomically add study points to the daily aggregate.
@@ -166,4 +169,16 @@ interface CampusVisitDao {
 
     @Query("SELECT * FROM campus_visits ORDER BY yyyymmdd DESC")
     suspend fun getAllVisits(): List<CampusVisitEntity>
+}
+
+@Dao
+interface WeeklyChallengeDao {
+    @Query("SELECT * FROM weekly_challenges WHERE yearWeek = :yearWeek")
+    fun getChallengesForWeek(yearWeek: String): Flow<List<WeeklyChallengeEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertChallenge(challenge: WeeklyChallengeEntity)
+    
+    @Update
+    suspend fun updateChallenge(challenge: WeeklyChallengeEntity)
 }
