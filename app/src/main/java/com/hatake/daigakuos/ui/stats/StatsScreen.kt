@@ -97,6 +97,13 @@ fun StatsScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
             
+            WeeklyChallengesCard(
+                challenges = uiState.weeklyChallenges,
+                onClaimReward = { challenge -> viewModel.claimReward(challenge) }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+            
             // 3. Recent History (Editable)
             Text(
                 "履歴 (タップで編集)",
@@ -236,6 +243,74 @@ fun EditSessionDialog(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun WeeklyChallengesCard(
+    challenges: List<com.hatake.daigakuos.data.local.entity.WeeklyChallengeEntity>,
+    onClaimReward: (com.hatake.daigakuos.data.local.entity.WeeklyChallengeEntity) -> Unit
+) {
+    if (challenges.isEmpty()) return
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "今週のチャレンジ (自己投資)",
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        challenges.forEach { challenge ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        val title = when (challenge.type) {
+                            "TARGET_POINTS" -> "今週の目標: 1000 pts"
+                            "ACTIVE_DAYS" -> "今週の目標: 5日活動"
+                            else -> "チャレンジ"
+                        }
+                        Text(text = title, fontWeight = FontWeight.SemiBold)
+                        
+                        val progress = (challenge.currentValue / challenge.targetValue).toFloat().coerceIn(0f, 1f)
+                        Spacer(modifier = Modifier.height(6.dp))
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier.fillMaxWidth().height(8.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${challenge.currentValue.toInt()} / ${challenge.targetValue.toInt()}",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
+                    if (challenge.isCompleted) {
+                        if (challenge.isRewardClaimed) {
+                            Text("達成済み！", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        } else {
+                            Button(onClick = { onClaimReward(challenge) }) {
+                                Text("受取")
+                            }
+                        }
+                    } else {
+                        Text("進行中", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        }
     }
 }
 
