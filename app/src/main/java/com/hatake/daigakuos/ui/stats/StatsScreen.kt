@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,6 +42,32 @@ fun StatsScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "戻る")
+                    }
+                },
+                actions = {
+                    val context = androidx.compose.ui.platform.LocalContext.current
+                    IconButton(onClick = {
+                        val sevenDaysAgo = LocalDate.now().minusDays(7)
+                        val last7Days = uiState.dailyAggs.filter { 
+                            try {
+                                val date = LocalDate.parse(it.dateString, DateTimeFormatter.ISO_LOCAL_DATE)
+                                date.isAfter(sevenDaysAgo) || date.isEqual(sevenDaysAgo)
+                            } catch (e: Exception) {
+                                false
+                            }
+                        }
+                        val weekPoints = last7Days.sumOf { it.pointsTotal }
+                        val activeDays = last7Days.count { it.pointsTotal > 0 }
+                        
+                        val intent = com.hatake.daigakuos.utils.ShareUtils.createWeeklyReportIntent(
+                            context = context,
+                            weekPoints = weekPoints,
+                            activeDays = activeDays,
+                            creatureName = uiState.creatureStage.name
+                        )
+                        context.startActivity(intent)
+                    }) {
+                        Icon(androidx.compose.material.icons.Icons.Default.Share, contentDescription = "Share Weekly Report")
                     }
                 }
             )

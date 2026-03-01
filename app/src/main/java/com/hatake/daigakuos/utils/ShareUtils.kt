@@ -87,4 +87,80 @@ object ShareUtils {
         
         return Intent.createChooser(sendIntent, "実績をシェア")
     }
+
+    fun createWeeklyReportIntent(
+        context: Context,
+        weekPoints: Double,
+        activeDays: Int,
+        creatureName: String
+    ): Intent {
+        // Generate a 1080x1080 square image for the weekly report
+        val bitmap = Bitmap.createBitmap(1080, 1080, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        
+        // Background color
+        canvas.drawColor(Color.parseColor("#E0F7FA")) // Soft Cyan
+        
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.parseColor("#006064") // Dark Cyan
+            textAlign = Paint.Align.CENTER
+        }
+
+        // Draw Title
+        paint.textSize = 80f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        canvas.drawText("📊 Weekly Report", 540f, 250f, paint)
+
+        // Draw Points
+        paint.textSize = 70f
+        paint.color = Color.parseColor("#00838F")
+        canvas.drawText("Total Points: ${weekPoints.toInt()} pts", 540f, 450f, paint)
+
+        // Draw Active Days
+        paint.textSize = 60f
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        canvas.drawText("Active Days: $activeDays / 7", 540f, 600f, paint)
+
+        // Draw Pet Status
+        paint.textSize = 50f
+        paint.color = Color.parseColor("#006064")
+        canvas.drawText("Pet Evolution: $creatureName", 540f, 750f, paint)
+
+        // Draw App Branding
+        paint.textSize = 40f
+        paint.color = Color.parseColor("#00ACC1")
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC)
+        canvas.drawText("#DaigakuOS", 540f, 950f, paint)
+
+        // Save Bitmap to the cache directory carefully exposed by FileProvider
+        val imagesFolder = File(context.cacheDir, "images")
+        imagesFolder.mkdirs()
+        // Use a different filename
+        val file = File(imagesFolder, "weekly_report.png")
+        FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+        }
+
+        // Get URI using FileProvider defined in AndroidManifest.xml
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+
+        // Define accompanying text
+        val text = """
+            📊 This Week's Report!
+            Total Points: ${weekPoints.toInt()} pts
+            Active Days: $activeDays
+            
+            #DaigakuOS
+        """.trimIndent()
+
+        // Create the ACTION_SEND intent with image and text
+        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_TEXT, text)
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        
+        return Intent.createChooser(sendIntent, "ウィークリーレポートをシェア")
+    }
 }
