@@ -8,4 +8,5 @@ interface StatsRepository {
     suspend fun getStreak(): Int
     fun getTotalPoints(): kotlinx.coroutines.flow.Flow<Float>
     suspend fun logSession(nodeId: Long, durationMillis: Long, points: Float)
+    suspend fun addPointsFromCompletedNode(nodeType: NodeType, points: Double, minutes: Int)
 }

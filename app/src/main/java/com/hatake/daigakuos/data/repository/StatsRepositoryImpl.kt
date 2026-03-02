@@ -17,7 +17,15 @@ class StatsRepositoryImpl @Inject constructor(
 ) : StatsRepository {
 
     override suspend fun getTodayCompletedTypes(): List<NodeType> {
-       return emptyList() 
+        val todayStr = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+        val yyyymmdd = todayStr.toInt()
+        val agg = aggDao.getAgg(yyyymmdd) ?: return emptyList()
+        val types = mutableListOf<NodeType>()
+        if (agg.pointsStudy > 0) types.add(NodeType.STUDY)
+        if (agg.pointsResearch > 0) types.add(NodeType.RESEARCH)
+        if (agg.pointsMake > 0) types.add(NodeType.MAKE)
+        if (agg.pointsAdmin > 0) types.add(NodeType.ADMIN)
+        return types
     }
 
     override suspend fun getRecentRecoveryCount(): Int {
@@ -40,5 +48,28 @@ class StatsRepositoryImpl @Inject constructor(
         
         // MVP Logging - Currently stubbed to allow compilation.
         // Full session logging logic is handled by StartSessionUseCase / UpsertNodeUseCase
+    }
+
+    override suspend fun addPointsFromCompletedNode(nodeType: NodeType, points: Double, minutes: Int) {
+        val todayStr = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+        val yyyymmdd = todayStr.toInt()
+        
+        val updated = when(nodeType) {
+            NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, minutes)
+            NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, minutes)
+            NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, minutes)
+            NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, minutes)
+        }
+        
+        if (updated == 0) {
+            val newAgg = com.hatake.daigakuos.data.local.entity.DailyAggEntity(yyyymmdd = yyyymmdd)
+            aggDao.upsertDailyAgg(newAgg)
+            when(nodeType) {
+                NodeType.STUDY -> aggDao.addStudyPoints(yyyymmdd, points, minutes)
+                NodeType.RESEARCH -> aggDao.addResearchPoints(yyyymmdd, points, minutes)
+                NodeType.MAKE -> aggDao.addMakePoints(yyyymmdd, points, minutes)
+                NodeType.ADMIN -> aggDao.addAdminPoints(yyyymmdd, points, minutes)
+            }
+        }
     }
 }

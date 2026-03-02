@@ -48,15 +48,25 @@ class CompleteNodeUseCase @Inject constructor(
         // For now, let's assume the repo helper does the heavy lifting or we construct the Entity here.
         // In clean architecture, UseCase often constructs the entity or DTO.
         
+        // We actually pass 'result.totalPoints' here to save it immediately
+        val nodeType = try { 
+            com.hatake.daigakuos.data.local.entity.NodeType.valueOf(node.type) 
+        } catch (e: Exception) { 
+            com.hatake.daigakuos.data.local.entity.NodeType.STUDY 
+        }
+        
+        statsRepository.addPointsFromCompletedNode(
+            nodeType = nodeType,
+            points = result.totalPoints,
+            minutes = actualMinutes
+        )
+
         nodeRepository.completeNode(
             nodeId = node.id,
             actualMinutes = actualMinutes,
             focusLevel = focusLevel,
             isOnCampus = isOnCampus,
             streakDays = streak 
-            // We would actually pass 'result.totalPoints' here if the Repo supports it, 
-            // but the interface currently doesn't have it.
-            // Let's assume we update the Repo interface or implementation later to accept the explicit points.
         )
     }
 }

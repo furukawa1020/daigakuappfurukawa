@@ -1,0 +1,46 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/hatake/.gradle/wrapper/dists/gradle-8.5-bin/5t9huq95ubn472n8rpzujfbqh/gradle-8.5/lib/native-platform-0.22-milestone-25.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+
+> Configure project :app
+WARNING: The option setting 'android.overridePathCheck=true' is experimental.
+The current default is 'false'.
+
+> Task :app:clean FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:clean'.
+> java.io.IOException: Unable to delete directory 'C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build'
+    Failed to delete some children. This might happen because a process has files open or has its working directory set in the target directory.
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp\debug\java\com\hatake\daigakuos\utils
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp\debug\java\com\hatake\daigakuos
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp\debug\java\com\hatake
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp\debug\java\com
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp\debug\java
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp\debug
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated\ksp
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\generated
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm\dirs\com\hatake\daigakuos\ui\widget
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm\dirs\com\hatake\daigakuos\ui
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm\dirs\com\hatake\daigakuos
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm\dirs\com\hatake
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm\dirs\com
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm\dirs
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug\transformDebugClassesWithAsm
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates\classes\debug
+    - and more ...
+    New files were found. This might happen because a process is still writing to the target directory.
+    - C:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa\app\build\intermediates
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 6s
+1 actionable task: 1 executed
