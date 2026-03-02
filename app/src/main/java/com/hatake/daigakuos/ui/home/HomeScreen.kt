@@ -25,6 +25,7 @@ import com.hatake.daigakuos.data.local.entity.NodeEntity
 
 import androidx.compose.material.icons.Icons
 import com.hatake.daigakuos.ui.common.TutorialDialog
+import com.hatake.daigakuos.ui.common.AnimatedPet
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -293,8 +294,6 @@ fun CurrencyBadge(emoji: String, amount: Int) {
         }
     }
 }
-
-import com.hatake.daigakuos.ui.common.AnimatedPet
 
 @Composable
 fun AnimatedPetPlaceholder(level: Int) {
