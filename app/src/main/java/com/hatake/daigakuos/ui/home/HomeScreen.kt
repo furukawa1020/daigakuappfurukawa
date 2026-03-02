@@ -143,29 +143,62 @@ fun HomeScreen(
 
 
 
-            // Center: The TANK (Minimalist Circle)
+            val aiQuotes = remember { listOf(
+                "分析完了。今日は何にフォーカスしますか？",
+                "Mokoは準備完了です。",
+                "最適な集中サイクルを計算しました。",
+                "一緒に最高のパフォーマンスを出しましょう。",
+                "あなたの活動ログ、順調ですね。"
+            ) }
+            val currentQuote = remember(uiState) { aiQuotes.random() } // Refresh occasionally or on load
+
+            // Center: The TANK (Minimalist Circle) -> Upgraded to AI Core
             Box(
                 modifier = Modifier
-                    .size(260.dp)
+                    .size(280.dp)
                     .clickable { onNavigateToStats() },
                 contentAlignment = Alignment.Center
             ) {
-                Canvas(modifier = Modifier.fillMaxSize()) {
-                    // Outer Ring
+                val infiniteTransition = rememberInfiniteTransition(label = "TankRotation")
+                val rotation by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(10000, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "TankRotation"
+                )
+                
+                val primaryColor = MaterialTheme.colorScheme.primary
+                val tertiaryColor = MaterialTheme.colorScheme.tertiary
+                
+                Canvas(modifier = Modifier.fillMaxSize().graphicsLayer(rotationZ = rotation)) {
+                    // Futuristic glowing dashed outer ring
                     drawCircle(
-                        color = Color.LightGray.copy(alpha = 0.2f),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4.dp.toPx())
+                        brush = androidx.compose.ui.graphics.Brush.sweepGradient(
+                            colors = listOf(primaryColor, tertiaryColor, primaryColor)
+                        ),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(
+                            width = 6.dp.toPx(),
+                            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(40f, 20f))
+                        )
                     )
-                    // Inner Progress (Simulated)
+                    // Inner subtle glow
                     drawCircle(
-                        color = Color(0xFF1A237E), // Navy logic color
-                        radius = size.minDimension / 2 * 0.8f,
-                        alpha = 0.1f
+                        color = primaryColor.copy(alpha = 0.05f),
+                        radius = size.minDimension / 2 * 0.8f
                     )
                 }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    TypewriterChatBubble(text = currentQuote)
                     AnimatedPetPlaceholder(level = uiState.organismState?.level ?: 1)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Lv.${uiState.organismState?.level ?: 1} Moko",
                         style = MaterialTheme.typography.titleMedium,
@@ -310,4 +343,32 @@ fun AnimatedPetPlaceholder(level: Int) {
     }
 
     AnimatedPet(emoji = petEmoji)
+}
+
+@Composable
+fun TypewriterChatBubble(text: String, modifier: Modifier = Modifier) {
+    var displayedText by remember { mutableStateOf("") }
+
+    LaunchedEffect(text) {
+        displayedText = ""
+        for (i in text.indices) {
+            displayedText += text[i]
+            kotlinx.coroutines.delay(50) // Typewriter speed
+        }
+    }
+
+    Surface(
+        shape = RoundedCornerShape(16.dp, 16.dp, 16.dp, 0.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = modifier.padding(horizontal = 24.dp, vertical = 8.dp),
+        tonalElevation = 4.dp
+    ) {
+        Text(
+            text = displayedText,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = FontWeight.Medium
+        )
+    }
 }
