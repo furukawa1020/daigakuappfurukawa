@@ -50,7 +50,11 @@ fun StatsScreen(
                         val sevenDaysAgo = LocalDate.now().minusDays(7)
                         val last7Days = uiState.dailyAggs.filter { 
                             try {
-                                val date = LocalDate.parse(it.dateString, DateTimeFormatter.ISO_LOCAL_DATE)
+                                val dateStr = it.yyyymmdd.toString()
+                                val yyyy = dateStr.substring(0, 4).toInt()
+                                val mm = dateStr.substring(4, 6).toInt()
+                                val dd = dateStr.substring(6, 8).toInt()
+                                val date = LocalDate.of(yyyy, mm, dd)
                                 date.isAfter(sevenDaysAgo) || date.isEqual(sevenDaysAgo)
                             } catch (e: Exception) {
                                 false
@@ -357,8 +361,8 @@ fun GrassGrid(aggs: List<DailyAggEntity>) {
     val today = LocalDate.now()
     val startDate = today.minusDays(364) // Last 365 days
 
-    // Create a map for quick lookup by date string (e.g. "YYYY-MM-DD")
-    val aggsMap = aggs.associateBy { it.dateString }
+    // Create a map for quick lookup by yyyymmdd (e.g. 20260213)
+    val aggsMap = aggs.associateBy { it.yyyymmdd }
 
     // Day of week ranges from 1 (Monday) to 7 (Sunday)
     // We want Sunday at the top (row 0), Monday at row 1, etc.
@@ -382,9 +386,10 @@ fun GrassGrid(aggs: List<DailyAggEntity>) {
             } else {
                 val dateOffset = index - startDayOfWeek
                 val currentDate = startDate.plusDays(dateOffset.toLong())
-                val dateStr = currentDate.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                val yyyymmddStr = currentDate.format(DateTimeFormatter.BASIC_ISO_DATE)
+                val yyyymmdd = try { yyyymmddStr.toInt() } catch (e: Exception) { 0 }
 
-                val agg = aggsMap[dateStr]
+                val agg = aggsMap[yyyymmdd]
                 val points = agg?.pointsTotal ?: 0.0
 
                 // Intensity scales from 0.3 to 1.0 based on points (assuming 100+ is max green)
