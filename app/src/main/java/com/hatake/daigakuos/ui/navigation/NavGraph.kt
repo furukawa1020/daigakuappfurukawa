@@ -14,8 +14,9 @@ import com.hatake.daigakuos.ui.stats.StatsScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
-    object Now : Screen("now/{nodeId}") {
-        fun createRoute(nodeId: String) = "now/$nodeId"
+    object Now : Screen("now/{nodeId}?targetMinutes={targetMinutes}") {
+        fun createRoute(nodeId: String, targetMinutes: Int? = null) = 
+            if (targetMinutes != null) "now/$nodeId?targetMinutes=$targetMinutes" else "now/$nodeId"
     }
     object Tree : Screen("tree")
     object Stats : Screen("stats")
@@ -30,7 +31,7 @@ fun UniversityNavGraph(navController: NavHostController) {
             val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
                 uiState = viewModel.uiState.collectAsState().value,
-                onNavigateToNow = { nodeId -> navController.navigate(Screen.Now.createRoute(nodeId)) },
+                onNavigateToNow = { nodeId, target -> navController.navigate(Screen.Now.createRoute(nodeId, target)) },
                 onNavigateToTree = { navController.navigate(Screen.Tree.route) },
                 onNavigateToStats = { navController.navigate(Screen.Stats.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
@@ -39,13 +40,26 @@ fun UniversityNavGraph(navController: NavHostController) {
             )
         }
         
-        composable(Screen.Now.route) { backStackEntry ->
+        composable(
+            route = Screen.Now.route,
+            arguments = listOf(
+                androidx.navigation.navArgument("nodeId") { type = androidx.navigation.NavType.StringType },
+                androidx.navigation.navArgument("targetMinutes") { 
+                    type = androidx.navigation.NavType.IntType 
+                    defaultValue = -1 
+                }
+            )
+        ) { backStackEntry ->
             val nodeId = backStackEntry.arguments?.getString("nodeId")
             // Handle "null" string from navigation if any, or logic
             val safeNodeId = if(nodeId == "null") null else nodeId
             
+            val targetMinutesArg = backStackEntry.arguments?.getInt("targetMinutes") ?: -1
+            val safeTargetMinutes = if (targetMinutesArg == -1) null else targetMinutesArg
+            
             NowScreen(
                 nodeId = safeNodeId,
+                targetMinutes = safeTargetMinutes,
                 onComplete = { sessionId, minutes ->
                     navController.navigate("finish/$sessionId/$minutes") {
                          popUpTo(Screen.Home.route) { inclusive = false } // Don't allow back to Now

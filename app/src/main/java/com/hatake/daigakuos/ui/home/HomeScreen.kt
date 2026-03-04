@@ -35,7 +35,7 @@ import androidx.compose.material.icons.filled.Face
 @Composable
 fun HomeScreen(
     uiState: com.hatake.daigakuos.ui.home.HomeUiState,
-    onNavigateToNow: (String) -> Unit,
+    onNavigateToNow: (String, Int?) -> Unit,
     onNavigateToTree: () -> Unit,
     onNavigateToStats: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -133,13 +133,27 @@ fun HomeScreen(
             
             // "Do Now" Button (Zero Input Start)
             Button(
-                onClick = { onNavigateToNow("null") },
+                onClick = { onNavigateToNow("null", null) },
                 modifier = Modifier.height(56.dp).fillMaxWidth(0.6f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("今やる (未定)", fontSize = 18.sp)
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // "Just 5 Minutes" Button
+            OutlinedButton(
+                onClick = { onNavigateToNow("null", 5) },
+                modifier = Modifier.height(48.dp).fillMaxWidth(0.6f),
+                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Icon(androidx.compose.material.icons.filled.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("とりあえず5分", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
 

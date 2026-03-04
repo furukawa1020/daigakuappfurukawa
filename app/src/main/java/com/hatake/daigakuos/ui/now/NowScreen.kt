@@ -32,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 @Composable
 fun NowScreen(
     nodeId: String?,
+    targetMinutes: Int? = null,
     onComplete: (String, Int) -> Unit, // sessionId, minutes
     viewModel: NowViewModel = hiltViewModel()
 ) {
@@ -48,11 +49,23 @@ fun NowScreen(
     var isRunning by remember { mutableStateOf(true) }
     var showDialog by remember { mutableStateOf(false) }
     
+    var showTargetReachedDialog by remember { mutableStateOf(false) }
+    var targetReachedTriggered by remember { mutableStateOf(false) }
+    var currentTargetMinutes by remember { mutableStateOf(targetMinutes) }
+
     // Timer Effect - calculate from session start time once available
     LaunchedEffect(isRunning, sessionStartTime) {
         if (isRunning && sessionStartTime != null) {
             while (isRunning) {
                 timeElapsed = System.currentTimeMillis() - sessionStartTime
+                
+                // Check if target is reached
+                if (currentTargetMinutes != null && !targetReachedTriggered && timeElapsed >= currentTargetMinutes!! * 60 * 1000L) {
+                    isRunning = false
+                    targetReachedTriggered = true
+                    showTargetReachedDialog = true
+                }
+                
                 delay(100L) // Update faster for smooth UI
             }
         }
@@ -198,7 +211,59 @@ fun NowScreen(
         }
         
         Spacer(modifier = Modifier.height(24.dp))
+        
+        if (showTargetReachedDialog) {
+            FiveMinuteReachedDialog(
+                onDismiss = { showTargetReachedDialog = false },
+                onExtend = {
+                    currentTargetMinutes = (currentTargetMinutes ?: 0) + 5
+                    targetReachedTriggered = false
+                    showTargetReachedDialog = false
+                    isRunning = true
+                },
+                onUnlimited = {
+                    currentTargetMinutes = null
+                    showTargetReachedDialog = false
+                    isRunning = true
+                },
+                onFinish = {
+                    showTargetReachedDialog = false
+                    val minutes = (timeElapsed / 1000 / 60).toInt().coerceAtLeast(1)
+                    val sessionId = viewModel.currentSessionId ?: ""
+                    onComplete(sessionId, minutes)
+                }
+            )
+        }
     }
+}
+
+@Composable
+fun FiveMinuteReachedDialog(
+    onDismiss: () -> Unit,
+    onExtend: () -> Unit,
+    onUnlimited: () -> Unit,
+    onFinish: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("目標時間達成！🎉") },
+        text = { Text("お疲れ様です！目標時間に到達しました。\nこの後どうしますか？") },
+        confirmButton = {
+            Button(onClick = onFinish) {
+                Text("終わり！")
+            }
+        },
+        dismissButton = {
+            Column(horizontalAlignment = Alignment.End) {
+                TextButton(onClick = onExtend) {
+                    Text("延長 (+5分)")
+                }
+                TextButton(onClick = onUnlimited) {
+                    Text("ゾーンに入る (無制限)")
+                }
+            }
+        }
+    )
 }
 
 @Composable
