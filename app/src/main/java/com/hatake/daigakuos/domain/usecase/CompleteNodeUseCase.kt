@@ -33,10 +33,10 @@ class CompleteNodeUseCase @Inject constructor(
         // 2. Calculate Points
         val result = pointCalculator.calculate(
             PointCalculator.Inputs(
-                completedNodeTypesToday = updatedTypes,
-                isOnCampus = isOnCampus,
+                selfReportMin = actualMinutes,
                 focusLevel = focusLevel,
-                estimateMinutes = node.estimateMin ?: 25,
+                isOnCampus = isOnCampus,
+                uniqueTypesCompletedToday = updatedTypes.distinct().size,
                 recentRecoveryCount = recentRecovery,
                 currentStreakDays = streak
             )
