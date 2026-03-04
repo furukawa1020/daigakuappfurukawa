@@ -35,7 +35,7 @@ import androidx.compose.material.icons.filled.Face
 @Composable
 fun HomeScreen(
     uiState: com.hatake.daigakuos.ui.home.HomeUiState,
-    onNavigateToNow: (String, Int?) -> Unit,
+    onNavigateToNow: (String, Int?, String?) -> Unit,
     onNavigateToTree: () -> Unit,
     onNavigateToStats: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -46,6 +46,7 @@ fun HomeScreen(
     val isOnCampus = uiState.isOnCampus
     val recommendations = uiState.recommendations
     var showTutorial by remember { mutableStateOf(false) }
+    var showRoulette by remember { mutableStateOf(false) }
 
     if (showTutorial) {
         TutorialDialog(onDismiss = { showTutorial = false })
@@ -133,7 +134,7 @@ fun HomeScreen(
             
             // "Do Now" Button (Zero Input Start)
             Button(
-                onClick = { onNavigateToNow("null", null) },
+                onClick = { onNavigateToNow("null", null, null) },
                 modifier = Modifier.height(56.dp).fillMaxWidth(0.6f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
@@ -144,19 +145,44 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
             
-            // "Just 5 Minutes" Button
-            OutlinedButton(
-                onClick = { onNavigateToNow("null", 5) },
-                modifier = Modifier.height(48.dp).fillMaxWidth(0.6f),
-                border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
+            Row(
+                modifier = Modifier.fillMaxWidth(0.6f),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(androidx.compose.material.icons.filled.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("とりあえず5分", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                // "Just 5 Minutes" Button
+                OutlinedButton(
+                    onClick = { onNavigateToNow("null", 5, null) },
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Icon(androidx.compose.material.icons.filled.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("とりあえず5分", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                
+                // Roulette Button
+                OutlinedButton(
+                    onClick = { showRoulette = true },
+                    modifier = Modifier.size(48.dp),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text("🎲", fontSize = 20.sp)
+                }
             }
 
-
+            if (showRoulette) {
+                TaskRouletteDialog(
+                    onDismiss = { showRoulette = false },
+                    onStartTask = { taskTitle ->
+                        showRoulette = false
+                        onNavigateToNow("null", null, taskTitle)
+                    }
+                )
+            }
 
             // Center: The TANK (Minimalist Circle)
             Box(
@@ -324,3 +350,69 @@ fun AnimatedPetPlaceholder(level: Int) {
 
     AnimatedPet(emoji = petEmoji)
 }
+
+@Composable
+fun TaskRouletteDialog(
+    onDismiss: () -> Unit,
+    onStartTask: (String) -> Unit
+) {
+    val defaultTasks = listOf("デスクを片付ける", "メールを確認", "1ページだけ読む", "深呼吸する", "単語帳を見る", "水を飲む")
+    var currentTask by remember { mutableStateOf(defaultTasks.random()) }
+    var isSpinning by remember { mutableStateOf(true) }
+    
+    LaunchedEffect(isSpinning) {
+        if (isSpinning) {
+            val spinDuration = 2000L
+            val startTime = System.currentTimeMillis()
+            while (System.currentTimeMillis() - startTime < spinDuration) {
+                currentTask = defaultTasks.random()
+                kotlinx.coroutines.delay(100)
+            }
+            isSpinning = false
+        }
+    }
+    
+    val scale by animateFloatAsState(if (isSpinning) 0.9f else 1.1f)
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "タスクルーレット 🎲", 
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        },
+        text = {
+            Box(
+                modifier = Modifier.fillMaxWidth().height(100.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = currentTask,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onStartTask(currentTask) },
+                enabled = !isSpinning,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("このタスクを始める")
+            }
+        },
+        dismissButton = {
+             TextButton(onClick = onDismiss) { Text("キャンセル") }
+        }
+    )
+}
+

@@ -14,9 +14,15 @@ import com.hatake.daigakuos.ui.stats.StatsScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
-    object Now : Screen("now/{nodeId}?targetMinutes={targetMinutes}") {
-        fun createRoute(nodeId: String, targetMinutes: Int? = null) = 
-            if (targetMinutes != null) "now/$nodeId?targetMinutes=$targetMinutes" else "now/$nodeId"
+    object Now : Screen("now/{nodeId}?targetMinutes={targetMinutes}&taskTitle={taskTitle}") {
+        fun createRoute(nodeId: String, targetMinutes: Int? = null, taskTitle: String? = null): String {
+            var route = "now/$nodeId"
+            val params = mutableListOf<String>()
+            if (targetMinutes != null) params.add("targetMinutes=$targetMinutes")
+            if (taskTitle != null) params.add("taskTitle=${android.net.Uri.encode(taskTitle)}")
+            if (params.isNotEmpty()) route += "?" + params.joinToString("&")
+            return route
+        }
     }
     object Tree : Screen("tree")
     object Stats : Screen("stats")
@@ -31,7 +37,7 @@ fun UniversityNavGraph(navController: NavHostController) {
             val viewModel: HomeViewModel = hiltViewModel()
             HomeScreen(
                 uiState = viewModel.uiState.collectAsState().value,
-                onNavigateToNow = { nodeId, target -> navController.navigate(Screen.Now.createRoute(nodeId, target)) },
+                onNavigateToNow = { nodeId, target, title -> navController.navigate(Screen.Now.createRoute(nodeId, target, title)) },
                 onNavigateToTree = { navController.navigate(Screen.Tree.route) },
                 onNavigateToStats = { navController.navigate(Screen.Stats.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
@@ -47,6 +53,10 @@ fun UniversityNavGraph(navController: NavHostController) {
                 androidx.navigation.navArgument("targetMinutes") { 
                     type = androidx.navigation.NavType.IntType 
                     defaultValue = -1 
+                },
+                androidx.navigation.navArgument("taskTitle") {
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true
                 }
             )
         ) { backStackEntry ->
@@ -57,9 +67,12 @@ fun UniversityNavGraph(navController: NavHostController) {
             val targetMinutesArg = backStackEntry.arguments?.getInt("targetMinutes") ?: -1
             val safeTargetMinutes = if (targetMinutesArg == -1) null else targetMinutesArg
             
+            val taskTitle = backStackEntry.arguments?.getString("taskTitle")
+            
             NowScreen(
                 nodeId = safeNodeId,
                 targetMinutes = safeTargetMinutes,
+                taskTitle = taskTitle,
                 onComplete = { sessionId, minutes ->
                     navController.navigate("finish/$sessionId/$minutes") {
                          popUpTo(Screen.Home.route) { inclusive = false } // Don't allow back to Now
