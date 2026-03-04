@@ -157,7 +157,7 @@ fun HomeScreen(
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
                     contentPadding = PaddingValues(horizontal = 8.dp)
                 ) {
-                    Icon(androidx.compose.material.icons.filled.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("とりあえず5分", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
@@ -244,7 +244,7 @@ fun HomeScreen(
             }
 
             recommendations.forEach { node ->
-                RecommendationCard(node = node, onClick = { onNavigateToNow(node.id) })
+                RecommendationCard(node = node, onClick = { onNavigateToNow(node.id, null, null) })
                 Spacer(modifier = Modifier.height(12.dp))
             }
             

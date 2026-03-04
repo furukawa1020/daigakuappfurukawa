@@ -33,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 fun NowScreen(
     nodeId: String?,
     targetMinutes: Int? = null,
+    taskTitle: String? = null,
     onComplete: (String, Int) -> Unit, // sessionId, minutes
     viewModel: NowViewModel = hiltViewModel()
 ) {
@@ -42,7 +43,7 @@ fun NowScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
-    val nodeTitle = uiState.nodeTitle
+    val nodeTitle = taskTitle ?: uiState.nodeTitle
     val sessionStartTime = uiState.sessionStartTime
     
     var timeElapsed by remember { mutableLongStateOf(0L) }
