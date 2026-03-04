@@ -288,7 +288,7 @@ fun WeeklyChallengesCard(
                         val progress = (challenge.currentValue / challenge.targetValue).toFloat().coerceIn(0f, 1f)
                         Spacer(modifier = Modifier.height(6.dp))
                         LinearProgressIndicator(
-                            progress = { progress },
+                            progress = progress,
                             modifier = Modifier.fillMaxWidth().height(8.dp),
                             color = MaterialTheme.colorScheme.primary
                         )
