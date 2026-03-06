@@ -47,6 +47,26 @@ fun HomeScreen(
     val recommendations = uiState.recommendations
     var showTutorial by remember { mutableStateOf(false) }
     var showRoulette by remember { mutableStateOf(false) }
+    
+    // Idle Trigger logic
+    var idleSeconds by remember { mutableIntStateOf(0) }
+    var isIdle by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            idleSeconds++
+            if (idleSeconds >= 10) {
+                isIdle = true
+            }
+        }
+    }
+    
+    // Helper to reset idle timer
+    val resetIdle = {
+        idleSeconds = 0
+        isIdle = false
+    }
 
     if (showTutorial) {
         TutorialDialog(onDismiss = { showTutorial = false })
@@ -134,7 +154,10 @@ fun HomeScreen(
             
             // "Do Now" Button (Zero Input Start)
             Button(
-                onClick = { onNavigateToNow("null", null, null) },
+                onClick = { 
+                    resetIdle()
+                    onNavigateToNow("null", null, null) 
+                },
                 modifier = Modifier.height(56.dp).fillMaxWidth(0.6f),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
@@ -151,7 +174,10 @@ fun HomeScreen(
             ) {
                 // "Just 5 Minutes" Button
                 OutlinedButton(
-                    onClick = { onNavigateToNow("null", 5, null) },
+                    onClick = { 
+                        resetIdle()
+                        onNavigateToNow("null", 5, null) 
+                    },
                     modifier = Modifier.weight(1f).height(48.dp),
                     border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
@@ -164,7 +190,10 @@ fun HomeScreen(
                 
                 // Roulette Button
                 OutlinedButton(
-                    onClick = { showRoulette = true },
+                    onClick = { 
+                        resetIdle()
+                        showRoulette = true 
+                    },
                     modifier = Modifier.size(48.dp),
                     border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
@@ -188,7 +217,10 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .size(260.dp)
-                    .clickable { onNavigateToStats() },
+                    .clickable { 
+                        resetIdle()
+                        onNavigateToStats() 
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -205,7 +237,29 @@ fun HomeScreen(
                     )
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    AnimatedPetPlaceholder(level = uiState.organismState?.level ?: 1)
+                    Box(contentAlignment = Alignment.Center) {
+                        AnimatedPetPlaceholder(level = uiState.organismState?.level ?: 1)
+                        androidx.compose.animation.AnimatedVisibility(
+                            visible = isIdle,
+                            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically(initialOffsetY = { 20 }),
+                            exit = androidx.compose.animation.fadeOut(),
+                            modifier = Modifier.offset(y = (-56).dp)
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                tonalElevation = 4.dp
+                            ) {
+                                Text(
+                                    text = "どうしたの？\n1分だけやってみる？",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "Lv.${uiState.organismState?.level ?: 1} Moko",

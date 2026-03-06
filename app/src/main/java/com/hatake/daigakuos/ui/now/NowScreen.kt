@@ -37,9 +37,13 @@ fun NowScreen(
     onComplete: (String, Int) -> Unit, // sessionId, minutes
     viewModel: NowViewModel = hiltViewModel()
 ) {
-    // Start session on enter
-    LaunchedEffect(nodeId) {
-        viewModel.startSession(nodeId)
+    // Start session on enter, but offset by charge-up duration (approx 3s)
+    var showChargeUp by remember { mutableStateOf(true) }
+    
+    LaunchedEffect(nodeId, showChargeUp) {
+        if (!showChargeUp) {
+            viewModel.startSession(nodeId)
+        }
     }
 
     val uiState by viewModel.uiState.collectAsState()
@@ -76,15 +80,73 @@ fun NowScreen(
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val backgroundColor = MaterialTheme.colorScheme.background
+    
+    val hapticFeedback = androidx.compose.ui.platform.LocalHapticFeedback.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(backgroundColor)
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween // Top/Center/Bottom
-    ) {
+    if (showChargeUp) {
+        var chargeProgress by remember { mutableFloatStateOf(0f) }
+        
+        LaunchedEffect(Unit) {
+            val duration = 3000L
+            val step = 50L
+            for (i in 0..(duration / step)) {
+                delay(step)
+                chargeProgress = i.toFloat() / (duration / step)
+                if (i % 10 == 0L) {
+                    hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                }
+            }
+            hapticFeedback.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+            delay(200)
+            showChargeUp = false
+        }
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "深呼吸して...",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(48.dp))
+            Box(modifier = Modifier.size(240.dp), contentAlignment = Alignment.Center) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val strokeWidth = 16.dp.toPx()
+                    drawCircle(
+                        color = Color.LightGray.copy(alpha = 0.2f),
+                        style = Stroke(width = strokeWidth)
+                    )
+                    drawArc(
+                        brush = Brush.verticalGradient(listOf(primaryColor, secondaryColor)),
+                        startAngle = -90f,
+                        sweepAngle = chargeProgress * 360f,
+                        useCenter = false,
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                    )
+                }
+                Text(
+                    text = "${(3 - (chargeProgress * 3)).toInt() + 1}",
+                    style = MaterialTheme.typography.displayLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(backgroundColor)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween // Top/Center/Bottom
+        ) {
         // Header
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(

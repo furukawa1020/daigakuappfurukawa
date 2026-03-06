@@ -97,6 +97,8 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // Force check location on Resume to catch "Already Inside" case
         forceCheckLocation()
+        // Reset the idle notification timer
+        com.hatake.daigakuos.utils.IdleNotificationReceiver.scheduleIdleNotification(this)
     }
 
     private fun forceCheckLocation() {
@@ -156,6 +158,11 @@ class MainActivity : ComponentActivity() {
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineLocationGranted = permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val notificationsGranted = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissions[android.Manifest.permission.POST_NOTIFICATIONS] ?: false
+        } else {
+            true
+        }
         
         if (fineLocationGranted) {
             checkAndRequestBackgroundPermission()
@@ -187,12 +194,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestForegroundPermissions() {
-        requestPermissionLauncher.launch(
-            arrayOf(
-                android.Manifest.permission.ACCESS_FINE_LOCATION,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION
-            )
+        val permissions = mutableListOf(
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
         )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+        
+        requestPermissionLauncher.launch(permissions.toTypedArray())
     }
 
     private fun checkAndRequestBackgroundPermission() {
