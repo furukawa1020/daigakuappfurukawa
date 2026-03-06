@@ -298,6 +298,7 @@ fun NowScreen(
             )
         }
     }
+    }
 }
 
 @Composable
