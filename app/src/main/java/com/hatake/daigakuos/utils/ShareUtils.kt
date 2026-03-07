@@ -19,7 +19,10 @@ object ShareUtils {
         completedNode: NodeEntity,
         pointsGained: Float,
         streak: Int,
-        isOnCampus: Boolean
+        isOnCampus: Boolean,
+        earnedMokoCoins: Int = 0,
+        earnedStarCrystals: Int = 0,
+        earnedCampusGems: Int = 0
     ): Intent {
         val locationTag = if (isOnCampus) "📍At University" else "🏠At Home"
         
@@ -51,6 +54,17 @@ object ShareUtils {
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         canvas.drawText("$locationTag  |  🔥Streak: $streak", 540f, 700f, paint)
 
+        // Draw Rewards
+        paint.textSize = 40f
+        paint.color = Color.parseColor("#E65100") // Orange
+        var rewardsText = ""
+        if (earnedMokoCoins > 0) rewardsText += "🪙 +$earnedMokoCoins  "
+        if (earnedStarCrystals > 0) rewardsText += "✨ +$earnedStarCrystals  "
+        if (earnedCampusGems > 0) rewardsText += "💎 +$earnedCampusGems"
+        if (rewardsText.isNotEmpty()) {
+            canvas.drawText(rewardsText.trim(), 540f, 800f, paint)
+        }
+
         // Draw App Branding
         paint.textSize = 40f
         paint.color = Color.parseColor("#B5EAD7") // Mint
@@ -69,13 +83,17 @@ object ShareUtils {
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 
         // Define accompanying text
-        val text = """
-            🏆 ${completedNode.title} Completed!
-            +${pointsGained.toInt()} pts
-            $locationTag | 🔥Streak: $streak
-            
-            #DaigakuOS
-        """.trimIndent()
+        val textItems = mutableListOf(
+            "🏆 ${completedNode.title} Completed!",
+            "+${pointsGained.toInt()} pts",
+            "$locationTag | 🔥Streak: $streak"
+        )
+        if (earnedMokoCoins > 0) textItems.add("🪙 +$earnedMokoCoins MokoCoins")
+        if (earnedStarCrystals > 0) textItems.add("✨ +$earnedStarCrystals StarCrystals")
+        if (earnedCampusGems > 0) textItems.add("💎 +$earnedCampusGems CampusGems")
+        textItems.add("\n#DaigakuOS")
+        
+        val text = textItems.joinToString("\n")
 
         // Create the ACTION_SEND intent with image and text
         val sendIntent = Intent(Intent.ACTION_SEND).apply {

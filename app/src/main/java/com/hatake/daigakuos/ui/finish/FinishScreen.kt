@@ -80,7 +80,10 @@ fun FinishScreen(
                                                 completedNode = result.node,
                                                 pointsGained = result.points.toFloat(),
                                                 streak = result.streak,
-                                                isOnCampus = result.isOnCampus
+                                                isOnCampus = result.isOnCampus,
+                                                earnedMokoCoins = result.earnedMokoCoins,
+                                                earnedStarCrystals = result.earnedStarCrystals,
+                                                earnedCampusGems = result.earnedCampusGems
                                             )
                                             context.startActivity(shareIntent)
                                         }
