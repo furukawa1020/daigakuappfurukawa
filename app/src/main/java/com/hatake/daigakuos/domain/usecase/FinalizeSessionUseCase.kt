@@ -99,12 +99,25 @@ class FinalizeSessionUseCase @Inject constructor(
             finalNodeObj = nodeDao.getNodeById(finalNodeId)
         }
         
+        // 7. Wallet Rewards
+        walletDao.initWallet() // Ensure wallet exists
+        val mokoCoinsEarned = selfReportMin
+        val starCrystalsEarned = if (selfReportMin >= 60 && focus >= 4) 1 else 0
+        val campusGemsEarned = if (onCampus) 1 else 0
+
+        walletDao.addMokoCoins(mokoCoinsEarned)
+        if (starCrystalsEarned > 0) walletDao.addStarCrystals(starCrystalsEarned)
+        if (campusGemsEarned > 0) walletDao.addCampusGems(campusGemsEarned)
+
         return finalNodeObj?.let {
             SessionResult(
                 node = it,
                 points = points,
                 isOnCampus = onCampus,
-                streak = 1 // Placeholder for MVP
+                streak = 1, // Placeholder for MVP
+                earnedMokoCoins = mokoCoinsEarned,
+                earnedStarCrystals = starCrystalsEarned,
+                earnedCampusGems = campusGemsEarned
             )
         }
     }
