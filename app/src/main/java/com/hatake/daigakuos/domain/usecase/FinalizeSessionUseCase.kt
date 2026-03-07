@@ -13,7 +13,10 @@ data class SessionResult(
     val node: NodeEntity,
     val points: Double,
     val isOnCampus: Boolean,
-    val streak: Int
+    val streak: Int,
+    val earnedMokoCoins: Int = 0,
+    val earnedStarCrystals: Int = 0,
+    val earnedCampusGems: Int = 0
 )
 
 class FinalizeSessionUseCase @Inject constructor(
@@ -21,6 +24,7 @@ class FinalizeSessionUseCase @Inject constructor(
     private val settingsDao: SettingsDao,
     private val nodeDao: NodeDao,
     private val projectDao: com.hatake.daigakuos.data.local.dao.ProjectDao,
+    private val walletDao: com.hatake.daigakuos.data.local.dao.WalletDao,
     private val pointsCalculator: PointsCalculator,
     private val updateDailyAggregationUseCase: UpdateDailyAggregationUseCase
 ) {
