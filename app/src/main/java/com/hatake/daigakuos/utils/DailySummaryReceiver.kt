@@ -87,4 +87,34 @@ class DailySummaryReceiver : BroadcastReceiver() {
 
         notifManager.notify(999, notif)
     }
+
+    companion object {
+        fun scheduleDailySummary(context: Context) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager
+            val intent = Intent(context, DailySummaryReceiver::class.java)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, 1001, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            // Target 21:00 (9 PM) today; if already past, schedule for tomorrow
+            val trigger = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, 21)
+                set(java.util.Calendar.MINUTE, 0)
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+                if (timeInMillis <= System.currentTimeMillis()) {
+                    add(java.util.Calendar.DAY_OF_YEAR, 1)
+                }
+            }.timeInMillis
+
+            // Repeat daily
+            alarmManager.setRepeating(
+                android.app.AlarmManager.RTC_WAKEUP,
+                trigger,
+                android.app.AlarmManager.INTERVAL_DAY,
+                pendingIntent
+            )
+        }
+    }
 }
