@@ -150,7 +150,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Currency Bar
+            // Currency + Streak Bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -158,6 +158,9 @@ fun HomeScreen(
                 CurrencyBadge("💰", uiState.mokoCoins)
                 CurrencyBadge("✨", uiState.starCrystals)
                 CurrencyBadge("💎", uiState.campusGems)
+                if (uiState.streak > 0) {
+                    CurrencyBadge("🔥", uiState.streak, suffix = "日")
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -392,7 +395,7 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
 }
 
 @Composable
-fun CurrencyBadge(emoji: String, amount: Int) {
+fun CurrencyBadge(emoji: String, amount: Int, suffix: String = "") {
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -404,7 +407,7 @@ fun CurrencyBadge(emoji: String, amount: Int) {
             Text(text = emoji, fontSize = 16.sp)
             Spacer(modifier = Modifier.width(6.dp))
             Text(
-                text = "$amount",
+                text = "$amount$suffix",
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant

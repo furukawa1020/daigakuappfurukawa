@@ -99,6 +99,10 @@ interface AggDao {
     @Query("SELECT * FROM daily_agg ORDER BY yyyymmdd DESC LIMIT :limit")
     fun getAggRange(limit: Int): Flow<List<DailyAggEntity>>
 
+    /** Returns all days that had at least one completed session, sorted newest-first */
+    @Query("SELECT * FROM daily_agg WHERE countDone > 0 ORDER BY yyyymmdd DESC")
+    suspend fun getActiveDaysDesc(): List<DailyAggEntity>
+
     @Query("SELECT * FROM daily_agg WHERE yyyymmdd BETWEEN :start AND :end")
     suspend fun getAggsInRange(start: Int, end: Int): List<DailyAggEntity>
     

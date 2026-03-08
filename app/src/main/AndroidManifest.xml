@@ -38,6 +38,10 @@
             android:name=".utils.IdleNotificationReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".utils.DailySummaryReceiver"
+            android:exported="false" />
+
         <!-- Widget Receiver -->
         <receiver
             android:name=".ui.widget.MokoWidgetReceiver"
