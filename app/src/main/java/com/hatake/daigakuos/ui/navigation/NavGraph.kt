@@ -117,7 +117,7 @@ fun UniversityNavGraph(navController: NavHostController) {
             )
         }
 
-        composable(Screen.Collection.route) {
+        composable(Screen.Collections.route) {
             com.hatake.daigakuos.ui.collection.MokoCollectionScreen(
                 onBack = { navController.popBackStack() }
             )
