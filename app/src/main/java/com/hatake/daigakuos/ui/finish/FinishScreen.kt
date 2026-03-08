@@ -36,10 +36,11 @@ fun FinishScreen(
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+                tonalElevation = 16.dp, // Higher elevation for the bottom bar
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedButton(
@@ -57,9 +58,10 @@ fun FinishScreen(
                                 )
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).height(56.dp),
+                        shape = androidx.compose.foundation.shape.CircleShape
                     ) {
-                        Text("完了", style = MaterialTheme.typography.labelLarge)
+                        Text("完了のみ", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -92,11 +94,12 @@ fun FinishScreen(
                                 )
                             }
                         },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1.2f).height(56.dp),
+                        shape = androidx.compose.foundation.shape.CircleShape
                     ) {
                         Icon(Icons.Default.Check, "Done")
                         Spacer(Modifier.width(8.dp))
-                        Text("完了＆シェア")
+                        Text("完了＆シェア", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -189,13 +192,15 @@ fun TypeSelector(selected: NodeType, onSelect: (NodeType) -> Unit) {
 fun SuggestionItem(title: String, type: String, isSelected: Boolean, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
         )
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
-            Text(type, style = MaterialTheme.typography.labelSmall)
+        Column(modifier = Modifier.padding(20.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(type, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
         }
     }
 }

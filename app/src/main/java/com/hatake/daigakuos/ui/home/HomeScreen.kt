@@ -159,11 +159,12 @@ fun HomeScreen(
                     onNavigateToNow("null", null, null) 
                 },
                 modifier = Modifier.height(56.dp).fillMaxWidth(0.6f),
+                shape = CircleShape,
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("今やる (未定)", fontSize = 18.sp)
+                Text("今やる (未定)", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -179,6 +180,7 @@ fun HomeScreen(
                         onNavigateToNow("null", 5, null) 
                     },
                     modifier = Modifier.weight(1f).height(48.dp),
+                    shape = CircleShape,
                     border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
                     contentPadding = PaddingValues(horizontal = 8.dp)
@@ -195,6 +197,7 @@ fun HomeScreen(
                         showRoulette = true 
                     },
                     modifier = Modifier.size(48.dp),
+                    shape = CircleShape,
                     border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.secondary),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
                     contentPadding = PaddingValues(0.dp)
@@ -320,13 +323,14 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         onClick = onClick,
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Row(
-            modifier = Modifier.padding(20.dp),
+            modifier = Modifier.padding(24.dp), // Increased padding
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -346,23 +350,33 @@ fun RecommendationCard(node: NodeEntity, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.secondary,
                     letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
                     text = node.title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "${node.estimateMin ?: 25} 分",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )
             }
-            Icon(
-                imageVector = Icons.Filled.PlayArrow,
-                contentDescription = "Start",
-                tint = MaterialTheme.colorScheme.primary
-            )
+            // Play Button with soft background
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(48.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = "Start",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
         }
     }
 }

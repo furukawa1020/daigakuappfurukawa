@@ -116,7 +116,13 @@ fun NowScreen(
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(48.dp))
-            Box(modifier = Modifier.size(240.dp), contentAlignment = Alignment.Center) {
+            
+            val scale by animateFloatAsState(
+                targetValue = 1f + (chargeProgress * 0.2f), 
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+            )
+
+            Box(modifier = Modifier.size(240.dp).graphicsLayer { scaleX = scale; scaleY = scale }, contentAlignment = Alignment.Center) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val strokeWidth = 16.dp.toPx()
                     drawCircle(
@@ -124,7 +130,7 @@ fun NowScreen(
                         style = Stroke(width = strokeWidth)
                     )
                     drawArc(
-                        brush = Brush.verticalGradient(listOf(primaryColor, secondaryColor)),
+                        brush = Brush.verticalGradient(listOf(Color(0xFFFFB7B2), Color(0xFFC7CEEA))), // Moko-Moko Pink to Periwinkle
                         startAngle = -90f,
                         sweepAngle = chargeProgress * 360f,
                         useCenter = false,
@@ -175,10 +181,10 @@ fun NowScreen(
             // Animated Pulse Background
             val infiniteTransition = rememberInfiniteTransition()
             val pulseScale by infiniteTransition.animateFloat(
-                initialValue = 0.8f,
-                targetValue = 1.0f,
+                initialValue = 0.85f,
+                targetValue = 1.05f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(2000),
+                    animation = tween(2500, easing = FastOutSlowInEasing),
                     repeatMode = RepeatMode.Reverse
                 )
             )
@@ -186,28 +192,28 @@ fun NowScreen(
             if (isRunning) {
                 Box(
                     modifier = Modifier
-                        .size(300.dp * pulseScale)
+                        .fillMaxSize()
+                        .graphicsLayer { scaleX = pulseScale; scaleY = pulseScale }
                         .clip(CircleShape)
-                        .background(primaryColor.copy(alpha = 0.05f))
+                        .background(Color(0xFFB5EAD7).copy(alpha = 0.3f)) // Moko-Moko Mint
                 )
             }
 
             // Progress Ring
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val strokeWidth = 12.dp.toPx()
+                val strokeWidth = 14.dp.toPx()
                 // Track
                 drawCircle(
-                    color = Color.LightGray.copy(alpha = 0.2f),
+                    color = Color.LightGray.copy(alpha = 0.15f),
                     style = Stroke(width = strokeWidth)
                 )
-                // Progress (Indeterminate look or just rotating? Let's do a fill based on 90m cap)
                 // Cap at 90 mins for full circle
                 val progress = (timeElapsed / 1000f) / (90 * 60f)
                 val sweepAngle = (progress * 360f).coerceAtMost(360f)
                 
                 drawArc(
                     brush = Brush.verticalGradient(
-                        colors = listOf(primaryColor, secondaryColor)
+                        colors = listOf(Color(0xFFFFB7B2), Color(0xFFC7CEEA)) // Pink to Periwinkle
                     ),
                     startAngle = -90f,
                     sweepAngle = sweepAngle,
