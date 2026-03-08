@@ -27,7 +27,8 @@ sealed class Screen(val route: String) {
     object Tree : Screen("tree")
     object Stats : Screen("stats")
     object Settings : Screen("settings")
-    object Collection : Screen("collection")
+    object Collections : Screen("collection") // renamed internally or just kept as is, but we add achievements
+    object AchievementsGallery : Screen("achievements_gallery")
 }
 
 @Composable
@@ -41,7 +42,7 @@ fun UniversityNavGraph(navController: NavHostController) {
                 onNavigateToTree = { navController.navigate(Screen.Tree.route) },
                 onNavigateToStats = { navController.navigate(Screen.Stats.route) },
                 onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
-                onNavigateToCollection = { navController.navigate(Screen.Collection.route) },
+                onNavigateToCollection = { navController.navigate(Screen.AchievementsGallery.route) }, // Changed from Collection to AchievementsGallery for testing or keeping both
                 onModeChange = viewModel::setMode
             )
         }
@@ -118,6 +119,12 @@ fun UniversityNavGraph(navController: NavHostController) {
 
         composable(Screen.Collection.route) {
             com.hatake.daigakuos.ui.collection.MokoCollectionScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(Screen.AchievementsGallery.route) {
+            com.hatake.daigakuos.ui.collection.AchievementGalleryScreen(
                 onBack = { navController.popBackStack() }
             )
         }

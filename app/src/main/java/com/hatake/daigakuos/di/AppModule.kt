@@ -44,7 +44,8 @@ object AppModule {
         .addMigrations(
             com.hatake.daigakuos.data.local.MIGRATION_2_3,
             com.hatake.daigakuos.data.local.MIGRATION_3_4,
-            com.hatake.daigakuos.data.local.MIGRATION_4_5
+            com.hatake.daigakuos.data.local.MIGRATION_4_5,
+            com.hatake.daigakuos.data.local.MIGRATION_5_6
         )
         // Database Migration Strategy:
         // - Version 2 is the first production version (no migration from v1 needed)
@@ -83,6 +84,9 @@ object AppModule {
 
     @Provides
     fun provideWeeklyChallengeDao(db: AppDatabase): WeeklyChallengeDao = db.weeklyChallengeDao()
+
+    @Provides
+    fun provideAchievementDao(db: AppDatabase): AchievementDao = db.achievementDao()
 
     // Repositories
     @Provides

@@ -40,6 +40,7 @@ fun HomeScreen(
     onNavigateToStats: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToCollection: () -> Unit,
+    onNavigateToAchievements: () -> Unit = onNavigateToCollection, // default to keep compatibility if not passed
     onModeChange: (com.hatake.daigakuos.data.local.entity.Mode) -> Unit
 ) {
     val currentPoints = uiState.currentPoints
@@ -114,6 +115,13 @@ fun HomeScreen(
                 
                 // Actions: Help & Settings
                 Row {
+                    IconButton(onClick = onNavigateToAchievements) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Filled.Star,
+                            contentDescription = "Achievements",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
                     IconButton(onClick = onNavigateToCollection) {
                         Icon(
                             imageVector = Icons.Filled.Face,

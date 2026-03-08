@@ -72,6 +72,12 @@ interface SessionDao {
     @Query("SELECT COALESCE(SUM(points), 0.0) FROM sessions")
     fun getTotalPointsFlow(): Flow<Double>
 
+    @Query("SELECT COALESCE(SUM(points), 0.0) FROM sessions")
+    suspend fun getTotalPoints(): Double
+
+    @Query("SELECT COUNT(*) FROM sessions")
+    suspend fun getSessionCount(): Int
+
     @Query("SELECT * FROM sessions WHERE id = :sessionId LIMIT 1")
     suspend fun getSessionById(sessionId: String): SessionEntity?
 
@@ -181,4 +187,19 @@ interface WeeklyChallengeDao {
     
     @Update
     suspend fun updateChallenge(challenge: WeeklyChallengeEntity)
+}
+
+@Dao
+interface AchievementDao {
+    @Query("SELECT * FROM user_achievements ORDER BY unlockedAt DESC")
+    fun getAllAchievements(): Flow<List<AchievementEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun unlockAchievement(achievement: AchievementEntity): Long // Returns -1 if already exists
+
+    @Query("UPDATE user_achievements SET isNew = 0 WHERE isNew = 1")
+    suspend fun markAllAsViewed()
+    
+    @Query("SELECT COUNT(*) FROM user_achievements")
+    suspend fun getUnlockedCount(): Int
 }

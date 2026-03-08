@@ -15,9 +15,10 @@ import com.hatake.daigakuos.data.local.entity.*
         SettingsEntity::class,
         CampusVisitEntity::class,
         WalletEntity::class,
-        WeeklyChallengeEntity::class
+        WeeklyChallengeEntity::class,
+        AchievementEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 // @androidx.room.TypeConverters(Converters::class) // Removed, using primitive types (String, Long)
@@ -30,4 +31,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun campusVisitDao(): CampusVisitDao
     abstract fun walletDao(): WalletDao
     abstract fun weeklyChallengeDao(): WeeklyChallengeDao
+    abstract fun achievementDao(): AchievementDao
 }

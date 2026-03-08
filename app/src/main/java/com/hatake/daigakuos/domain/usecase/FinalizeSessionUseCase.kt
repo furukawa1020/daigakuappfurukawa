@@ -16,7 +16,8 @@ data class SessionResult(
     val streak: Int,
     val earnedMokoCoins: Int = 0,
     val earnedStarCrystals: Int = 0,
-    val earnedCampusGems: Int = 0
+    val earnedCampusGems: Int = 0,
+    val unlockedAchievements: List<String> = emptyList()
 )
 
 class FinalizeSessionUseCase @Inject constructor(
@@ -26,7 +27,8 @@ class FinalizeSessionUseCase @Inject constructor(
     private val projectDao: com.hatake.daigakuos.data.local.dao.ProjectDao,
     private val walletDao: com.hatake.daigakuos.data.local.dao.WalletDao,
     private val pointsCalculator: PointsCalculator,
-    private val updateDailyAggregationUseCase: UpdateDailyAggregationUseCase
+    private val updateDailyAggregationUseCase: UpdateDailyAggregationUseCase,
+    private val checkAchievementsUseCase: CheckAchievementsUseCase
 ) {
     suspend operator fun invoke(
         sessionId: String,
@@ -109,15 +111,30 @@ class FinalizeSessionUseCase @Inject constructor(
         if (starCrystalsEarned > 0) walletDao.addStarCrystals(starCrystalsEarned)
         if (campusGemsEarned > 0) walletDao.addCampusGems(campusGemsEarned)
 
+        // 8. Evaluate Achievements
+        // Note: In MVP, streak is fixed to 1 since actual streak calculation needs DailyAgg tracking
+        val streak = 1 
+        val totalSessionsCount = sessionDao.getSessionCount()
+        val totalPoints = sessionDao.getTotalPoints()
+        
+        val newlyUnlocked = checkAchievementsUseCase(
+            session = updatedSession,
+            streak = streak,
+            totalSessionsCount = totalSessionsCount,
+            totalPoints = totalPoints,
+            isOnCampus = onCampus
+        )
+
         return finalNodeObj?.let {
             SessionResult(
                 node = it,
                 points = points,
                 isOnCampus = onCampus,
-                streak = 1, // Placeholder for MVP
+                streak = streak,
                 earnedMokoCoins = mokoCoinsEarned,
                 earnedStarCrystals = starCrystalsEarned,
-                earnedCampusGems = campusGemsEarned
+                earnedCampusGems = campusGemsEarned,
+                unlockedAchievements = newlyUnlocked
             )
         }
     }

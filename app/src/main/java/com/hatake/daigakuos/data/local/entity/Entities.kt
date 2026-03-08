@@ -151,3 +151,11 @@ data class WeeklyChallengeEntity(
     val rewardCrystals: Int = 0,
     val createdAt: Long = System.currentTimeMillis()
 )
+
+// 8. 実績（バッジ）コレクション
+@Entity(tableName = "user_achievements")
+data class AchievementEntity(
+    @PrimaryKey val id: String, // Use string IDs like "first_session", "three_day_streak"
+    val unlockedAt: Long = System.currentTimeMillis(),
+    val isNew: Boolean = true // To show a badge until the user views it
+)
