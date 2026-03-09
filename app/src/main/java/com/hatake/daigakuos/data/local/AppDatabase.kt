@@ -44,7 +44,6 @@ abstract class AppDatabase : RoomDatabase() {
                     "daigaku_os.db"
                 )
                     .addMigrations(
-                        com.hatake.daigakuos.data.local.MIGRATION_1_2,
                         com.hatake.daigakuos.data.local.MIGRATION_2_3,
                         com.hatake.daigakuos.data.local.MIGRATION_3_4,
                         com.hatake.daigakuos.data.local.MIGRATION_4_5,
