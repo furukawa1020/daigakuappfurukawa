@@ -32,4 +32,27 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun walletDao(): WalletDao
     abstract fun weeklyChallengeDao(): WeeklyChallengeDao
     abstract fun achievementDao(): AchievementDao
+
+    companion object {
+        @Volatile private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: android.content.Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: androidx.room.Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "daigaku_os.db"
+                )
+                    .addMigrations(
+                        com.hatake.daigakuos.data.local.MIGRATION_1_2,
+                        com.hatake.daigakuos.data.local.MIGRATION_2_3,
+                        com.hatake.daigakuos.data.local.MIGRATION_3_4,
+                        com.hatake.daigakuos.data.local.MIGRATION_4_5,
+                        com.hatake.daigakuos.data.local.MIGRATION_5_6
+                    )
+                    .fallbackToDestructiveMigration()
+                    .build().also { INSTANCE = it }
+            }
+        }
+    }
 }
