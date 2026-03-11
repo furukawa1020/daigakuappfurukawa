@@ -28,7 +28,10 @@ import 'achievement_service.dart';
 import 'moko_collection_screen.dart';
 import 'shop_screen.dart';
 import 'widgets/moko_card.dart';
+import 'services/quotes.dart';
 import 'widgets/task_roulette_dialog.dart';
+import 'widgets/visual_timer.dart';
+import 'widgets/focus_sound_player.dart';
 import 'widgets/pet_display.dart';
 import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
@@ -111,6 +114,15 @@ final _router = GoRouter(
 void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
   await NotificationService().init(); // Init notifications
+
+  // Schedule daily 9 PM summary (fire-and-forget on startup)
+  DatabaseHelper().getUserStats().then((stats) {
+    NotificationService().scheduleDailySummary(
+      todayXP: ((stats['dailyPoints'] as double?) ?? 0.0).toInt(),
+      streak: (stats['currentStreak'] as int?) ?? 0,
+    );
+  });
+
   runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
@@ -240,6 +252,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                  context.push('/now');
                },
                child: const Text("とりあえず5分やる")
+             ),
+             const SizedBox(height: 8),
+             OutlinedButton.icon(
+               onPressed: () {
+                 Navigator.pop(ctx);
+                 showDialog(context: context, builder: (_) => const TaskRouletteDialog());
+               },
+               icon: const Icon(Icons.casino, size: 18),
+               label: const Text("ルーレットで決める！"),
              ),
              TextButton(
                onPressed: () => Navigator.pop(ctx),
@@ -1138,9 +1159,9 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                      child: Column(
                        mainAxisSize: MainAxisSize.min,
                        children: [
-                         Text(
-                           "$minutes:$seconds", 
-                           style: const TextStyle(color: Colors.white, fontSize: 80, fontWeight: FontWeight.w200, fontFamily: 'monospace'),
+                         VisualTimer(
+                           elapsed: _elapsed,
+                           targetMinutes: ref.watch(sessionProvider)?.targetMinutes,
                          ).animate().fadeIn(duration: 1.seconds),
                          const SizedBox(height: 10),
                          Container(
@@ -1151,9 +1172,16 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                        ],
                      ),
                    ),
-                 ),
-                 
-                 // Slider to Finish
+                  ),
+                  
+                  // Focus Sound Controls
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: FocusSoundPlayer(),
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Slider to Finish
                  Padding(
                    padding: const EdgeInsets.all(40),
                    child: GestureDetector(
@@ -1301,12 +1329,21 @@ class FinishScreen extends ConsumerStatefulWidget {
   ConsumerState<FinishScreen> createState() => _FinishScreenState();
 }
 
+
 class _FinishScreenState extends ConsumerState<FinishScreen> {
   late ConfettiController _confetti;
   final TextEditingController _titleCtrl = TextEditingController();
   List<Map<String, dynamic>> _suggestions = [];
-
+  String? _selectedNodeId;
+  int _focusRating = 3; // 1-5
   String _praiseMessage = "お疲れ様でした！";
+  String _motivationalQuote = "";
+  bool _isSaving = false;
+
+  // Grade calculation
+  String _gradeEmoji = "🙂";
+  String _gradeLabel = "C";
+  Color _gradeColor = Colors.grey;
 
   final List<String> _praiseMessages = [
     "天才ですか？",
@@ -1322,7 +1359,8 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     "今日もよくがんばった！",
     "小さな一歩が素敵✨",
     "休むのも大事だよ🌙",
-    "マイペースでOK💫", "またやれるよ！",
+    "マイペースでOK💫",
+    "またやれるよ！",
     "あなたは十分がんばった",
     "焦らなくていいからね",
     "続けてるだけで偉い🌟",
@@ -1333,33 +1371,37 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     super.initState();
     _confetti = ConfettiController(duration: const Duration(seconds: 3));
     _confetti.play();
-    
-    // Play sound/haptics
     ref.read(hapticsProvider.notifier).heavyImpact();
-    
-    // Pre-fill title from provider
+
     final selectedTask = ref.read(selectedTaskProvider);
-    if (selectedTask != null) {
-      _titleCtrl.text = selectedTask;
-    }
-    
-    // Random Praise
+    if (selectedTask != null) _titleCtrl.text = selectedTask;
+
     _praiseMessage = _praiseMessages[Random().nextInt(_praiseMessages.length)];
-    
-    // Suggest next actions (Could be from API or local logic)
+    _motivationalQuote = MOTIVATIONAL_QUOTES[Random().nextInt(MOTIVATIONAL_QUOTES.length)];
     _loadSuggestions();
+    _updateGrade();
   }
 
-  void _loadSuggestions() async {
-    // Mock suggestions for now. In real app, analyze context or time.
+  void _updateGrade() {
+    final session = ref.read(sessionProvider);
+    final mins = session?.durationMinutes ?? 0;
+    final score = mins * _focusRating;
     setState(() {
-      _suggestions = [
-        {'title': 'レポート執筆', 'node_id': 'task_1'},
-        {'title': '読書', 'node_id': 'task_2'},
-        {'title': 'プログラミング', 'node_id': 'task_3'},
-        {'title': '休憩', 'node_id': 'task_break'},
-      ];
+      if (score >= 180) {
+        _gradeLabel = "S"; _gradeEmoji = "🌟"; _gradeColor = const Color(0xFFFFD700);
+      } else if (score >= 100) {
+        _gradeLabel = "A"; _gradeEmoji = "✨"; _gradeColor = Colors.green;
+      } else if (score >= 50) {
+        _gradeLabel = "B"; _gradeEmoji = "👍"; _gradeColor = Colors.blue;
+      } else {
+        _gradeLabel = "C"; _gradeEmoji = "🙂"; _gradeColor = Colors.grey;
+      }
     });
+  }
+
+  Future<void> _loadSuggestions() async {
+    final results = await DatabaseHelper().getSuggestions();
+    if (mounted) setState(() => _suggestions = results);
   }
 
   @override
@@ -1369,224 +1411,402 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     super.dispose();
   }
 
-  void _finish(String? nodeId) async {
-     final session = ref.read(sessionProvider);
-     if (session != null) {
-        final title = _titleCtrl.text.isNotEmpty ? _titleCtrl.text : (nodeId != null ? _suggestions.firstWhere((s) => s['node_id'] == nodeId)['title'] : "無題のセッション");
-        final mins = session.durationMinutes ?? 0;
-        
-        await DatabaseHelper().insertSession(
-          draftTitle: title,
-          startAt: session.startAt,
-          minutes: mins,
-          isOnCampus: ref.read(locationBonusProvider) == LocationBonus.campus,
-          nodeId: nodeId,
-          moodPre: session.moodPre,
-          moodPost: session.moodPost,
+  void _finish() async {
+    if (_isSaving) return;
+    setState(() => _isSaving = true);
+
+    final session = ref.read(sessionProvider);
+    if (session != null) {
+      final title = _titleCtrl.text.isNotEmpty
+          ? _titleCtrl.text
+          : (_selectedNodeId != null
+              ? (_suggestions.firstWhere((s) => s['id'] == _selectedNodeId,
+                  orElse: () => {'title': '無題'})['title'] as String)
+              : "無題のセッション");
+      final mins = session.durationMinutes ?? 0;
+
+      await DatabaseHelper().insertSession(
+        draftTitle: title,
+        startAt: session.startAt,
+        minutes: mins,
+        isOnCampus: ref.read(locationBonusProvider) == LocationBonus.campus,
+        nodeId: _selectedNodeId,
+        moodPre: session.moodPre,
+        moodPost: session.moodPost,
+        focusRating: _focusRating,
+      );
+
+      ref.refresh(userStatsProvider);
+      ref.refresh(historyProvider);
+      ref.refresh(dailyAggProvider);
+      ref.refresh(weeklyAggProvider);
+
+      final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home;
+      final newAchievements = await ref.read(achievementProvider.notifier)
+          .checkAchievements(mins, session.startAt, homeBonus);
+
+      final challengeCompleted = await DatabaseHelper().checkChallengeCompletion();
+      if (challengeCompleted && mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text("🎉 デイリーチャレンジ達成！"),
+            content: const Text("ボーナス 100 XPを獲得しました！"),
+            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("やったね！"))],
+          ),
         );
+        ref.refresh(dailyChallengeProvider);
+      }
 
-        // Update Stats
-        // await DatabaseHelper().updateUserStats(mins, (mins * 10).toDouble()); // Removed: Stats are calculated dynamically from sessions
-        
-        // Refresh Providers
-        ref.refresh(userStatsProvider);
-        ref.refresh(historyProvider);
-        ref.refresh(dailyAggProvider);
-        ref.refresh(weeklyAggProvider);
-        
-        // Check Achievements
-        final homeBonus = ref.read(locationBonusProvider) == LocationBonus.home; // This might be reset by now, but let's try
-     
-        final newAchievements = await ref.read(achievementProvider.notifier).checkAchievements(mins, session.startAt, homeBonus);
+      final currencyService = ref.read(currencyProvider.notifier);
+      int earnedCoins = (mins / 10).floor();
+      int earnedGems = 0;
+      int earnedCrystals = 0;
+      if (earnedCoins > 0) await currencyService.addMokoCoins(earnedCoins);
+      if (ref.read(locationBonusProvider) == LocationBonus.campus) {
+        earnedGems = (mins / 20).floor();
+        if (earnedGems > 0) await currencyService.addCampusGems(earnedGems);
+      }
+      if (mins >= 45) {
+        earnedCrystals = 1;
+        await currencyService.addStarCrystals(1);
+      }
 
-        // Check Daily Challenge
-        final challengeCompleted = await DatabaseHelper().checkChallengeCompletion();
-        if (challengeCompleted && mounted) {
-           showDialog(
-             context: context,
-             builder: (_) => AlertDialog(
-               title: const Text("🎉 デイリーチャレンジ達成！"),
-               content: const Text("ボーナス 100 XPを獲得しました！"),
-               actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("やったね！"))]
-             )
-           );
-           ref.refresh(dailyChallengeProvider);
+      if (mounted) {
+        if (newAchievements.isNotEmpty) {
+          _showAchievementDialog(context, newAchievements, ref);
         }
+        String rewardMsg = "";
+        if (earnedCoins > 0) rewardMsg += " +${earnedCoins}コイン";
+        if (earnedGems > 0) rewardMsg += " +${earnedGems}ジェム";
+        if (earnedCrystals > 0) rewardMsg += " +${earnedCrystals}スター";
+        await showNotification("セッション完了", "お疲れ様でした！ ${mins}分間の集中を記録しました。$rewardMsg");
 
-        // AWARD CURRENCY (Phase 14)
-        final currencyService = ref.read(currencyProvider.notifier);
-        int earnedCoins = 0;
-        int earnedGems = 0;
-        int earnedCrystals = 0;
-
-        // 1. MokoCoins: 1 per 10 mins
-        earnedCoins = (mins / 10).floor();
-        if (earnedCoins > 0) await currencyService.addMokoCoins(earnedCoins);
-        
-        // 2. CampusGems: 1 per 20 mins if on Campus
-        if (ref.read(locationBonusProvider) == LocationBonus.campus) {
-             earnedGems = (mins / 20).floor();
-             if (earnedGems > 0) await currencyService.addCampusGems(earnedGems);
+        if (mounted && (earnedCoins > 0 || earnedGems > 0 || earnedCrystals > 0)) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("報酬獲得！$rewardMsg"),
+            backgroundColor: Colors.amber[700],
+            behavior: SnackBarBehavior.floating,
+          ));
         }
-        
-        // 3. StarCrystals: 1 if session > 45 mins
-        if (mins >= 45) {
-             earnedCrystals = 1;
-             await currencyService.addStarCrystals(1);
-        }
-     
-        if (mounted) {
-           if (newAchievements.isNotEmpty) {
-             // Show Achievement Dialog
-             _showAchievementDialog(context, newAchievements, ref);
-           }
-           
-           // Show Notification (Local)
-           String rewardMsg = "";
-           if (earnedCoins > 0) rewardMsg += " +$earnedCoinsコイン";
-           if (earnedGems > 0) rewardMsg += " +$earnedGemsジェム";
-           if (earnedCrystals > 0) rewardMsg += " +$earnedCrystalsスター";
-           
-           await showNotification("セッション完了", "お疲れ様でした！ $mins分間の集中を記録しました。$rewardMsg");
-
-           if (mounted && (earnedCoins > 0 || earnedGems > 0 || earnedCrystals > 0)) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text("報酬獲得！$rewardMsg"),
-                  backgroundColor: Colors.amber[700],
-                  behavior: SnackBarBehavior.floating,
-              ));
-           }
-           
-           // Return home
-           if (context.canPop()) {
-              context.pop(); 
-              // We need to pop 'now' screen or go root. 
-              // Since we pushedReplacement to finish, we might need to go home explicitly.
-              context.go('/'); 
-           } else {
-              context.go('/');
-           }
-        }
-     }
+        if (context.canPop()) context.pop();
+        context.go('/');
+      }
+    }
+    if (mounted) setState(() => _isSaving = false);
   }
-  
-
-
 
   @override
   Widget build(BuildContext context) {
     final session = ref.read(sessionProvider);
     final mins = session?.durationMinutes ?? 0;
+    final previewXP = (30.0 * mins * (_focusRating / 3.0) *
+        (ref.read(locationBonusProvider) == LocationBonus.campus ? 1.5 : 1.0)).toStringAsFixed(0);
 
     return Scaffold(
       body: Stack(
         children: [
-          Align(alignment: Alignment.topCenter, child: ConfettiWidget(confettiController: _confetti, blastDirectionality: BlastDirectionality.explosive, numberOfParticles: 30, colors: const [Colors.blue, Colors.pink, Colors.orange])),
-          
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confetti,
+              blastDirectionality: BlastDirectionality.explosive,
+              numberOfParticles: 30,
+              colors: const [Colors.blue, Colors.pink, Colors.orange],
+            ),
+          ),
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 40),
-                  
-                  // Moko-Moko Finish Card
+                  const SizedBox(height: 20),
+
+                  // ── Grade Card ─────────────────────────────────
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(30),
-                      boxShadow: [BoxShadow(color: const Color(0xFFC7CEEA).withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))]
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                         const Icon(Icons.check_circle, color: Color(0xFFB5EAD7), size: 80).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
-                         const SizedBox(height: 16),
-                         Text(_praiseMessage, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.grey[800]), textAlign: TextAlign.center),
-                         const SizedBox(height: 8),
-                         Text("$mins分間の集中", style: TextStyle(color: Colors.grey[500])),
-                         
-                         // Post-session Mood Selector
-                         const SizedBox(height: 24),
-                         const Text("今の気分を教えてね ✨", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.blueGrey)),
-                         const SizedBox(height: 12),
-                         Consumer(builder: (context, ref, _) {
-                           final session = ref.watch(sessionProvider);
-                           final moods = ['😃', '🙂', '😐', '😔', '😫'];
-                           
-                           return Row(
-                             mainAxisAlignment: MainAxisAlignment.center,
-                             children: moods.map((m) => GestureDetector(
-                               onTap: () {
-                                 ref.read(hapticsProvider.notifier).lightImpact();
-                                 ref.read(sessionProvider.notifier).state = Session(
-                                   id: session?.id,
-                                   startAt: session?.startAt ?? DateTime.now(),
-                                   durationMinutes: session?.durationMinutes,
-                                   moodPre: session?.moodPre,
-                                   moodPost: m,
-                                 );
-                               },
-                               child: Container(
-                                 margin: const EdgeInsets.symmetric(horizontal: 6),
-                                 padding: const EdgeInsets.all(10),
-                                 decoration: BoxDecoration(
-                                   color: session?.moodPost == m ? const Color(0xFFC7CEEA).withOpacity(0.5) : Colors.grey[100],
-                                   shape: BoxShape.circle,
-                                   border: session?.moodPost == m ? Border.all(color: const Color(0xFFC7CEEA), width: 2) : null,
-                                 ),
-                                 child: Text(m, style: const TextStyle(fontSize: 24)),
-                               ),
-                             )).toList(),
-                           );
-                         }),
-
-                         const SizedBox(height: 24),
-                         TextField(
-                           controller: _titleCtrl,
-                           decoration: InputDecoration(
-                             filled: true,
-                             fillColor: const Color(0xFFFFF5F6),
-                             hintText: "何をしていましたか？",
-                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
-                           ),
-                         ),
-                         const SizedBox(height: 16),
-                         Wrap(
-                           spacing: 8,
-                           children: _suggestions.map((s) => ActionChip(
-                             elevation: 0,
-                             backgroundColor: const Color(0xFFE2F0CB),
-                             label: Text(s['title'], style: TextStyle(color: Colors.grey[700], fontWeight: FontWeight.bold)),
-                             onPressed: () {
-                               ref.read(hapticsProvider.notifier).lightImpact();
-                               _titleCtrl.text = s['title'];
-                             },
-                           )).toList(),
-                         ),
-                         const SizedBox(height: 32),
-                         SizedBox(
-                           width: double.infinity,
-                           height: 50,
-                           child: FilledButton(
-                             style: FilledButton.styleFrom(
-                               backgroundColor: const Color(0xFFFFB7B2),
-                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25))
-                             ),
-                             onPressed: () => _finish(_suggestions.isNotEmpty ? _suggestions.first['node_id'] : null),
-                             child: const Text("記録する", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                           ),
-                         ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _gradeColor.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        )
                       ],
                     ),
-                  ),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.check_circle, color: Color(0xFFB5EAD7), size: 64)
+                            .animate().scale(curve: Curves.elasticOut, duration: 800.ms),
+                        const SizedBox(height: 12),
+                        Text(
+                          _praiseMessage,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text("$mins分間の集中", style: TextStyle(color: Colors.grey[500])),
+
+                        const SizedBox(height: 20),
+                        // Grade Badge
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(_gradeEmoji, style: const TextStyle(fontSize: 40))
+                                .animate().scale(curve: Curves.elasticOut, duration: 600.ms),
+                            const SizedBox(width: 12),
+                            Text(
+                              "Grade $_gradeLabel",
+                              style: TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: _gradeColor,
+                              ),
+                            ).animate().fadeIn().slideX(begin: 0.2, end: 0),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "+$previewXP XP（予定）",
+                          style: TextStyle(fontSize: 14, color: Colors.grey[500], fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+
+                  const SizedBox(height: 16),
+                  
+                  // ── Motivational Quote ──────────────────────────
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      "\"$_motivationalQuote\"",
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                        color: Colors.grey[600],
+                        fontSize: 16,
+                        fontFamily: 'serif',
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ).animate().fadeIn(delay: 500.ms),
+
+                  const SizedBox(height: 20),
+
+                  // ── Focus Rating ────────────────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("集中度はどうでしたか？", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: List.generate(5, (i) {
+                            final val = i + 1;
+                            final isSelected = _focusRating == val;
+                            return GestureDetector(
+                              onTap: () {
+                                ref.read(hapticsProvider.notifier).lightImpact();
+                                setState(() => _focusRating = val);
+                                _updateGrade();
+                              },
+                              child: AnimatedContainer(
+                                duration: 200.ms,
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isSelected ? const Color(0xFFFFB7B2) : Colors.grey[100],
+                                  border: Border.all(
+                                    color: isSelected ? const Color(0xFFFF9AA2) : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    ["😫", "😔", "😐", "🙂", "😃"][i],
+                                    style: const TextStyle(fontSize: 22),
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                        const SizedBox(height: 8),
+                        Center(
+                          child: Text(
+                            ["かなりしんどかった", "やや集中できた", "普通に集中", "よく集中できた！", "超ゾーン状態！🔥"][_focusRating - 1],
+                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.1, end: 0),
+
+                  const SizedBox(height: 20),
+
+                  // ── Post-session Mood ──────────────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("今の気分は？", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        Consumer(builder: (context, ref, _) {
+                          final sess = ref.watch(sessionProvider);
+                          final moods = ['😃', '🙂', '😐', '😔', '😫'];
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: moods.map((m) => GestureDetector(
+                              onTap: () {
+                                ref.read(hapticsProvider.notifier).lightImpact();
+                                ref.read(sessionProvider.notifier).state = Session(
+                                  id: sess?.id, startAt: sess?.startAt ?? DateTime.now(),
+                                  durationMinutes: sess?.durationMinutes,
+                                  moodPre: sess?.moodPre, moodPost: m,
+                                );
+                              },
+                              child: AnimatedContainer(
+                                duration: 200.ms,
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: sess?.moodPost == m ? const Color(0xFFC7CEEA).withOpacity(0.4) : Colors.grey[50],
+                                  shape: BoxShape.circle,
+                                  border: sess?.moodPost == m ? Border.all(color: const Color(0xFFC7CEEA), width: 2) : null,
+                                ),
+                                child: Text(m, style: const TextStyle(fontSize: 24)),
+                              ),
+                            )).toList(),
+                          );
+                        }),
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 150.ms),
+
+                  const SizedBox(height: 20),
+
+                  // ── Title Input + Suggestions ──────────────────
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("何をやりましたか？", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _titleCtrl,
+                          onChanged: (_) => setState(() => _selectedNodeId = null),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: const Color(0xFFFFF5F6),
+                            hintText: "タスク名を入力...",
+                            prefixIcon: const Icon(Icons.edit_note, color: Color(0xFFFFB7B2)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        if (_suggestions.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          const Text("最近のタスクから選択：", style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: _suggestions.take(8).map((s) {
+                              final isSelected = _selectedNodeId == s['id'];
+                              return GestureDetector(
+                                onTap: () {
+                                  ref.read(hapticsProvider.notifier).lightImpact();
+                                  setState(() {
+                                    _selectedNodeId = s['id'];
+                                    _titleCtrl.text = s['title'];
+                                  });
+                                },
+                                child: AnimatedContainer(
+                                  duration: 200.ms,
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? const Color(0xFFB5EAD7) : const Color(0xFFE2F0CB),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: isSelected ? Colors.green.shade300 : Colors.transparent,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    s['title'] as String,
+                                    style: TextStyle(
+                                      color: Colors.grey[700],
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ).animate().fadeIn(delay: 200.ms),
+
+                  const SizedBox(height: 24),
+
+                  // ── Save Button ────────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFFFB7B2),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+                      ),
+                      onPressed: _isSaving ? null : _finish,
+                      child: _isSaving
+                          ? const SizedBox(
+                              width: 24, height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : const Text("記録する 🎉", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                    ),
+                  ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
+
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1651,4 +1871,90 @@ void _showLevelUpDialog(BuildContext context, int level, WidgetRef ref) {
     ),
   );
 }
+// ---------------------------------------------------------------------------
+// HELPERS
+// ---------------------------------------------------------------------------
 
+/// Top-level shortcut so FinishScreen can call without storing a service reference.
+Future<void> showNotification(String title, String body) async {
+  await NotificationService().showNotification(title, body);
+}
+
+/// Achievement celebration dialog — called from FinishScreen._finish()
+void _showAchievementDialog(
+  BuildContext context,
+  List<Achievement> achievements,
+  WidgetRef ref,
+) {
+  ref.read(hapticsProvider.notifier).heavyImpact();
+
+  showDialog(
+    context: context,
+    builder: (ctx) => Center(
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 24)],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "🏆 バッジ獲得！",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...achievements.map((a) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(a.icon, size: 32, color: a.color)
+                        .animate().scale(curve: Curves.elasticOut, duration: 600.ms),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        a.title,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+              const SizedBox(height: 20),
+              const Text(
+                "新しい実績をアンロックしました！",
+                style: TextStyle(color: Colors.grey, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.amber,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text("やったー！🎉", style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+        ).animate().scale(curve: Curves.elasticOut, duration: 800.ms).fadeIn(),
+      ),
+    ),
+  );
+}

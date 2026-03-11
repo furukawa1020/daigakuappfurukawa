@@ -163,14 +163,14 @@ class DatabaseHelper {
     required bool isOnCampus,
     String? moodPre,
     String? moodPost,
+    int focusRating = 3, // 1–5 self-reported focus
   }) async {
     final db = await database;
     final now = DateTime.now();
 
     // 1. Calculate Points
-    // Base: 30 pts per minute (assuming focus 3)
-    // Multiplier: 1.5x if on campus
-    double basePoints = 30.0 * minutes;
+    // Base: 30 pts per minute × (focusRating / 3.0) as multiplier
+    double basePoints = 30.0 * minutes * (focusRating / 3.0);
     double multiplier = isOnCampus ? 1.5 : 1.0;
     double finalPoints = basePoints * multiplier;
 
@@ -220,7 +220,7 @@ class DatabaseHelper {
       'start_at': startAt.toIso8601String(),
       'minutes': minutes,
       'points': finalPoints,
-      'focus': 3, // Default Focus
+      'focus': focusRating,
       'is_on_campus': isOnCampus ? 1 : 0,
       'mood_pre': moodPre,
       'mood_post': moodPost,
@@ -464,7 +464,6 @@ class DatabaseHelper {
       'generated_at': DateTime.now().toIso8601String(),
       'sessions': sessions,
       'nodes': nodes,
-      'exported_at': DateTime.now().toIso8601String(),
     };
     
     final jsonStr = jsonEncode(data);
@@ -684,3 +683,5 @@ class DatabaseHelper {
     });
   }
 }
+
+

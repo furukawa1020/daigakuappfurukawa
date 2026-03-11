@@ -71,6 +71,40 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails);
   }
 
+  /// Schedule a daily 9 PM summary notification (XP + streak recap).
+  /// Call once from app startup; it auto-repeats daily.
+  Future<void> scheduleDailySummary({required int todayXP, required int streak}) async {
+    await flutterLocalNotificationsPlugin.cancel(999); // clear previous
+
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 21, 0);
+    if (scheduledDate.isBefore(now)) {
+      scheduledDate = scheduledDate.add(const Duration(days: 1));
+    }
+
+    final streakText = streak > 0 ? '🔥 $streak日連続！' : '今日から始めよう！';
+    final xpText = todayXP > 0 ? '今日の獲得XP: $todayXP' : 'まだ記録がありません';
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      999,
+      'Moko より今日のまとめ 🐾',
+      '$xpText ｜ $streakText',
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'daily_summary_channel',
+          '日次サマリー',
+          channelDescription: 'Daily study summary from Moko',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at same time
+    );
+  }
+
   Future<void> cancelAll() async {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
