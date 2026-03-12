@@ -145,14 +145,32 @@ class _PieTimerPainter extends CustomPainter {
 
     final sweepAngle = 2 * pi * remainingPct;
 
+    // Glow effect (Shadow)
+    final shadowPaint = Paint()
+      ..color = color.withOpacity(0.3)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12)
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius - strokeWidth * 2),
+      -pi / 2, 
+      sweepAngle, 
+      true, 
+      shadowPaint
+    );
+
+    // Main Fill with Gradient
     final fillPaint = Paint()
-      ..color = color.withOpacity(0.8) // Use theme color
+      ..shader = SweepGradient(
+        colors: [color.withOpacity(0.9), color.withOpacity(0.5)],
+        stops: const [0.0, 1.0],
+        transform: const GradientRotation(-pi / 2),
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
 
     // Draw Pie Wedge
-    // Start from top (-pi/2)
     canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius - strokeWidth * 2), // Slightly smaller
+      Rect.fromCircle(center: center, radius: radius - strokeWidth * 2),
       -pi / 2, 
       sweepAngle, 
       true, 
