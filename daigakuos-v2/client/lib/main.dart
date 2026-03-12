@@ -29,6 +29,7 @@ import 'moko_collection_screen.dart';
 import 'shop_screen.dart';
 import 'widgets/moko_card.dart';
 import 'services/quotes.dart';
+import 'services/theme_service.dart';
 import 'widgets/task_roulette_dialog.dart';
 import 'widgets/visual_timer.dart';
 import 'widgets/focus_sound_player.dart';
@@ -159,40 +160,16 @@ class _DaigakuAPPAppState extends State<DaigakuAPPApp> with WidgetsBindingObserv
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeTheme = ref.watch(themeProvider);
+    final themeNotifier = ref.read(themeProvider.notifier);
+
     return MaterialApp.router(
       routerConfig: _router,
       title: 'DaigakuAPP v2',
-      theme: ThemeData(
-        brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFFFF5F6), // Pale Pink Background
-        primaryColor: const Color(0xFFB5EAD7), // Mint
-        colorScheme: ColorScheme.fromSwatch().copyWith(
-          secondary: const Color(0xFFFFB7B2), // Salmon Pink
-          surface: Colors.white,
-        ),
-        fontFamily: 'Roboto', // Ideally rounded font
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF000000), // Pure Black for OLED
-        primaryColor: const Color(0xFF7DBAA0), // Softer Mint
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF7DBAA0),
-          secondary: const Color(0xFFFF9D97), // Softer Salmon
-          surface: const Color(0xFF121212), // Very Dark Gray
-          background: const Color(0xFF000000),
-          onPrimary: Colors.white,
-          onSecondary: Colors.white,
-          onSurface: const Color(0xFFE0E0E0), // Gentle white
-          onBackground: const Color(0xFFE0E0E0),
-        ),
-        cardColor: const Color(0xFF1E1E1E),
-        fontFamily: 'Roboto',
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system, // Auto-switch based on system
+      theme: themeNotifier.getThemeData(false),
+      darkTheme: themeNotifier.getThemeData(true),
+      themeMode: ThemeMode.system, 
     );
   }
 }
