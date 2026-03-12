@@ -186,6 +186,11 @@ class AchievementService extends Notifier<List<Achievement>> {
     return newlyUnlocked;
   }
   
+  // Get all achievements (including locked ones)
+  List<Achievement> getAllAchievements() {
+    return _achievementData.values.toList();
+  }
+
   // Get all unlocked achievements for display
   Future<List<Achievement>> getUnlockedAchievements() async {
     final db = DatabaseHelper();
@@ -196,6 +201,12 @@ class AchievementService extends Notifier<List<Achievement>> {
         .where((entry) => unlockedIds.contains(entry.key.name))
         .map((entry) => entry.value)
         .toList();
+  }
+
+  Future<Set<String>> getUnlockedIds() async {
+    final db = DatabaseHelper();
+    final List<Map<String, dynamic>> maps = await (await db.database).query('user_achievements');
+    return maps.map((m) => m['id'] as String).toSet();
   }
 }
 

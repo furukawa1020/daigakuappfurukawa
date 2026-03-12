@@ -27,6 +27,7 @@ import 'widgets/hyperfocus_button.dart';
 import 'achievement_service.dart';
 import 'moko_collection_screen.dart';
 import 'shop_screen.dart';
+import 'achievements_gallery_screen.dart';
 import 'widgets/moko_card.dart';
 import 'services/quotes.dart';
 import 'services/theme_service.dart';
@@ -107,6 +108,7 @@ final _router = GoRouter(
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
     GoRoute(path: '/collection', builder: (context, state) => const MokoCollectionScreen()),
+    GoRoute(path: '/achievements', builder: (context, state) => const AchievementsGalleryScreen()),
     GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
     GoRoute(path: '/stats', builder: (context, state) => const StatsScreen()),
   ],
@@ -1116,12 +1118,12 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                       const SizedBox(width: 12),
                       Expanded(
                         child: FilledButton.icon(
-                          onPressed: () => context.go('/shop'),
-                          icon: const Icon(Icons.shopping_bag, size: 18),
-                          label: const Text("ショップ"),
+                          onPressed: () => context.go('/achievements'),
+                          icon: const Icon(Icons.workspace_premium, size: 18),
+                          label: const Text("称号・勲章"),
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFB7B2),
-                            foregroundColor: Colors.white,
+                            backgroundColor: const Color(0xFFC7CEEA),
+                            foregroundColor: Colors.deepPurple,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
