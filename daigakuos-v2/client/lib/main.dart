@@ -24,10 +24,11 @@ import 'calendar_screen.dart';
 import 'settings_screen.dart';
 import 'haptics_service.dart';
 import 'widgets/hyperfocus_button.dart';
-import 'achievement_service.dart';
+import 'services/achievement_service.dart';
 import 'moko_collection_screen.dart';
 import 'shop_screen.dart';
 import 'achievements_gallery_screen.dart';
+import 'package:share_plus/share_plus.dart';
 import 'widgets/moko_card.dart';
 import 'services/quotes.dart';
 import 'services/theme_service.dart';
@@ -1762,6 +1763,29 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
 
                   const SizedBox(height: 24),
 
+                  // ── Share Button ────────────────────────────────
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        final task = _titleCtrl.text.isNotEmpty ? _titleCtrl.text : "集中";
+                        final mins = ref.read(sessionProvider)?.durationMinutes ?? 0;
+                        final text = "🎓 #DaigakuAPP で $mins分間 $task に集中しました！\n"
+                            "🔥 評価: $_gradeLabel $_gradeEmoji\n"
+                            "あなたも一緒にモコモコしませんか？\n"
+                            "https://github.com/furukawa1020/daigakuappfurukawa";
+                        Share.share(text);
+                      },
+                      icon: const Icon(Icons.share, size: 18, color: Colors.grey),
+                      label: const Text("成果をシェアして応援！", style: TextStyle(color: Colors.grey)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.black12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                    ),
+                  ).animate().fadeIn(delay: 250.ms),
+
+                  const SizedBox(height: 16),
+
                   // ── Save Button ────────────────────────────────
                   SizedBox(
                     width: double.infinity,
@@ -1777,7 +1801,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                               width: 24, height: 24,
                               child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                             )
-                          : const Text("記録する 🎉", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                          : const Text("記録して終了 🎉", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
                     ),
                   ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.2, end: 0),
 
