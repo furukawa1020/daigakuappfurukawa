@@ -162,8 +162,51 @@ class DatabaseHelper {
     );
   }
 
+  // --- Nodes (Goals/Tasks) ---
 
-  // --- Logic ---
+  Future<void> insertNode({
+    required String title,
+    required int estimateMinutes,
+    required String type,
+  }) async {
+    final db = await database;
+    final now = DateTime.now();
+    final id = 'node_${now.millisecondsSinceEpoch}';
+
+    await db.insert('nodes', {
+      'id': id,
+      'title': title,
+      'estimate_minutes': estimateMinutes,
+      'type': type,
+      'is_completed': 0,
+      'created_at': now.toIso8601String(),
+      'updated_at': now.toIso8601String(),
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingNodes() async {
+    final db = await database;
+    return await db.query(
+      'nodes',
+      where: 'is_completed = 0',
+      orderBy: 'created_at DESC',
+    );
+  }
+
+  Future<void> completeNode(String id) async {
+    final db = await database;
+    await db.update(
+      'nodes',
+      {
+        'is_completed': 1,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  // --- Sessions Logic ---
 
   Future<void> insertSession({
     required DateTime startAt,
