@@ -154,3 +154,4 @@ final dailyChallengeProvider = FutureProvider<DailyChallenge>((ref) async {
   final data = await DatabaseHelper().getDailyChallenge();
   return DailyChallenge.fromJson(data);
 });
+

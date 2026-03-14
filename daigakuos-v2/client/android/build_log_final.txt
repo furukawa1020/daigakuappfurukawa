@@ -1,0 +1,517 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/C:/Users/hatake/.gradle/wrapper/dists/gradle-8.14-all/c2qonpi39x1mddn7hk5gh9iqj/gradle-8.14/lib/native-platform-0.22-milestone-28.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+
+> Configure project :app
+WARNING: The option setting 'android.overridePathCheck=true' is experimental.
+The current default is 'false'.
+
+> Task :clean
+> Task :app:externalNativeBuildCleanDebug
+> Task :app:externalNativeBuildCleanProfile
+> Task :app:externalNativeBuildCleanRelease
+> Task :app:clean UP-TO-DATE
+> Task :flutter_local_notifications:clean UP-TO-DATE
+> Task :geolocator_android:clean UP-TO-DATE
+> Task :package_info_plus:clean UP-TO-DATE
+> Task :path_provider_android:clean UP-TO-DATE
+> Task :permission_handler_android:clean UP-TO-DATE
+> Task :share_plus:clean UP-TO-DATE
+> Task :shared_preferences_android:clean UP-TO-DATE
+> Task :sqflite_android:clean UP-TO-DATE
+> Task :wakelock_plus:clean UP-TO-DATE
+> Task :app:DebugMinSdkCheck
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:compileFlutterBuildDebug
+> Task :app:packJniLibsflutterBuildDebug
+> Task :flutter_local_notifications:preBuild UP-TO-DATE
+> Task :flutter_local_notifications:preDebugBuild UP-TO-DATE
+> Task :geolocator_android:preBuild UP-TO-DATE
+> Task :geolocator_android:preDebugBuild UP-TO-DATE
+> Task :flutter_local_notifications:writeDebugAarMetadata
+> Task :package_info_plus:preBuild UP-TO-DATE
+> Task :package_info_plus:preDebugBuild UP-TO-DATE
+> Task :geolocator_android:writeDebugAarMetadata
+> Task :path_provider_android:preBuild UP-TO-DATE
+> Task :path_provider_android:preDebugBuild UP-TO-DATE
+> Task :package_info_plus:writeDebugAarMetadata
+> Task :permission_handler_android:preBuild UP-TO-DATE
+> Task :permission_handler_android:preDebugBuild UP-TO-DATE
+> Task :path_provider_android:writeDebugAarMetadata
+> Task :share_plus:preBuild UP-TO-DATE
+> Task :share_plus:preDebugBuild UP-TO-DATE
+> Task :permission_handler_android:writeDebugAarMetadata
+> Task :shared_preferences_android:preBuild UP-TO-DATE
+> Task :shared_preferences_android:preDebugBuild UP-TO-DATE
+> Task :share_plus:writeDebugAarMetadata
+> Task :sqflite_android:preBuild UP-TO-DATE
+> Task :sqflite_android:preDebugBuild UP-TO-DATE
+> Task :shared_preferences_android:writeDebugAarMetadata
+> Task :wakelock_plus:preBuild UP-TO-DATE
+> Task :wakelock_plus:preDebugBuild UP-TO-DATE
+> Task :sqflite_android:writeDebugAarMetadata
+> Task :app:cleanMergeDebugAssets UP-TO-DATE
+> Task :wakelock_plus:writeDebugAarMetadata
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :flutter_local_notifications:mergeDebugShaders
+> Task :flutter_local_notifications:compileDebugShaders NO-SOURCE
+> Task :flutter_local_notifications:generateDebugAssets UP-TO-DATE
+> Task :app:checkDebugAarMetadata
+> Task :flutter_local_notifications:packageDebugAssets
+> Task :geolocator_android:mergeDebugShaders
+> Task :geolocator_android:compileDebugShaders NO-SOURCE
+> Task :geolocator_android:generateDebugAssets UP-TO-DATE
+> Task :geolocator_android:packageDebugAssets
+> Task :package_info_plus:mergeDebugShaders
+> Task :package_info_plus:compileDebugShaders NO-SOURCE
+> Task :package_info_plus:generateDebugAssets UP-TO-DATE
+> Task :package_info_plus:packageDebugAssets
+> Task :path_provider_android:mergeDebugShaders
+> Task :path_provider_android:compileDebugShaders NO-SOURCE
+> Task :path_provider_android:generateDebugAssets UP-TO-DATE
+> Task :path_provider_android:packageDebugAssets
+> Task :permission_handler_android:mergeDebugShaders
+> Task :permission_handler_android:compileDebugShaders NO-SOURCE
+> Task :permission_handler_android:generateDebugAssets UP-TO-DATE
+> Task :permission_handler_android:packageDebugAssets
+> Task :share_plus:mergeDebugShaders
+> Task :share_plus:compileDebugShaders NO-SOURCE
+> Task :share_plus:generateDebugAssets UP-TO-DATE
+> Task :share_plus:packageDebugAssets
+> Task :shared_preferences_android:mergeDebugShaders
+> Task :shared_preferences_android:compileDebugShaders NO-SOURCE
+> Task :shared_preferences_android:generateDebugAssets UP-TO-DATE
+> Task :shared_preferences_android:packageDebugAssets
+> Task :sqflite_android:mergeDebugShaders
+> Task :sqflite_android:compileDebugShaders NO-SOURCE
+> Task :sqflite_android:generateDebugAssets UP-TO-DATE
+> Task :sqflite_android:packageDebugAssets
+> Task :wakelock_plus:mergeDebugShaders
+> Task :wakelock_plus:compileDebugShaders NO-SOURCE
+> Task :wakelock_plus:generateDebugAssets UP-TO-DATE
+> Task :wakelock_plus:packageDebugAssets
+> Task :app:mergeDebugAssets
+> Task :app:copyFlutterAssetsDebug
+> Task :app:generateDebugResValues
+> Task :flutter_local_notifications:generateDebugResValues
+> Task :flutter_local_notifications:generateDebugResources
+> Task :flutter_local_notifications:packageDebugResources
+> Task :geolocator_android:generateDebugResValues
+> Task :geolocator_android:generateDebugResources
+> Task :geolocator_android:packageDebugResources
+> Task :package_info_plus:generateDebugResValues
+> Task :package_info_plus:generateDebugResources
+> Task :package_info_plus:packageDebugResources
+> Task :path_provider_android:generateDebugResValues
+> Task :path_provider_android:generateDebugResources
+> Task :path_provider_android:packageDebugResources
+> Task :permission_handler_android:generateDebugResValues
+> Task :permission_handler_android:generateDebugResources
+> Task :permission_handler_android:packageDebugResources
+> Task :share_plus:generateDebugResValues
+> Task :share_plus:generateDebugResources
+> Task :share_plus:packageDebugResources
+> Task :shared_preferences_android:generateDebugResValues
+> Task :shared_preferences_android:generateDebugResources
+> Task :shared_preferences_android:packageDebugResources
+> Task :sqflite_android:generateDebugResValues
+> Task :sqflite_android:generateDebugResources
+> Task :sqflite_android:packageDebugResources
+> Task :wakelock_plus:generateDebugResValues
+> Task :wakelock_plus:generateDebugResources
+> Task :wakelock_plus:packageDebugResources
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :flutter_local_notifications:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :geolocator_android:extractDeepLinksDebug
+
+> Task :flutter_local_notifications:processDebugManifest
+package="com.dexterous.flutterlocalnotifications" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_local_notifications-18.0.1\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.dexterous.flutterlocalnotifications" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\flutter_local_notifications-18.0.1\android\src\main\AndroidManifest.xml.
+
+> Task :package_info_plus:extractDeepLinksDebug
+
+> Task :geolocator_android:processDebugManifest
+package="com.baseflow.geolocator" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\geolocator_android-5.0.2\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.baseflow.geolocator" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\geolocator_android-5.0.2\android\src\main\AndroidManifest.xml.
+
+> Task :path_provider_android:extractDeepLinksDebug
+
+> Task :package_info_plus:processDebugManifest
+package="dev.fluttercommunity.plus.packageinfo" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\package_info_plus-9.0.0\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="dev.fluttercommunity.plus.packageinfo" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\package_info_plus-9.0.0\android\src\main\AndroidManifest.xml.
+
+> Task :permission_handler_android:extractDeepLinksDebug
+
+> Task :path_provider_android:processDebugManifest
+package="io.flutter.plugins.pathprovider" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\path_provider_android-2.2.22\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.pathprovider" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\path_provider_android-2.2.22\android\src\main\AndroidManifest.xml.
+
+> Task :share_plus:extractDeepLinksDebug
+
+> Task :permission_handler_android:processDebugManifest
+package="com.baseflow.permissionhandler" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\permission_handler_android-12.1.0\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.baseflow.permissionhandler" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\permission_handler_android-12.1.0\android\src\main\AndroidManifest.xml.
+
+> Task :shared_preferences_android:extractDeepLinksDebug
+
+> Task :share_plus:processDebugManifest
+package="dev.fluttercommunity.plus.share" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\share_plus-12.0.1\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="dev.fluttercommunity.plus.share" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\share_plus-12.0.1\android\src\main\AndroidManifest.xml.
+
+> Task :app:mergeDebugResources
+> Task :sqflite_android:extractDeepLinksDebug
+
+> Task :shared_preferences_android:processDebugManifest
+package="io.flutter.plugins.sharedpreferences" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\shared_preferences_android-2.4.20\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="io.flutter.plugins.sharedpreferences" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\shared_preferences_android-2.4.20\android\src\main\AndroidManifest.xml.
+
+> Task :wakelock_plus:extractDeepLinksDebug
+
+> Task :sqflite_android:processDebugManifest
+package="com.tekartik.sqflite" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.2+2\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="com.tekartik.sqflite" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\sqflite_android-2.4.2+2\android\src\main\AndroidManifest.xml.
+
+> Task :wakelock_plus:processDebugManifest
+package="dev.fluttercommunity.plus.wakelock" found in source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\wakelock_plus-1.4.0\android\src\main\AndroidManifest.xml.
+Setting the namespace via the package attribute in the source AndroidManifest.xml is no longer supported, and the value is ignored.
+Recommendation: remove package="dev.fluttercommunity.plus.wakelock" from the source AndroidManifest.xml: C:\Users\hatake\AppData\Local\Pub\Cache\hosted\pub.dev\wakelock_plus-1.4.0\android\src\main\AndroidManifest.xml.
+
+> Task :flutter_local_notifications:compileDebugLibraryResources
+> Task :flutter_local_notifications:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:outputDebugAppLinkSettings
+> Task :app:processDebugManifest
+> Task :flutter_local_notifications:generateDebugRFile
+> Task :geolocator_android:compileDebugLibraryResources
+> Task :geolocator_android:parseDebugLocalResources
+> Task :package_info_plus:compileDebugLibraryResources
+> Task :geolocator_android:generateDebugRFile
+> Task :package_info_plus:parseDebugLocalResources
+> Task :path_provider_android:compileDebugLibraryResources
+> Task :package_info_plus:generateDebugRFile
+> Task :path_provider_android:parseDebugLocalResources
+> Task :permission_handler_android:compileDebugLibraryResources
+> Task :path_provider_android:generateDebugRFile
+> Task :permission_handler_android:parseDebugLocalResources
+> Task :share_plus:compileDebugLibraryResources
+> Task :permission_handler_android:generateDebugRFile
+> Task :share_plus:parseDebugLocalResources
+> Task :shared_preferences_android:compileDebugLibraryResources
+> Task :share_plus:generateDebugRFile
+> Task :shared_preferences_android:parseDebugLocalResources
+> Task :sqflite_android:compileDebugLibraryResources
+> Task :shared_preferences_android:generateDebugRFile
+> Task :sqflite_android:parseDebugLocalResources
+> Task :wakelock_plus:compileDebugLibraryResources
+> Task :sqflite_android:generateDebugRFile
+> Task :wakelock_plus:parseDebugLocalResources
+> Task :flutter_local_notifications:javaPreCompileDebug
+> Task :geolocator_android:javaPreCompileDebug
+> Task :wakelock_plus:generateDebugRFile
+
+> Task :flutter_local_notifications:compileDebugJavaWithJavac
+Java compiler version 21 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+警告: [options] ソース値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] ターゲット値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] 廃止されたオプションについての警告を表示しないようにするには、-Xlint:オプションを使用します。
+警告3個
+
+> Task :flutter_local_notifications:bundleLibCompileToJarDebug
+
+> Task :geolocator_android:compileDebugJavaWithJavac
+Java compiler version 21 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+警告: [options] ソース値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] ターゲット値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] 廃止されたオプションについての警告を表示しないようにするには、-Xlint:オプションを使用します。
+警告3個
+
+> Task :package_info_plus:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :geolocator_android:bundleLibCompileToJarDebug
+> Task :package_info_plus:javaPreCompileDebug
+> Task :path_provider_android:javaPreCompileDebug
+> Task :permission_handler_android:javaPreCompileDebug
+> Task :path_provider_android:compileDebugJavaWithJavac
+> Task :path_provider_android:bundleLibCompileToJarDebug
+
+> Task :permission_handler_android:compileDebugJavaWithJavac
+Java compiler version 21 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+警告: [options] ソース値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] ターゲット値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] 廃止されたオプションについての警告を表示しないようにするには、-Xlint:オプションを使用します。
+警告3個
+
+> Task :share_plus:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :permission_handler_android:bundleLibCompileToJarDebug
+> Task :share_plus:javaPreCompileDebug
+> Task :app:processDebugManifestForPackage
+> Task :shared_preferences_android:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :package_info_plus:compileDebugKotlin
+> Task :package_info_plus:compileDebugJavaWithJavac NO-SOURCE
+> Task :package_info_plus:bundleLibCompileToJarDebug
+> Task :shared_preferences_android:javaPreCompileDebug
+> Task :wakelock_plus:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :sqflite_android:javaPreCompileDebug
+> Task :sqflite_android:compileDebugJavaWithJavac
+> Task :wakelock_plus:javaPreCompileDebug
+> Task :app:javaPreCompileDebug
+> Task :sqflite_android:bundleLibCompileToJarDebug
+> Task :flutter_local_notifications:processDebugJavaRes NO-SOURCE
+> Task :geolocator_android:processDebugJavaRes NO-SOURCE
+> Task :package_info_plus:processDebugJavaRes
+> Task :path_provider_android:processDebugJavaRes NO-SOURCE
+> Task :permission_handler_android:processDebugJavaRes NO-SOURCE
+> Task :sqflite_android:processDebugJavaRes NO-SOURCE
+> Task :app:desugarDebugFileDependencies
+> Task :package_info_plus:bundleLibRuntimeToDirDebug
+> Task :app:checkDebugDuplicateClasses
+> Task :path_provider_android:bundleLibRuntimeToDirDebug
+> Task :geolocator_android:bundleLibRuntimeToDirDebug
+> Task :permission_handler_android:bundleLibRuntimeToDirDebug
+> Task :flutter_local_notifications:bundleLibRuntimeToDirDebug
+> Task :sqflite_android:bundleLibRuntimeToDirDebug
+> Task :wakelock_plus:compileDebugKotlin
+> Task :share_plus:compileDebugKotlin
+> Task :shared_preferences_android:compileDebugKotlin
+> Task :app:processDebugResources
+> Task :app:compressDebugAssets
+> Task :app:configureCMakeDebug[arm64-v8a]
+> Task :share_plus:compileDebugJavaWithJavac NO-SOURCE
+> Task :share_plus:bundleLibCompileToJarDebug
+> Task :shared_preferences_android:compileDebugJavaWithJavac
+> Task :wakelock_plus:compileDebugJavaWithJavac NO-SOURCE
+> Task :wakelock_plus:bundleLibCompileToJarDebug
+> Task :shared_preferences_android:bundleLibCompileToJarDebug
+> Task :share_plus:processDebugJavaRes
+> Task :shared_preferences_android:processDebugJavaRes
+> Task :wakelock_plus:processDebugJavaRes
+> Task :app:l8DexDesugarLibDebug
+> Task :app:buildCMakeDebug[arm64-v8a]
+> Task :share_plus:bundleLibRuntimeToDirDebug
+> Task :wakelock_plus:bundleLibRuntimeToDirDebug
+> Task :shared_preferences_android:bundleLibRuntimeToDirDebug
+> Task :app:compileDebugKotlin
+> Task :app:mergeExtDexDebug
+> Task :app:configureCMakeDebug[armeabi-v7a]
+
+> Task :app:compileDebugJavaWithJavac
+Java compiler version 21 has deprecated support for compiling with source/target version 8.
+Try one of the following options:
+    1. [Recommended] Use Java toolchain with a lower language version
+    2. Set a higher source/target version
+    3. Use a lower version of the JDK running the build (if you're not using Java toolchain)
+For more details on how to configure these settings, see https://developer.android.com/build/jdks.
+To suppress this warning, set android.javaCompile.suppressSourceTargetDeprecationWarning=true in gradle.properties.
+警告: [options] ソース値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] ターゲット値8は廃止されていて、今後のリリースで削除される予定です
+警告: [options] 廃止されたオプションについての警告を表示しないようにするには、-Xlint:オプションを使用します。
+警告3個
+
+> Task :app:processDebugJavaRes
+> Task :app:mergeLibDexDebug
+> Task :app:dexBuilderDebug
+> Task :app:buildCMakeDebug[armeabi-v7a]
+> Task :app:mergeProjectDexDebug
+> Task :app:configureCMakeDebug[x86_64]
+> Task :app:buildCMakeDebug[x86_64]
+> Task :app:mergeDebugJniLibFolders
+> Task :flutter_local_notifications:mergeDebugJniLibFolders
+> Task :flutter_local_notifications:mergeDebugNativeLibs NO-SOURCE
+> Task :flutter_local_notifications:copyDebugJniLibsProjectOnly
+> Task :geolocator_android:mergeDebugJniLibFolders
+> Task :geolocator_android:mergeDebugNativeLibs NO-SOURCE
+> Task :geolocator_android:copyDebugJniLibsProjectOnly
+> Task :package_info_plus:mergeDebugJniLibFolders
+> Task :package_info_plus:mergeDebugNativeLibs NO-SOURCE
+> Task :package_info_plus:copyDebugJniLibsProjectOnly
+> Task :path_provider_android:mergeDebugJniLibFolders
+> Task :path_provider_android:mergeDebugNativeLibs NO-SOURCE
+> Task :path_provider_android:copyDebugJniLibsProjectOnly
+> Task :permission_handler_android:mergeDebugJniLibFolders
+> Task :permission_handler_android:mergeDebugNativeLibs NO-SOURCE
+> Task :permission_handler_android:copyDebugJniLibsProjectOnly
+> Task :share_plus:mergeDebugJniLibFolders
+> Task :share_plus:mergeDebugNativeLibs NO-SOURCE
+> Task :share_plus:copyDebugJniLibsProjectOnly
+> Task :shared_preferences_android:mergeDebugJniLibFolders
+> Task :shared_preferences_android:mergeDebugNativeLibs NO-SOURCE
+> Task :shared_preferences_android:copyDebugJniLibsProjectOnly
+> Task :sqflite_android:mergeDebugJniLibFolders
+> Task :sqflite_android:mergeDebugNativeLibs NO-SOURCE
+> Task :sqflite_android:copyDebugJniLibsProjectOnly
+> Task :wakelock_plus:mergeDebugJniLibFolders
+> Task :wakelock_plus:mergeDebugNativeLibs NO-SOURCE
+> Task :wakelock_plus:copyDebugJniLibsProjectOnly
+> Task :app:validateSigningDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:writeDebugAppMetadata
+> Task :app:writeDebugSigningConfigVersions
+> Task :flutter_local_notifications:stripDebugDebugSymbols NO-SOURCE
+> Task :flutter_local_notifications:copyDebugJniLibsProjectAndLocalJars
+> Task :app:mergeDebugNativeLibs
+> Task :flutter_local_notifications:extractDebugAnnotations
+> Task :flutter_local_notifications:extractDeepLinksForAarDebug
+> Task :flutter_local_notifications:mergeDebugGeneratedProguardFiles
+> Task :flutter_local_notifications:mergeDebugConsumerProguardFiles
+> Task :flutter_local_notifications:prepareDebugArtProfile
+> Task :flutter_local_notifications:prepareLintJarForPublish
+> Task :geolocator_android:stripDebugDebugSymbols NO-SOURCE
+> Task :geolocator_android:copyDebugJniLibsProjectAndLocalJars
+> Task :flutter_local_notifications:mergeDebugJavaResource
+> Task :geolocator_android:extractDebugAnnotations
+> Task :flutter_local_notifications:syncDebugLibJars
+> Task :flutter_local_notifications:bundleDebugAar
+> Task :flutter_local_notifications:assembleDebug
+> Task :geolocator_android:extractDeepLinksForAarDebug
+> Task :geolocator_android:mergeDebugGeneratedProguardFiles
+> Task :geolocator_android:mergeDebugConsumerProguardFiles
+> Task :geolocator_android:prepareDebugArtProfile
+> Task :geolocator_android:prepareLintJarForPublish
+> Task :package_info_plus:stripDebugDebugSymbols NO-SOURCE
+> Task :geolocator_android:mergeDebugJavaResource
+> Task :package_info_plus:copyDebugJniLibsProjectAndLocalJars
+> Task :geolocator_android:syncDebugLibJars
+> Task :geolocator_android:bundleDebugAar
+> Task :geolocator_android:assembleDebug
+> Task :package_info_plus:extractDebugAnnotations
+> Task :package_info_plus:extractDeepLinksForAarDebug
+> Task :package_info_plus:mergeDebugGeneratedProguardFiles
+> Task :package_info_plus:mergeDebugConsumerProguardFiles
+> Task :package_info_plus:prepareDebugArtProfile
+> Task :package_info_plus:prepareLintJarForPublish
+> Task :path_provider_android:stripDebugDebugSymbols NO-SOURCE
+> Task :path_provider_android:copyDebugJniLibsProjectAndLocalJars
+> Task :package_info_plus:mergeDebugJavaResource
+> Task :path_provider_android:extractDebugAnnotations
+> Task :package_info_plus:syncDebugLibJars
+> Task :package_info_plus:bundleDebugAar
+> Task :package_info_plus:assembleDebug
+> Task :path_provider_android:extractDeepLinksForAarDebug
+> Task :path_provider_android:mergeDebugGeneratedProguardFiles
+> Task :path_provider_android:mergeDebugConsumerProguardFiles
+> Task :path_provider_android:prepareDebugArtProfile
+> Task :path_provider_android:prepareLintJarForPublish
+> Task :app:stripDebugDebugSymbols
+> Task :path_provider_android:mergeDebugJavaResource
+> Task :path_provider_android:syncDebugLibJars
+> Task :path_provider_android:bundleDebugAar
+> Task :path_provider_android:assembleDebug
+> Task :permission_handler_android:stripDebugDebugSymbols NO-SOURCE
+> Task :permission_handler_android:copyDebugJniLibsProjectAndLocalJars
+> Task :permission_handler_android:extractDeepLinksForAarDebug
+> Task :permission_handler_android:mergeDebugGeneratedProguardFiles
+> Task :permission_handler_android:mergeDebugConsumerProguardFiles
+> Task :permission_handler_android:prepareDebugArtProfile
+> Task :permission_handler_android:prepareLintJarForPublish
+> Task :share_plus:stripDebugDebugSymbols NO-SOURCE
+> Task :permission_handler_android:mergeDebugJavaResource
+> Task :share_plus:copyDebugJniLibsProjectAndLocalJars
+> Task :share_plus:extractDebugAnnotations
+> Task :share_plus:extractDeepLinksForAarDebug
+> Task :share_plus:mergeDebugGeneratedProguardFiles
+> Task :share_plus:mergeDebugConsumerProguardFiles
+> Task :share_plus:prepareDebugArtProfile
+> Task :share_plus:prepareLintJarForPublish
+> Task :shared_preferences_android:stripDebugDebugSymbols NO-SOURCE
+> Task :shared_preferences_android:copyDebugJniLibsProjectAndLocalJars
+> Task :share_plus:mergeDebugJavaResource
+> Task :shared_preferences_android:extractDebugAnnotations
+> Task :share_plus:syncDebugLibJars
+> Task :share_plus:bundleDebugAar
+> Task :share_plus:assembleDebug
+> Task :shared_preferences_android:extractDeepLinksForAarDebug
+> Task :shared_preferences_android:mergeDebugGeneratedProguardFiles
+> Task :shared_preferences_android:mergeDebugConsumerProguardFiles
+> Task :shared_preferences_android:prepareDebugArtProfile
+> Task :shared_preferences_android:prepareLintJarForPublish
+> Task :sqflite_android:stripDebugDebugSymbols NO-SOURCE
+> Task :sqflite_android:copyDebugJniLibsProjectAndLocalJars
+> Task :shared_preferences_android:mergeDebugJavaResource
+> Task :sqflite_android:extractDebugAnnotations
+> Task :shared_preferences_android:syncDebugLibJars
+> Task :shared_preferences_android:bundleDebugAar
+> Task :shared_preferences_android:assembleDebug
+> Task :sqflite_android:extractDeepLinksForAarDebug
+> Task :sqflite_android:mergeDebugGeneratedProguardFiles
+> Task :sqflite_android:mergeDebugConsumerProguardFiles
+> Task :sqflite_android:prepareDebugArtProfile
+> Task :sqflite_android:prepareLintJarForPublish
+> Task :wakelock_plus:stripDebugDebugSymbols NO-SOURCE
+> Task :sqflite_android:mergeDebugJavaResource
+> Task :wakelock_plus:copyDebugJniLibsProjectAndLocalJars
+> Task :wakelock_plus:extractDebugAnnotations
+> Task :sqflite_android:syncDebugLibJars
+> Task :sqflite_android:bundleDebugAar
+> Task :sqflite_android:assembleDebug
+> Task :wakelock_plus:extractDeepLinksForAarDebug
+> Task :wakelock_plus:mergeDebugGeneratedProguardFiles
+> Task :wakelock_plus:mergeDebugConsumerProguardFiles
+> Task :wakelock_plus:prepareDebugArtProfile
+> Task :wakelock_plus:prepareLintJarForPublish
+> Task :wakelock_plus:mergeDebugJavaResource
+> Task :wakelock_plus:syncDebugLibJars
+> Task :wakelock_plus:bundleDebugAar
+> Task :wakelock_plus:assembleDebug
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect
+> Task :app:assembleDebug
+> Task :permission_handler_android:extractDebugAnnotations
+> Task :permission_handler_android:syncDebugLibJars
+> Task :permission_handler_android:bundleDebugAar
+> Task :permission_handler_android:assembleDebug
+
+[Incubating] Problems report is available at: file:///C:/Projects/daigakuos-v2/client/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 56s
+315 actionable tasks: 300 executed, 15 up-to-date
