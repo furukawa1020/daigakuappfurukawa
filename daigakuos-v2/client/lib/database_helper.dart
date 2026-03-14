@@ -36,6 +36,10 @@ class DatabaseHelper {
           CREATE TABLE nodes (
             id TEXT PRIMARY KEY,
             title TEXT,
+            estimate_minutes INTEGER DEFAULT 25,
+            type TEXT DEFAULT 'STUDY',
+            is_completed INTEGER DEFAULT 0,
+            created_at TEXT,
             updated_at TEXT
           )
         ''');
@@ -147,6 +151,12 @@ class DatabaseHelper {
             'star_crystals': 0,
             'campus_gems': 0,
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+        if (oldVersion < 8) {
+           await db.execute('ALTER TABLE nodes ADD COLUMN estimate_minutes INTEGER DEFAULT 25');
+           await db.execute('ALTER TABLE nodes ADD COLUMN type TEXT DEFAULT "STUDY"');
+           await db.execute('ALTER TABLE nodes ADD COLUMN is_completed INTEGER DEFAULT 0');
+           await db.execute('ALTER TABLE nodes ADD COLUMN created_at TEXT');
         }
       },
     );
