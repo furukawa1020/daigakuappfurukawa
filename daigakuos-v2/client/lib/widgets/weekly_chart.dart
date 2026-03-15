@@ -65,7 +65,7 @@ class WeeklyChart extends StatelessWidget {
                   final dayLabel = weekDays[date.weekday - 1];
                   
                   return SideTitleWidget(
-                    axisSide: meta.axisSide,
+                    meta: meta,
                     child: Text(dayLabel, style: const TextStyle(color: Colors.grey, fontSize: 10)),
                   );
                 },

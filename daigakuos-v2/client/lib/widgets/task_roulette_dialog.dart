@@ -157,7 +157,7 @@ class _TaskRouletteDialogState extends ConsumerState<TaskRouletteDialog> {
           FilledButton(
             onPressed: () {
                ref.read(hapticsProvider.notifier).heavyImpact();
-               ref.read(selectedTaskProvider.notifier).state = _currentTask;
+               ref.read(selectedTaskProvider.notifier).state = DaigakuNode(id: 'roulette_${DateTime.now().millisecondsSinceEpoch}', title: _currentTask, estimateMinutes: 5, type: 'STUDY');
                // Start "Just 5 Minutes" Mode by default for lower barrier
                ref.read(sessionProvider.notifier).state = Session(
                  startAt: DateTime.now(),

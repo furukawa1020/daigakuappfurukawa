@@ -23,7 +23,7 @@ class PetDisplay extends ConsumerWidget {
             Text(
               petState.emoji,
               style: const TextStyle(fontSize: 56),
-            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(duration: 2.seconds, lowerBound: 0.9, upperBound: 1.1),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(duration: 2.seconds, begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1)),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
