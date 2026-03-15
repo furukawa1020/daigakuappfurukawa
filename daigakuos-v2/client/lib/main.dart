@@ -132,14 +132,14 @@ void main() async { // Async main
   runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
-class DaigakuAPPApp extends StatefulWidget {
+class DaigakuAPPApp extends ConsumerStatefulWidget {
   const DaigakuAPPApp({super.key});
 
   @override
   State<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
 }
 
-class _DaigakuAPPAppState extends State<DaigakuAPPApp> with WidgetsBindingObserver {
+class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindingObserver {
   
   @override
   void initState() {
