@@ -136,7 +136,7 @@ class DaigakuAPPApp extends ConsumerStatefulWidget {
   const DaigakuAPPApp({super.key});
 
   @override
-  State<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
+  ConsumerState<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
 }
 
 class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindingObserver {
@@ -165,7 +165,7 @@ class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindi
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final activeTheme = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
 
@@ -661,7 +661,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
                                 ),
-                              else
+                              if (recentTitle == null)
                                 MokoCard(
                                   padding: const EdgeInsets.all(24),
                                   child: Center(
@@ -1363,7 +1363,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     ref.read(hapticsProvider.notifier).heavyImpact();
 
     final selectedTask = ref.read(selectedTaskProvider);
-    if (selectedTask != null) _titleCtrl.text = selectedTask;
+    if (selectedTask != null) _titleCtrl.text = selectedTask.title;
 
     _praiseMessage = _praiseMessages[Random().nextInt(_praiseMessages.length)];
     _motivationalQuote = MOTIVATIONAL_QUOTES[Random().nextInt(MOTIVATIONAL_QUOTES.length)];
