@@ -30,16 +30,12 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 7,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (
             id TEXT PRIMARY KEY,
             title TEXT,
-            estimate_minutes INTEGER DEFAULT 25,
-            type TEXT DEFAULT 'STUDY',
-            is_completed INTEGER DEFAULT 0,
-            created_at TEXT,
             updated_at TEXT
           )
         ''');
@@ -152,61 +148,12 @@ class DatabaseHelper {
             'campus_gems': 0,
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
         }
-        if (oldVersion < 8) {
-           await db.execute('ALTER TABLE nodes ADD COLUMN estimate_minutes INTEGER DEFAULT 25');
-           await db.execute('ALTER TABLE nodes ADD COLUMN type TEXT DEFAULT "STUDY"');
-           await db.execute('ALTER TABLE nodes ADD COLUMN is_completed INTEGER DEFAULT 0');
-           await db.execute('ALTER TABLE nodes ADD COLUMN created_at TEXT');
-        }
       },
     );
   }
 
-  // --- Nodes (Goals/Tasks) ---
 
-  Future<void> insertNode({
-    required String title,
-    required int estimateMinutes,
-    required String type,
-  }) async {
-    final db = await database;
-    final now = DateTime.now();
-    final id = 'node_${now.millisecondsSinceEpoch}';
-
-    await db.insert('nodes', {
-      'id': id,
-      'title': title,
-      'estimate_minutes': estimateMinutes,
-      'type': type,
-      'is_completed': 0,
-      'created_at': now.toIso8601String(),
-      'updated_at': now.toIso8601String(),
-    });
-  }
-
-  Future<List<Map<String, dynamic>>> getPendingNodes() async {
-    final db = await database;
-    return await db.query(
-      'nodes',
-      where: 'is_completed = 0',
-      orderBy: 'created_at DESC',
-    );
-  }
-
-  Future<void> completeNode(String id) async {
-    final db = await database;
-    await db.update(
-      'nodes',
-      {
-        'is_completed': 1,
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // --- Sessions Logic ---
+  // --- Logic ---
 
   Future<void> insertSession({
     required DateTime startAt,

@@ -97,32 +97,6 @@ class DailyChallenge {
 }
 
 
-class DaigakuNode {
-  final String id;
-  final String title;
-  final int estimateMinutes;
-  final String type;
-  final bool isCompleted;
-
-  DaigakuNode({
-    required this.id,
-    required this.title,
-    required this.estimateMinutes,
-    required this.type,
-    this.isCompleted = false,
-  });
-
-  factory DaigakuNode.fromJson(Map<String, dynamic> json) {
-    return DaigakuNode(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      estimateMinutes: json['estimate_minutes'] as int,
-      type: json['type'] as String,
-      isCompleted: (json['is_completed'] as int) == 1,
-    );
-  }
-}
-
 // -----------------------------------------------------------------------------
 // Providers
 // -----------------------------------------------------------------------------
@@ -135,12 +109,7 @@ final sessionProvider = StateProvider<Session?>((ref) => null);
 enum LocationBonus { none, campus, home }
 final locationBonusProvider = StateProvider<LocationBonus>((ref) => LocationBonus.none);
 
-final selectedTaskProvider = StateProvider<DaigakuNode?>((ref) => null);
-
-final nodesProvider = FutureProvider<List<DaigakuNode>>((ref) async {
-  final data = await DatabaseHelper().getPendingNodes();
-  return data.map((json) => DaigakuNode.fromJson(json)).toList();
-});
+final selectedTaskProvider = StateProvider<String?>((ref) => null);
 
 final userStatsProvider = FutureProvider<UserStats>((ref) async {
   try {

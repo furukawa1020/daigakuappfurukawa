@@ -23,7 +23,6 @@ import 'database_helper.dart';
 import 'calendar_screen.dart';
 import 'settings_screen.dart';
 import 'haptics_service.dart';
-import 'tree_screen.dart';
 import 'widgets/hyperfocus_button.dart';
 import 'services/achievement_service.dart';
 import 'moko_collection_screen.dart';
@@ -109,7 +108,6 @@ final _router = GoRouter(
     GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
     GoRoute(path: '/now', builder: (context, state) => const NowScreen()),
     GoRoute(path: '/finish', builder: (context, state) => const FinishScreen()),
-    GoRoute(path: '/tree', builder: (context, state) => const TreeScreen()),
     GoRoute(path: '/collection', builder: (context, state) => const MokoCollectionScreen()),
     GoRoute(path: '/achievements', builder: (context, state) => const AchievementsGalleryScreen()),
     GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
@@ -132,14 +130,14 @@ void main() async { // Async main
   runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
-class DaigakuAPPApp extends ConsumerStatefulWidget {
+class DaigakuAPPApp extends StatefulWidget {
   const DaigakuAPPApp({super.key});
 
   @override
-  ConsumerState<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
+  State<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
 }
 
-class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindingObserver {
+class _DaigakuAPPAppState extends State<DaigakuAPPApp> with WidgetsBindingObserver {
   
   @override
   void initState() {
@@ -165,7 +163,7 @@ class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindi
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final activeTheme = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
 
@@ -298,13 +296,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onPressed: () {
                     ref.read(hapticsProvider.notifier).lightImpact();
                     context.push('/collection');
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_tree, color: Colors.brown),
-                  onPressed: () {
-                    ref.read(hapticsProvider.notifier).lightImpact();
-                    context.push('/tree');
                   },
                 ),
                 IconButton(
@@ -628,10 +619,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const SizedBox(height: 12),
                               
                               if (recentTitle != null)
-                                 GestureDetector(
+                                GestureDetector(
                                   onTap: () {
                                      ref.read(hapticsProvider.notifier).heavyImpact();
-                                     ref.read(selectedTaskProvider.notifier).state = DaigakuNode(id: 'recent_${DateTime.now().millisecondsSinceEpoch}', title: recentTitle!, estimateMinutes: 25, type: 'STUDY');
+                                     ref.read(selectedTaskProvider.notifier).state = recentTitle!;
                                      // "One-Tap" -> Immediate Launch
                                      ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
                                      context.push('/now');
@@ -661,7 +652,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     ),
                                   ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
                                 ),
-                              if (recentTitle == null)
+                              else
                                 MokoCard(
                                   padding: const EdgeInsets.all(24),
                                   child: Center(
@@ -680,7 +671,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               GestureDetector(
                                 onTap: () {
                                    ref.read(hapticsProvider.notifier).mediumImpact();
-                                   ref.read(selectedTaskProvider.notifier).state = DaigakuNode(id: 'quick_1min', title: "1分チャレンジ", estimateMinutes: 1, type: 'STUDY');
+                                   ref.read(selectedTaskProvider.notifier).state = "1分チャレンジ";
                                    ref.read(sessionProvider.notifier).state = Session(startAt: DateTime.now());
                                    context.push('/now');
                                    
@@ -986,7 +977,7 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
     String twoDigits(int n) => n.toString().padLeft(2, "0");
     final minutes = twoDigits(_elapsed.inMinutes);
     final seconds = twoDigits(_elapsed.inSeconds % 60);
-    final taskTitle = ref.watch(selectedTaskProvider)?.title;
+    final taskTitle = ref.watch(selectedTaskProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF111827), // Dark Mode
@@ -1363,7 +1354,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     ref.read(hapticsProvider.notifier).heavyImpact();
 
     final selectedTask = ref.read(selectedTaskProvider);
-    if (selectedTask != null) _titleCtrl.text = selectedTask.title;
+    if (selectedTask != null) _titleCtrl.text = selectedTask;
 
     _praiseMessage = _praiseMessages[Random().nextInt(_praiseMessages.length)];
     _motivationalQuote = MOTIVATIONAL_QUOTES[Random().nextInt(MOTIVATIONAL_QUOTES.length)];
@@ -1405,13 +1396,12 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     setState(() => _isSaving = true);
 
     final session = ref.read(sessionProvider);
-    final selectedNode = ref.read(selectedTaskProvider);
-    
     if (session != null) {
       final title = _titleCtrl.text.isNotEmpty
           ? _titleCtrl.text
-          : (selectedNode != null
-              ? selectedNode.title
+          : (_selectedNodeId != null
+              ? (_suggestions.firstWhere((s) => s['id'] == _selectedNodeId,
+                  orElse: () => {'title': '無題'})['title'] as String)
               : "無題のセッション");
       final mins = session.durationMinutes ?? 0;
 
@@ -1420,16 +1410,11 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
         startAt: session.startAt,
         minutes: mins,
         isOnCampus: ref.read(locationBonusProvider) == LocationBonus.campus,
-        nodeId: selectedNode?.id,
+        nodeId: _selectedNodeId,
         moodPre: session.moodPre,
         moodPost: session.moodPost,
         focusRating: _focusRating,
       );
-      
-      if (selectedNode != null) {
-          await DatabaseHelper().completeNode(selectedNode.id);
-          ref.read(selectedTaskProvider.notifier).state = null; // Clear selected task
-      }
 
       ref.refresh(userStatsProvider);
       ref.refresh(historyProvider);

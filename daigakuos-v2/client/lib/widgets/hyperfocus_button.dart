@@ -16,7 +16,6 @@ class HyperfocusButton extends ConsumerStatefulWidget {
   ConsumerState<HyperfocusButton> createState() => _HyperfocusButtonState();
 }
 
-class _HyperfocusButtonState extends ConsumerState<HyperfocusButton> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 
