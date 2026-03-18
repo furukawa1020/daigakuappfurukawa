@@ -40,6 +40,7 @@ import 'widgets/premium_background.dart';
 import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
 import 'stats_screen.dart';
+import 'tree_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -112,6 +113,7 @@ final _router = GoRouter(
     GoRoute(path: '/achievements', builder: (context, state) => const AchievementsGalleryScreen()),
     GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
     GoRoute(path: '/stats', builder: (context, state) => const StatsScreen()),
+    GoRoute(path: '/tree', builder: (context, state) => const TreeScreen()),
   ],
 );
 
@@ -296,6 +298,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   onPressed: () {
                     ref.read(hapticsProvider.notifier).lightImpact();
                     context.push('/collection');
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.park_outlined, color: Colors.green),
+                  onPressed: () {
+                    ref.read(hapticsProvider.notifier).lightImpact();
+                    context.push('/tree');
                   },
                 ),
                 IconButton(
@@ -1354,7 +1363,13 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
     ref.read(hapticsProvider.notifier).heavyImpact();
 
     final selectedTask = ref.read(selectedTaskProvider);
-    if (selectedTask != null) _titleCtrl.text = selectedTask;
+    final selectedNode = ref.read(selectedNodeProvider);
+    if (selectedNode != null) {
+      _titleCtrl.text = selectedNode.title;
+      _selectedNodeId = selectedNode.id;
+    } else if (selectedTask != null) {
+      _titleCtrl.text = selectedTask;
+    }
 
     _praiseMessage = _praiseMessages[Random().nextInt(_praiseMessages.length)];
     _motivationalQuote = MOTIVATIONAL_QUOTES[Random().nextInt(MOTIVATIONAL_QUOTES.length)];
@@ -1426,17 +1441,33 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
           .checkAchievements(mins, session.startAt, homeBonus);
 
       final challengeCompleted = await DatabaseHelper().checkChallengeCompletion();
-      if (challengeCompleted && mounted) {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text("🎉 デイリーチャレンジ達成！"),
-            content: const Text("ボーナス 100 XPを獲得しました！"),
-            actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text("やったね！"))],
-          ),
-        );
-        ref.refresh(dailyChallengeProvider);
-      }
+        if (challengeCompleted && mounted) {
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: const Text("🎉 デイリーチャレンジ達成！"),
+              content: const Text("ボーナス 100 XPを獲得しました！"),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("やったね！"),
+                ),
+              ],
+            ),
+          );
+          ref.refresh(dailyChallengeProvider);
+        }
+
+        // 3. Mark Node as Completed if applicable
+        if (_selectedNodeId != null) {
+          await DatabaseHelper().completeNode(_selectedNodeId!);
+          // Bonus Coins for completing a planned task
+          await ref.read(currencyProvider.notifier).addCoins(10, type: CurrencyType.moko);
+        }
+
+        // 4. Reset Providers
+        ref.read(selectedNodeProvider.notifier).state = null;
+        ref.read(selectedTaskProvider.notifier).state = null;
 
       final currencyService = ref.read(currencyProvider.notifier);
       int earnedCoins = (mins / 10).floor();

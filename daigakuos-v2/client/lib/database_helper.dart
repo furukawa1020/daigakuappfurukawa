@@ -30,12 +30,16 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 7,
+      version: 8,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE nodes (
             id TEXT PRIMARY KEY,
             title TEXT,
+            estimate_minutes INTEGER,
+            type TEXT, -- (STUDY, RESEARCH, MAKE, ADMIN)
+            is_completed INTEGER DEFAULT 0,
+            created_at TEXT,
             updated_at TEXT
           )
         ''');
@@ -147,6 +151,15 @@ class DatabaseHelper {
             'star_crystals': 0,
             'campus_gems': 0,
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
+        }
+        if (oldVersion < 8) {
+          // Update nodes table
+          // Since we can't easily ALTER multiple columns in SQLite without recreating,
+          // and this is early dev, we'll try to add them if they don't exist.
+          try { await db.execute('ALTER TABLE nodes ADD COLUMN estimate_minutes INTEGER DEFAULT 0'); } catch(_) {}
+          try { await db.execute('ALTER TABLE nodes ADD COLUMN type TEXT DEFAULT "STUDY"'); } catch(_) {}
+          try { await db.execute('ALTER TABLE nodes ADD COLUMN is_completed INTEGER DEFAULT 0'); } catch(_) {}
+          try { await db.execute('ALTER TABLE nodes ADD COLUMN created_at TEXT'); } catch(_) {}
         }
       },
     );
@@ -416,11 +429,10 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getSuggestions() async {
     final db = await database;
-    // Simple logic: return most updated nodes
-    // Ideal: Filter by time of day like backend, but simple is fine for now
-    
+    // Return most recently updated pending nodes
     final res = await db.query(
       'nodes',
+      where: 'is_completed = 0',
       orderBy: 'updated_at DESC',
       limit: 10
     );
@@ -429,6 +441,52 @@ class DatabaseHelper {
       'id': e['id'],
       'title': e['title'],
     }).toList();
+  }
+
+  // --- Tree System Node Methods ---
+
+  Future<void> insertNode({
+    required String title,
+    required int estimateMinutes,
+    required String type,
+  }) async {
+    final db = await database;
+    final now = DateTime.now().toIso8601String();
+    final id = 'node_${DateTime.now().millisecondsSinceEpoch}';
+    
+    await db.insert('nodes', {
+      'id': id,
+      'title': title,
+      'estimate_minutes': estimateMinutes,
+      'type': type,
+      'is_completed': 0,
+      'created_at': now,
+      'updated_at': now,
+    });
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingNodes() async {
+    final db = await database;
+    return await db.query(
+      'nodes',
+      where: 'is_completed = 0',
+      orderBy: 'created_at DESC'
+    );
+  }
+
+  Future<void> completeNode(String id) async {
+    final db = await database;
+    await db.update(
+      'nodes',
+      {'is_completed': 1, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [id]
+    );
+  }
+
+  Future<void> deleteNode(String id) async {
+    final db = await database;
+    await db.delete('nodes', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<List<Map<String, dynamic>>> getSessionsForDate(DateTime date) async {
