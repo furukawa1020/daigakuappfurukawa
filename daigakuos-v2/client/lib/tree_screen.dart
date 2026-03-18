@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'state/app_state.dart';
 import 'database_helper.dart';
+import 'widgets/moko_card.dart';
+import 'widgets/premium_background.dart';
 
 class TreeScreen extends ConsumerStatefulWidget {
   const TreeScreen({super.key});
@@ -13,193 +17,270 @@ class TreeScreen extends ConsumerStatefulWidget {
 class _TreeScreenState extends ConsumerState<TreeScreen> {
   @override
   Widget build(BuildContext context) {
-    final nodesAsyncValue = ref.watch(nodesProvider);
+    final nodesAsync = ref.watch(nodesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('目標 / タスク管理'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+      body: PremiumBackground(
+        child: Column(
+          children: [
+            AppBar(
+              title: const Text("目標の樹", style: TextStyle(fontWeight: FontWeight.bold)),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/'),
+              ),
+            ),
+            
+            Expanded(
+              child: nodesAsync.when(
+                data: (nodes) {
+                  if (nodes.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.park_outlined, size: 80, color: Colors.green.withOpacity(0.3)),
+                          const SizedBox(height: 16),
+                          const Text("まだ計画はありません", style: TextStyle(color: Colors.grey)),
+                          const Text("新しいタスクを追加してみましょう！", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        ],
+                      ),
+                    );
+                  }
+
+                  // Group by Type
+                  final groups = <String, List<DaigakuNode>>{};
+                  for (var node in nodes) {
+                    groups.putIfAbsent(node.type, () => []).add(node);
+                  }
+
+                  return ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: groups.entries.map((entry) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8, bottom: 8, top: 16),
+                            child: Text(
+                              _getTypeLabel(entry.key),
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey),
+                            ),
+                          ),
+                          ...entry.value.map((node) => _TaskTile(node: node)).toList(),
+                        ],
+                      );
+                    }).toList(),
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) => Center(child: Text("エラー: $e")),
+              ),
+            ),
+          ],
         ),
       ),
-      body: nodesAsyncValue.when(
-        data: (nodes) {
-          if (nodes.isEmpty) {
-            return const Center(
-              child: Text(
-                '現在計画されている目標はありません。\n「+」ボタンからタスクを追加してください。',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
-            );
-          }
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showAddNodeDialog(context),
+        backgroundColor: const Color(0xFFB5EAD7), // Mint
+        icon: const Icon(Icons.add),
+        label: const Text("新しい目標"),
+      ).animate().scale(delay: 400.ms, curve: Curves.elasticOut),
+    );
+  }
 
-          // Group by Type
-          final Map<String, List<DaigakuNode>> groupedNodes = {
-            'STUDY': [],
-            'RESEARCH': [],
-            'MAKE': [],
-            'ADMIN': [],
-          };
+  String _getTypeLabel(String type) {
+    switch (type) {
+      case 'STUDY': return '📚 学ぶ';
+      case 'RESEARCH': return '🔍 調べる / 考える';
+      case 'MAKE': return '🛠️ 作る';
+      case 'ADMIN': return '📝 事務 / 整理';
+      default: return '📍 その他';
+    }
+  }
 
-          for (var node in nodes) {
-            if (groupedNodes.containsKey(node.type)) {
-              groupedNodes[node.type]!.add(node);
-            } else {
-               groupedNodes['STUDY']!.add(node); // Default fallback
-            }
-          }
+  void _showAddNodeDialog(BuildContext context) {
+    final titleCtrl = TextEditingController();
+    final estimateCtrl = TextEditingController(text: "25");
+    String selectedType = 'STUDY';
 
-          return ListView(
-             padding: const EdgeInsets.all(16.0),
-             children: [
-                _buildSection('学習 (Study)', groupedNodes['STUDY']!),
-                _buildSection('研究 (Research)', groupedNodes['RESEARCH']!),
-                _buildSection('制作 (Make)', groupedNodes['MAKE']!),
-                _buildSection('事務/運営 (Admin)', groupedNodes['ADMIN']!),
-                const SizedBox(height: 80), // Padding for FAB
-             ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('エラーが発生しました: $error')),
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("新しい目標を追加"),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: titleCtrl,
+                  decoration: const InputDecoration(
+                    labelText: "なにをしますか？",
+                    hintText: "例: レポートの構成案作成",
+                  ),
+                  autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: estimateCtrl,
+                  decoration: const InputDecoration(
+                    labelText: "見積もり時間 (分)",
+                    suffixText: "分",
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+                const SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                  value: selectedType,
+                  decoration: const InputDecoration(labelText: "カテゴリー"),
+                  items: const [
+                    DropdownMenuItem(value: 'STUDY', child: Text('📚 学ぶ')),
+                    DropdownMenuItem(value: 'RESEARCH', child: Text('🔍 調べる / 考える')),
+                    DropdownMenuItem(value: 'MAKE', child: Text('🛠️ 作る')),
+                    DropdownMenuItem(value: 'ADMIN', child: Text('📝 事務 / 整理')),
+                  ],
+                  onChanged: (val) => setDialogState(() => selectedType = val!),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("キャンセル"),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (titleCtrl.text.isEmpty) return;
+                final mins = int.tryParse(estimateCtrl.text) ?? 25;
+                
+                await DatabaseHelper().insertNode(
+                  title: titleCtrl.text,
+                  estimateMinutes: mins,
+                  type: selectedType,
+                );
+                
+                ref.refresh(nodesProvider);
+                if (mounted) Navigator.pop(ctx);
+              },
+              child: const Text("追加"),
+            ),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddNodeDialog,
-        backgroundColor: Theme.of(context).primaryColor,
-        child: const Icon(Icons.add, color: Colors.white),
+    );
+  }
+}
+
+class _TaskTile extends ConsumerWidget {
+  final DaigakuNode node;
+  const _TaskTile({required this.node});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () {
+          ref.read(hapticsProvider.notifier).lightImpact();
+          _startTask(context, ref);
+        },
+        onLongPress: () => _showOptions(context, ref),
+        child: MokoCard(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48, height: 48,
+                decoration: BoxDecoration(
+                  color: _getTypeColor(node.type).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Icon(_getTypeIcon(node.type), color: _getTypeColor(node.type)),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      node.title,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Text(
+                      "${node.estimateMinutes} 分の見積もり",
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.play_circle_outline, color: Colors.grey),
+            ],
+          ),
+        ),
+      ).animate().fadeIn().slideX(begin: 0.1, end: 0),
+    );
+  }
+
+  void _startTask(BuildContext context, WidgetRef ref) {
+    // Select this node for the timer
+    ref.read(selectedNodeProvider.notifier).state = node;
+    ref.read(selectedTaskProvider.notifier).state = node.title;
+    
+    // Auto-fill session target minutes if needed
+    ref.read(sessionProvider.notifier).state = Session(
+      startAt: DateTime.now(),
+      nodeId: node.id,
+      targetMinutes: node.estimateMinutes,
+    );
+    
+    context.push('/now');
+  }
+
+  void _showOptions(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.delete, color: Colors.red),
+              title: const Text("削除"),
+              onTap: () async {
+                await DatabaseHelper().deleteNode(node.id);
+                ref.refresh(nodesProvider);
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSection(String title, List<DaigakuNode> nodes) {
-      if (nodes.isEmpty) return const SizedBox.shrink();
-
-      return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-             Padding(
-                 padding: const EdgeInsets.symmetric(vertical: 8.0),
-                 child: Text(
-                     title,
-                     style: const TextStyle(
-                         fontSize: 18,
-                         fontWeight: FontWeight.bold,
-                         color: Colors.white,
-                     ),
-                 ),
-             ),
-             ...nodes.map((node) => _buildNodeItem(node)),
-             const SizedBox(height: 16),
-          ],
-      );
+  IconData _getTypeIcon(String type) {
+    switch (type) {
+      case 'STUDY': return Icons.book;
+      case 'RESEARCH': return Icons.search;
+      case 'MAKE': return Icons.build;
+      case 'ADMIN': return Icons.assignment;
+      default: return Icons.push_pin;
+    }
   }
 
-  Widget _buildNodeItem(DaigakuNode node) {
-      return Card(
-          color: Colors.white.withValues(alpha: 0.1),
-          margin: const EdgeInsets.only(bottom: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          child: ListTile(
-              title: Text(node.title, style: const TextStyle(color: Colors.white)),
-              subtitle: Text('${node.estimateMinutes} 分', style: const TextStyle(color: Colors.white54)),
-              trailing: const Icon(Icons.play_arrow, color: Colors.white70),
-              onTap: () {
-                  // Set active task and return to NowScreen
-                  ref.read(selectedTaskProvider.notifier).state = node;
-                  Navigator.pop(context); // Go back to Home/Now
-              },
-          ),
-      );
-  }
-
-  void _showAddNodeDialog() {
-      String title = '';
-      String minutesStr = '25';
-      String selectedType = 'STUDY';
-
-      showDialog(
-          context: context,
-          builder: (context) {
-              return StatefulBuilder(
-                  builder: (context, setState) {
-                      return AlertDialog(
-                          backgroundColor: Colors.grey[900],
-                          title: const Text('新しいタスク', style: TextStyle(color: Colors.white)),
-                          content: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                  TextField(
-                                      style: const TextStyle(color: Colors.white),
-                                      decoration: const InputDecoration(
-                                          labelText: 'タイトル',
-                                          labelStyle: TextStyle(color: Colors.white70),
-                                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30))
-                                      ),
-                                      onChanged: (val) => title = val,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  TextField(
-                                      style: const TextStyle(color: Colors.white),
-                                      keyboardType: TextInputType.number,
-                                      decoration: const InputDecoration(
-                                          labelText: '見積もり時間 (分)',
-                                          labelStyle: TextStyle(color: Colors.white70),
-                                          enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white30)) // Fixed typo
-                                      ),
-                                      controller: TextEditingController(text: minutesStr),
-                                      onChanged: (val) => minutesStr = val,
-                                  ),
-                                  const SizedBox(height: 20),
-                                  DropdownButtonFormField<String>(
-                                      value: selectedType,
-                                      dropdownColor: Colors.grey[800],
-                                      style: const TextStyle(color: Colors.white),
-                                      items: const [
-                                          DropdownMenuItem(value: 'STUDY', child: Text('学習')),
-                                          DropdownMenuItem(value: 'RESEARCH', child: Text('研究')),
-                                          DropdownMenuItem(value: 'MAKE', child: Text('制作')),
-                                          DropdownMenuItem(value: 'ADMIN', child: Text('事務')),
-                                      ],
-                                      onChanged: (val) {
-                                          if (val != null) setState(() => selectedType = val);
-                                      },
-                                      decoration: const InputDecoration(
-                                          labelText: 'カテゴリー',
-                                          labelStyle: TextStyle(color: Colors.white70),
-                                      ),
-                                  ),
-                              ],
-                          ),
-                          actions: [
-                              TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('キャンセル', style: TextStyle(color: Colors.white54)),
-                              ),
-                              ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-                                  onPressed: () async {
-                                      if (title.isNotEmpty) {
-                                          final mins = int.tryParse(minutesStr) ?? 25;
-                                          await DatabaseHelper().insertNode(
-                                              title: title, 
-                                              estimateMinutes: mins, 
-                                              type: selectedType
-                                          );
-                                          // ignore: use_build_context_synchronously
-                                          Navigator.pop(context);
-                                          ref.invalidate(nodesProvider); // Refresh list
-                                      }
-                                  },
-                                  child: const Text('追加', style: TextStyle(color: Colors.white)),
-                              )
-                          ],
-                      );
-                  }
-              );
-          }
-      );
+  Color _getTypeColor(String type) {
+    switch (type) {
+      case 'STUDY': return const Color(0xFFFFB7B2); // Pink
+      case 'RESEARCH': return const Color(0xFFC7CEEA); // Blue
+      case 'MAKE': return const Color(0xFFE2F0CB); // Green
+      case 'ADMIN': return const Color(0xFFFFDAC1); // Orange
+      default: return Colors.grey;
+    }
   }
 }

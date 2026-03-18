@@ -10,15 +10,41 @@ export '../services/pet_service.dart';
 // Models
 // -----------------------------------------------------------------------------
 
-class Session {
-  final String? id;
-  final DateTime startAt;
-  final int? durationMinutes;
-  final int? targetMinutes; // Added for Just 5 Minutes Mode
-  final String? moodPre;
-  final String? moodPost;
+  final String? nodeId;
 
-  Session({this.id, required this.startAt, this.durationMinutes, this.targetMinutes, this.moodPre, this.moodPost});
+  Session({this.id, this.nodeId, required this.startAt, this.durationMinutes, this.targetMinutes, this.moodPre, this.moodPost});
+}
+
+class DaigakuNode {
+  final String id;
+  final String title;
+  final int estimateMinutes;
+  final String type;
+  final bool isCompleted;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  DaigakuNode({
+    required this.id,
+    required this.title,
+    required this.estimateMinutes,
+    required this.type,
+    required this.isCompleted,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory DaigakuNode.fromJson(Map<String, dynamic> json) {
+    return DaigakuNode(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      estimateMinutes: json['estimate_minutes'] as int,
+      type: json['type'] as String,
+      isCompleted: (json['is_completed'] as int) == 1,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
 }
 
 class UserStats {
@@ -97,32 +123,6 @@ class DailyChallenge {
 }
 
 
-class DaigakuNode {
-  final String id;
-  final String title;
-  final int estimateMinutes;
-  final String type;
-  final bool isCompleted;
-
-  DaigakuNode({
-    required this.id,
-    required this.title,
-    required this.estimateMinutes,
-    required this.type,
-    this.isCompleted = false,
-  });
-
-  factory DaigakuNode.fromJson(Map<String, dynamic> json) {
-    return DaigakuNode(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      estimateMinutes: json['estimate_minutes'] as int,
-      type: json['type'] as String,
-      isCompleted: (json['is_completed'] as int) == 1,
-    );
-  }
-}
-
 // -----------------------------------------------------------------------------
 // Providers
 // -----------------------------------------------------------------------------
@@ -135,11 +135,12 @@ final sessionProvider = StateProvider<Session?>((ref) => null);
 enum LocationBonus { none, campus, home }
 final locationBonusProvider = StateProvider<LocationBonus>((ref) => LocationBonus.none);
 
-final selectedTaskProvider = StateProvider<DaigakuNode?>((ref) => null);
+final selectedNodeProvider = StateProvider<DaigakuNode?>((ref) => null);
+final selectedTaskProvider = StateProvider<String?>((ref) => null);
 
 final nodesProvider = FutureProvider<List<DaigakuNode>>((ref) async {
   final data = await DatabaseHelper().getPendingNodes();
-  return data.map((json) => DaigakuNode.fromJson(json)).toList();
+  return data.map((e) => DaigakuNode.fromJson(e)).toList();
 });
 
 final userStatsProvider = FutureProvider<UserStats>((ref) async {
