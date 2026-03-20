@@ -99,7 +99,33 @@ class _StatsScreenState extends ConsumerState<StatsScreen> {
 
                 const SizedBox(height: 24),
                 
-                 // 4. Detailed Stats (Placeholder for now)
+                // 4. Milestone Medals
+                const Text("Milestones", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                const SizedBox(height: 12),
+                userStatsAsync.when(
+                  data: (stats) {
+                    final hours = stats.totalMinutes / 60.0;
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          _MilestoneMedal(name: "Bronze", icon: "🥉", unachievedIcon: "🏁", hoursRequired: 50, currentHours: hours, color: Colors.orange.shade300),
+                          _MilestoneMedal(name: "Silver", icon: "🥈", unachievedIcon: "🏁", hoursRequired: 100, currentHours: hours, color: Colors.grey.shade300),
+                          _MilestoneMedal(name: "Gold", icon: "🥇", unachievedIcon: "🏁", hoursRequired: 300, currentHours: hours, color: Colors.amber.shade400),
+                          _MilestoneMedal(name: "Platinum", icon: "💎", unachievedIcon: "🏁", hoursRequired: 500, currentHours: hours, color: Colors.cyan.shade300),
+                          _MilestoneMedal(name: "Legend", icon: "👑", unachievedIcon: "🏁", hoursRequired: 1000, currentHours: hours, color: Colors.purple.shade300),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 500.ms);
+                  },
+                  loading: () => const CircularProgressIndicator(),
+                  error: (_,__) => const SizedBox(),
+                ),
+
+                const SizedBox(height: 24),
+                
+                 // 5. Detailed Stats (Placeholder for now)
                  MokoCard(
                    child: Column(
                      crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,6 +190,79 @@ class _InsightRow extends StatelessWidget {
         children: [
           Text(label, style: const TextStyle(color: Colors.grey)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+class _MilestoneMedal extends StatelessWidget {
+  final String name;
+  final String icon;
+  final String unachievedIcon;
+  final double hoursRequired;
+  final double currentHours;
+  final Color color;
+
+  const _MilestoneMedal({
+    required this.name,
+    required this.icon,
+    required this.unachievedIcon,
+    required this.hoursRequired,
+    required this.currentHours,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isUnlocked = currentHours >= hoursRequired;
+    final progress = (currentHours / hoursRequired).clamp(0.0, 1.0);
+
+    return Container(
+      width: 100,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isUnlocked ? color.withOpacity(0.15) : Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isUnlocked ? color.withOpacity(0.5) : Colors.white10,
+          width: isUnlocked ? 2 : 1,
+        ),
+        boxShadow: isUnlocked
+            ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4))]
+            : [],
+      ),
+      child: Column(
+        children: [
+          Text(
+            isUnlocked ? icon : unachievedIcon,
+            style: TextStyle(
+              fontSize: 32,
+              foreground: Paint()
+                ..colorFilter = isUnlocked
+                    ? null
+                    : const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+            ),
+          ).animate(target: isUnlocked ? 1 : 0).scale(begin: const Offset(0.8, 0.8), curve: Curves.elasticOut),
+          const SizedBox(height: 8),
+          Text(name, style: TextStyle(color: isUnlocked ? color : Colors.white54, fontWeight: FontWeight.bold, fontSize: 14)),
+          const SizedBox(height: 4),
+          if (isUnlocked)
+             const Text("Unlocked", style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold))
+          else
+             Column(
+               children: [
+                 Text("${hoursRequired.toInt()}h", style: const TextStyle(color: Colors.white54, fontSize: 10)),
+                 const SizedBox(height: 4),
+                 LinearProgressIndicator(
+                   value: progress,
+                   backgroundColor: Colors.white10,
+                   valueColor: AlwaysStoppedAnimation(color.withOpacity(0.5)),
+                   minHeight: 4,
+                 ),
+               ],
+             )
         ],
       ),
     );
