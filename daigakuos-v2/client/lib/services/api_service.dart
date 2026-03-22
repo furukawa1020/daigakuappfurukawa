@@ -1,13 +1,20 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../database_helper.dart';
 
 class ApiService {
   // Use http://10.0.2.2:3000 for Android Emulator connecting to local Rails server.
-  // Use http://127.0.0.1:3000 for iOS Simulator.
-  static const String baseUrl = 'http://10.0.2.2:3000/api/v1';
+  // Use http://127.0.0.1:3000 for iOS Simulator and Windows Desktop.
+  static String get baseUrl {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:3000/api/v1';
+    } else {
+      return 'http://127.0.0.1:3000/api/v1';
+    }
+  }
 
   static Future<String> getDeviceId() async {
     final prefs = await SharedPreferences.getInstance();

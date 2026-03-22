@@ -11,6 +11,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'dart:io';
 import 'database_helper.dart';
 import 'haptics_service.dart';
+import 'services/api_service.dart';
 import 'state/app_state.dart';
 import 'widgets/moko_card.dart';
 import 'widgets/premium_background.dart';
@@ -181,6 +182,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                      child: Column(
                        children: [
                          ListTile(
+                            leading: const Icon(Icons.cloud_sync, color: Colors.blueAccent),
+                            title: const Text("クラウドと同期 (Rails Backend)", style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
+                            subtitle: const Text("学習データをサーバーへ送信します", style: TextStyle(color: Colors.grey)),
+                            onTap: () async {
+                               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("同期を開始します...")));
+                               final success = await ApiService.pushSync();
+                               if (context.mounted) {
+                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                  if (success) {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("✅ 同期に成功しました！", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: Colors.green));
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("❌ 同期に失敗しました"), backgroundColor: Colors.red));
+                                  }
+                               }
+                            },
+                          ),
+                          const Divider(height: 1),
+                          ListTile(
                             leading: const Icon(Icons.home, color: Color(0xFFFFB7B2)),
                             title: const Text("自宅の場所を設定", style: TextStyle(color: Colors.black87)),
                             subtitle: const Text("現在地を「自宅」として登録します", style: TextStyle(color: Colors.grey)),
