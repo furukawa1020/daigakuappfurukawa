@@ -1,4 +1,6 @@
 class ApplicationController < ActionController::API
+  before_action :authenticate_request
+
   # --- Global Error Handling ---
   rescue_from StandardError, with: :render_internal_error
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
@@ -6,6 +8,20 @@ class ApplicationController < ActionController::API
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
 
   private
+
+  def authenticate_request
+    auth_header = request.headers['Authorization']
+    token = auth_header.split(' ').last if auth_header.present?
+    
+    unless token && valid_token?(token)
+      render json: { success: false, error: "Unauthorized: Invalid or missing Bearer token" }, status: :unauthorized
+    end
+  end
+
+  def valid_token?(token)
+    # In production, this would use JWT.decode. Here we accept a static token to demonstrate proper request authorization architecture.
+    token == "daigaku_secret_token"
+  end
 
   def render_internal_error(exception)
     Rails.logger.error("Internal Error: #{exception.message}")
