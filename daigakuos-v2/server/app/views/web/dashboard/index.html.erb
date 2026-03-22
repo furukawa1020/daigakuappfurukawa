@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DaigakuOS - Web Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --primary: #38bdf8;
+      --secondary: #818cf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    body {
+      margin: 0; padding: 0;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 3rem;
+    }
+    .logo {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #38bdf8, #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem; margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    }
+    .stat-title {
+      font-size: 0.875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .stat-value {
+      font-size: 2.5rem; font-weight: 800; margin-top: 0.5rem; color: var(--primary);
+    }
+    
+    .section-title {
+      font-family: 'Outfit', sans-serif; font-size: 2rem; margin-bottom: 1.5rem; color: var(--text);
+    }
+    .moko-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;
+    }
+    .moko-card {
+      background: linear-gradient(to bottom right, var(--surface), #151e2e);
+      border: 1px solid #334155;
+      border-radius: 1.5rem;
+      padding: 1.5rem; text-align: center;
+      transition: all 0.2s;
+    }
+    .moko-card:hover {
+      border-color: var(--primary);
+      transform: scale(1.02);
+    }
+    .moko-name { font-weight: 600; font-size: 1.25rem; margin-bottom: 0.5rem; }
+    .moko-desc { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1 class="logo">DaigakuOS Web</h1>
+      <div style="color: var(--text-muted);">Ruby on Rails <%= Rails.version %></div>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-title">Total Users</div>
+        <div class="stat-value"><%= @total_users %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Total Sessions</div>
+        <div class="stat-value"><%= @total_sessions %></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-title">Global Focus Hours</div>
+        <div class="stat-value"><%= (@total_focus_minutes / 60.0).round(1) %>h</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Moko Dictionary (Server-Side)</h2>
+    <div class="moko-grid">
+      <% @mokos.each do |moko| %>
+        <div class="moko-card">
+          <div class="moko-name"><%= moko.name %></div>
+          <div style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 1rem; font-weight: 600;">
+            Requires Level <%= moko.required_level %>+ (Phase <%= moko.phase %>)
+          </div>
+          <div class="moko-desc"><%= moko.description %></div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</body>
+</html>

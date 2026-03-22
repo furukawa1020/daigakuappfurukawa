@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  root 'web/dashboard#index'
+
+  namespace :web do
+    get 'dashboard', to: 'dashboard#index'
+  end
+
   namespace :api do
     namespace :v1 do
       resources :mokos, only: [:index]
