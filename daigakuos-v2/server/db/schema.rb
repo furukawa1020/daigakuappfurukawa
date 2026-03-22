@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_22_011050) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
   create_table "goal_nodes", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "title"
@@ -45,6 +45,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011050) do
     t.index ["code"], name: "index_moko_templates_on_code"
   end
 
+  create_table "reminders", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "time"
+    t.string "message"
+    t.string "days_of_week"
+    t.boolean "is_active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_reminders_on_user_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.datetime "started_at"
@@ -72,5 +83,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011050) do
 
   add_foreign_key "goal_nodes", "users"
   add_foreign_key "moko_items", "users"
+  add_foreign_key "reminders", "users"
   add_foreign_key "sessions", "users"
 end
