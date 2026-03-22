@@ -1,0 +1,2 @@
+class MokoTemplate < ApplicationRecord
+end

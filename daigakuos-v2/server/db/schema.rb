@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_22_003759) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_22_011050) do
   create_table "goal_nodes", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "title"
@@ -31,6 +31,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_003759) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_moko_items_on_user_id"
+  end
+
+  create_table "moko_templates", force: :cascade do |t|
+    t.string "code"
+    t.string "name"
+    t.string "description"
+    t.string "image_url"
+    t.integer "required_level"
+    t.integer "phase"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_moko_templates_on_code"
   end
 
   create_table "sessions", force: :cascade do |t|
