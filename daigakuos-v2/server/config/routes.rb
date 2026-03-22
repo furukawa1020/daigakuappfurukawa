@@ -1,7 +1,7 @@
 Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
-      get 'mokos/index'
+      resources :mokos, only: [:index]
       post 'sync/push'
       get 'sync/pull'
     end
