@@ -52,7 +52,10 @@ class ApiService {
 
       final response = await http.post(
         Uri.parse('$baseUrl/sync/push'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
         body: jsonEncode(payload),
       );
 
