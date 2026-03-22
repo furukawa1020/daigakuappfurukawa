@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'services/api_service.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -238,6 +239,9 @@ class DatabaseHelper {
       'mood_pre': moodPre,
       'mood_post': moodPost,
     });
+    
+    // Phase 21: Push to cloud silently
+    ApiService.pushSync();
   }
 
   Future<List<Map<String, dynamic>>> getSessions({int limit = 50}) async {
