@@ -1,0 +1,24 @@
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline/io/windows.rb:1: warning: fiddle/import is found in fiddle, which is not part of the default gems since Ruby 4.0.0.
+You can add fiddle to your Gemfile or gemspec to fix this error.
+DEBUGGER: can not load newer irb for coloring. Write 'gem "debug" in your Gemfile.
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:15: warning: already initialized constant Reline::FILENAME_COMPLETION_PROC
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:15: warning: previous definition of FILENAME_COMPLETION_PROC was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:16: warning: already initialized constant Reline::USERNAME_COMPLETION_PROC
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:16: warning: previous definition of USERNAME_COMPLETION_PROC was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:22: warning: already initialized constant Reline::Key
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:22: warning: previous definition of Key was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:28: warning: already initialized constant Reline::CursorPos
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:28: warning: previous definition of CursorPos was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:29: warning: already initialized constant Reline::DialogRenderInfo
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:29: warning: previous definition of DialogRenderInfo was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:41: warning: already initialized constant Reline::Core::ATTR_READER_NAMES
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:41: warning: previous definition of ATTR_READER_NAMES was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:161: warning: already initialized constant Reline::Core::DialogProc
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:161: warning: previous definition of DialogProc was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:211: warning: already initialized constant Reline::DEFAULT_DIALOG_PROC_AUTOCOMPLETE
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:211: warning: previous definition of DEFAULT_DIALOG_PROC_AUTOCOMPLETE was here
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:248: warning: already initialized constant Reline::DEFAULT_DIALOG_CONTEXT
+C:/Ruby40-x64/lib/ruby/gems/4.0.0/gems/reline-0.6.3/lib/reline.rb:248: warning: previous definition of DEFAULT_DIALOG_CONTEXT was here
+      invoke  active_record
+      create    db/migrate/20260322003732_create_users.rb
+      create    app/models/user.rb
