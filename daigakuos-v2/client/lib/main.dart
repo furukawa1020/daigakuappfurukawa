@@ -41,6 +41,7 @@ import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
 import 'stats_screen.dart';
 import 'tree_screen.dart';
+import 'moko_dictionary_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -114,6 +115,7 @@ final _router = GoRouter(
     GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
     GoRoute(path: '/stats', builder: (context, state) => const StatsScreen()),
     GoRoute(path: '/tree', builder: (context, state) => const TreeScreen()),
+    GoRoute(path: '/server_dictionary', builder: (context, state) => const MokoDictionaryScreen()),
   ],
 );
 
