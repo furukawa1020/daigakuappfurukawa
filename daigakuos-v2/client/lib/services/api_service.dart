@@ -71,4 +71,26 @@ class ApiService {
       return false;
     }
   }
+
+  static Future<List<dynamic>> fetchMokoDictionary() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/mokos'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data['payload'] as List<dynamic>;
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Fetch Dictionary Error: $e');
+      return [];
+    }
+  }
 }
