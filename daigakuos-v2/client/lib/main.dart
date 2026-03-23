@@ -589,6 +589,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ).animate().fadeIn().slideY(begin: 0.2, end: 0),
 
                     const SizedBox(height: 16),
+
+                    // Server Moko Discovery UI
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(hapticsProvider.notifier).heavyImpact();
+                        context.push('/server_dictionary');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [Colors.purple.shade300, Colors.blue.shade300]),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [BoxShadow(color: Colors.purple.withOpacity(0.3), blurRadius: 10, offset: const Offset(0,4))],
+                        ),
+                        child: Row(
+                          children: [
+                            const Text("☁️", style: TextStyle(fontSize: 40)),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Moko Dictionary", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text("サーバーから新しいモコの種類を確認！", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                          ],
+                        ),
+                      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+                    ),
                     
                     const SizedBox(height: 32),
                     
