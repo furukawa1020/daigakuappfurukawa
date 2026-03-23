@@ -10,7 +10,14 @@ export '../services/pet_service.dart';
 // Models
 // -----------------------------------------------------------------------------
 
+class Session {
+  final int? id;
   final String? nodeId;
+  final DateTime startAt;
+  final int? durationMinutes;
+  final int? targetMinutes;
+  final String? moodPre;
+  final String? moodPost;
 
   Session({this.id, this.nodeId, required this.startAt, this.durationMinutes, this.targetMinutes, this.moodPre, this.moodPost});
 }

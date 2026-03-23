@@ -1496,7 +1496,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
         if (_selectedNodeId != null) {
           await DatabaseHelper().completeNode(_selectedNodeId!);
           // Bonus Coins for completing a planned task
-          await ref.read(currencyProvider.notifier).addCoins(10, type: CurrencyType.moko);
+          await ref.read(currencyProvider.notifier).addMokoCoins(10);
         }
 
         // 4. Reset Providers
