@@ -25,22 +25,6 @@ class PetDisplay extends ConsumerWidget {
     
     return GestureDetector(
       onTap: () {
-        ref.read(hapticsProvider.notifier).lightImpact();
-        _showRandomMessage(context, petState, ref);
-      },
-      child: MokoCard(
-        child: Row(
-          children: [
-            Text(
-              petState.emoji,
-              style: const TextStyle(fontSize: 56),
-            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(duration: 2.seconds, lowerBound: 0.9, upperBound: 1.1),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
                     petState.name,
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
