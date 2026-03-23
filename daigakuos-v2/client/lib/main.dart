@@ -694,7 +694,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ),
                                     ),
                                   ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
-                                ),
+                                )
                               else
                                 MokoCard(
                                   padding: const EdgeInsets.all(24),
