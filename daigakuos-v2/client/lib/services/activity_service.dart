@@ -1,16 +1,22 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final activityProvider = StateNotifierProvider<ActivityNotifier, bool>((ref) {
-  return ActivityNotifier();
-});
+final activityProvider = NotifierProvider<ActivityNotifier, bool>(ActivityNotifier.new);
 
-class ActivityNotifier extends StateNotifier<bool> {
+class ActivityNotifier extends Notifier<bool> {
   Timer? _idleTimer;
   static const Duration _idleThreshold = Duration(seconds: 10);
 
-  ActivityNotifier() : super(true) {
-    resetTimer();
+  @override
+  bool build() {
+    ref.onDispose(() {
+      _idleTimer?.cancel();
+    });
+    
+    _idleTimer = Timer(_idleThreshold, () {
+      state = false;
+    });
+    return true;
   }
 
   void resetTimer() {
@@ -19,11 +25,5 @@ class ActivityNotifier extends StateNotifier<bool> {
     _idleTimer = Timer(_idleThreshold, () {
       state = false; // User is idle
     });
-  }
-
-  @override
-  void dispose() {
-    _idleTimer?.cancel();
-    super.dispose();
   }
 }
