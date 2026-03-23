@@ -27,6 +27,11 @@ class SyncService
       
       user
     end
+
+    # Side-load heavy data processing via ActiveJob so the API responds instantly
+    ProcessUserStatsJob.perform_later(user.id) if user.persisted?
+    
+    user
   end
 
   private
