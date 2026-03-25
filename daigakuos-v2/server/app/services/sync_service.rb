@@ -26,6 +26,9 @@ class SyncService
       sync_moko_items(user, @params[:moko_items]) if @params[:moko_items].present?
       sync_goal_nodes(user, @params[:goal_nodes]) if @params[:goal_nodes].present?
       
+      # Invalidate ranking cache whenever XP or Level might have changed
+      RankingService.invalidate_cache
+      
       user
     end
 
@@ -44,6 +47,9 @@ class SyncService
         session.duration = s[:duration]
         session.points   = s[:points]
         session.quality  = s[:quality]
+        
+        # Record a focus activity for the live feed
+        user.create_activity("focus_complete", { duration: s[:duration], points: s[:points] })
       end
     end
   end

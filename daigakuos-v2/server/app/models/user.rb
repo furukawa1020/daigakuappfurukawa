@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   include Levelable
+  include Activable
   
   has_many :sessions, dependent: :destroy
   has_many :moko_items, dependent: :destroy
