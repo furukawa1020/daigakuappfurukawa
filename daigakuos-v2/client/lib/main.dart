@@ -632,6 +632,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
                     ),
                     
+                    const SizedBox(height: 16),
+                    const LiveFeedWidget(),
                     const SizedBox(height: 32),
                     
                     // "No-Pressure" One-Tap Start Section
