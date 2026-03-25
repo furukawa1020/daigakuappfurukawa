@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_25_025550) do
   create_table "goal_nodes", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "title"
@@ -78,7 +78,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
     t.datetime "last_sync_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "username"
     t.index ["device_id"], name: "index_users_on_device_id"
+    t.index ["username"], name: "index_users_on_username"
   end
 
   add_foreign_key "goal_nodes", "users"

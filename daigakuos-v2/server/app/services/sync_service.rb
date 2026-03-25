@@ -13,6 +13,7 @@ class SyncService
       
       # Update user stats safely
       user.update!(
+        username: @params[:username] || user.username,
         level: @params[:level] || user.level || 1,
         xp: @params[:xp] || user.xp || 0,
         streak: @params[:streak] || user.streak || 0,
