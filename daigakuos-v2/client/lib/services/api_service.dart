@@ -92,6 +92,8 @@ class ApiService {
       print('Fetch Dictionary Error: $e');
       return [];
     }
+  }
+
   static Future<List<dynamic>> fetchRankings() async {
     try {
       final response = await http.get(

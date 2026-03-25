@@ -42,6 +42,7 @@ import 'widgets/quick_start_button.dart';
 import 'stats_screen.dart';
 import 'tree_screen.dart';
 import 'moko_dictionary_screen.dart';
+import 'screens/social_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -116,6 +117,7 @@ final _router = GoRouter(
     GoRoute(path: '/stats', builder: (context, state) => const StatsScreen()),
     GoRoute(path: '/tree', builder: (context, state) => const TreeScreen()),
     GoRoute(path: '/server_dictionary', builder: (context, state) => const MokoDictionaryScreen()),
+    GoRoute(path: '/social', builder: (context, state) => const SocialScreen()),
   ],
 );
 
@@ -287,6 +289,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               centerTitle: false,
               backgroundColor: Colors.transparent,
             actions: [
+                IconButton(
+                  icon: const Icon(Icons.public, color: Color(0xFF6366F1)),
+                  onPressed: () {
+                    ref.read(hapticsProvider.notifier).lightImpact();
+                    context.push('/social');
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.bar_chart, color: Colors.brown),
                   onPressed: () => context.push('/stats'),
