@@ -92,5 +92,41 @@ class ApiService {
       print('Fetch Dictionary Error: $e');
       return [];
     }
+  static Future<List<dynamic>> fetchRankings() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/rankings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print('Fetch Rankings Error: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchGlobalStats() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/analytics'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('Fetch Global Stats Error: $e');
+      return {};
+    }
   }
 }
