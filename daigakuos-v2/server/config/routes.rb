@@ -7,6 +7,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      get 'analytics/index'
+      get 'analytics/heatmap'
       resources :rankings, only: [:index]
       resources :mokos, only: [:index]
       post 'sync/push'
