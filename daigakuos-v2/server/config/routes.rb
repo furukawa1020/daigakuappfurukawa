@@ -7,11 +7,17 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
-      get 'rankings/index'
+      resources :rankings, only: [:index]
       resources :mokos, only: [:index]
       post 'sync/push'
       get 'sync/pull'
     end
+  end
+
+  # Admin Web UI Portal
+  namespace :admin do
+    root to: "moko_templates#index"
+    resources :moko_templates
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
