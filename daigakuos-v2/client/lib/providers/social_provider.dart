@@ -4,13 +4,11 @@ import '../services/api_service.dart';
 final apiServiceProvider = Provider((ref) => ApiService());
 
 final globalRankingsProvider = FutureProvider<List<dynamic>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.fetchRankings();
+  return ApiService.fetchRankings();
 });
 
 final globalStatsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final api = ref.watch(apiServiceProvider);
-  return api.fetchGlobalStats();
+  return ApiService.fetchGlobalStats();
 });
 
 // For Activity Feed, we would normally use a WebSocket listener (ActionCable).
