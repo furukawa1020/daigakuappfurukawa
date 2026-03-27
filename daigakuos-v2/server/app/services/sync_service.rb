@@ -3,7 +3,7 @@ class SyncService
     @device_id = device_id
     @params = params
   end
-
+  def perform_push
     user = User.find_or_initialize_by(device_id: @device_id)
 
     # Execute all database operations within a transaction.
