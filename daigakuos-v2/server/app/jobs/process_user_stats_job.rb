@@ -28,7 +28,18 @@ class ProcessUserStatsJob < ApplicationJob
       Rails.logger.info "[ActionMailer] Queued weekly digest email for User ##{user.id}"
     end
     
-    # 4. ActionCable: Broadcast real-time activity
+    # 4. Moko Whisper Generation
+    # Generates a new personalized message based on the user's focus patterns
+    MokoWhisperJob.perform_later(user.id)
+
+    # 5. Moko Party Detection
+    # If other users synced in the last 10 minutes, trigger a "Party" event
+    active_users = User.where('last_sync_at > ?', 10.minutes.ago).where.not(id: user.id)
+    if active_users.any?
+      ActivityFeedChannel.broadcast_moko_party(active_users + [user])
+    end
+
+    # 6. ActionCable: Broadcast individual sync
     ActionCable.server.broadcast("activity_feed_channel", {
       user: user.username,
       type: "sync_completed",
