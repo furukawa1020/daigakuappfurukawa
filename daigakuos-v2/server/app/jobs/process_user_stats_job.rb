@@ -7,6 +7,9 @@ class ProcessUserStatsJob < ApplicationJob
 
     Rails.logger.info "[ActiveJob] Processing deep analytics for User ##{user.id} asynchronously..."
 
+    # 0. Mood Refresh
+    user.update_moko_mood!
+    
     total_duration = user.sessions.sum(:duration) || 0
     
     # 1. Advanced Reward Logic (Simulating heavy DB queries)
