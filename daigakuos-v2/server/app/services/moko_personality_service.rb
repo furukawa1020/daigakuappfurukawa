@@ -28,7 +28,8 @@ class MokoPersonalityService
 
   def self.generate_whisper(user)
     personality = select_personality(user)
-    msg = PERSONALITIES[personality][:templates].sample
+    raw_msg = PERSONALITIES[personality][:templates].sample
+    msg = MokoGrammarService.mokofize(raw_msg)
     { message: msg, tags: PERSONALITIES[personality][:tags] }
   end
 
