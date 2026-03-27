@@ -10,20 +10,32 @@ class MokoEvolutionService
   }.freeze
 
   def self.check_evolution(user)
-    current_stage = user.level / 10 + 1 # Simple example logic
-    current_stage = [current_stage, 6].min
-    
+    # 1. Start with basic hardcoded stage as fallback
+    current_stage = (user.level / 10 + 1).clamp(1, 6)
     stage_data = STAGES[current_stage]
     
-    # Logic for branching based on focus quality
+    # 2. Try to apply DSL-based specific dynamic rules
+    definition = MokoDefinition::Registry.get('default') # In future, u.current_moko_id
+    if definition && definition.behaviors[:evolution_rule]
+      # Dynamic evaluation using Ruby magic
+      # We pass the user context into the block
+      begin
+        custom_rule_result = user.instance_exec(&definition.behaviors[:evolution_rule])
+        current_stage = custom_rule_result if custom_rule_result.is_a?(Integer)
+      rescue => e
+        Rails.logger.error "[MokoDSL] Evolution rule error: #{e.message}"
+      end
+    end
+    
+    # Final data
     avg_quality = user.sessions.average(:quality) || 0
     special_trait = avg_quality > 4 ? "集中マスター" : "努力家"
     
     {
       stage: current_stage,
-      name: stage_data[:name],
+      name: STAGES[current_stage][:name],
       trait: special_trait,
-      unlocked: user.level >= stage_data[:min_level]
+      unlocked: user.level >= STAGES[current_stage][:min_level]
     }
   end
 end
