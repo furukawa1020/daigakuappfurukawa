@@ -14,6 +14,7 @@ class UserSerializer
         streak: user.streak,
         coins: user.coins,
         rest_days: user.rest_days,
+        whisper: user.whisper,
         last_sync_at: user.last_sync_at
       },
       sessions: user.sessions.map { |s| serialize_session(s) },
