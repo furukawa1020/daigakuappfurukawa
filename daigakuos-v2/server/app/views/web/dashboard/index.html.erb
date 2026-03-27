@@ -116,7 +116,7 @@
           <div class="moko-name"><%= u.username %> の相棒</div>
           <div style="font-size: 1.2rem; margin: 1rem 0;"><%= evo[:name] %> 🐾</div>
           <div style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 0.5rem;">
-            特性: <%= evo[:trait] %>
+            特性: <%= evo[:trait] %> | 気分: <span style="font-weight: bold; color: var(--primary);"><%= u.moko_mood&.upcase %></span>
           </div>
           <div style="font-size: 0.85rem; font-style: italic; color: #e2e8f0; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0.5rem;">
             「<%= u.whisper ? u.whisper["message"] : "もこもこ！一緒に頑張ろう！" %>」
