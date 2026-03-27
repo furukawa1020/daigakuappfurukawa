@@ -1,5 +1,6 @@
 # Global Moko Definitions using our new DSL
-MokoDefinition.define 'default' do
+if defined?(MokoDefinition)
+  MokoDefinition.define 'default' do
   on_sync do
     # This block executes in the context of the User
     MokoGrammarService.mokofize("今日も同期を完了しますもこよ！")
