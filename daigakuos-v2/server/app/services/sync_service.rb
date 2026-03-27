@@ -4,13 +4,10 @@ class SyncService
     @params = params
   end
 
-  def perform_push
+    user = User.find_or_initialize_by(device_id: @device_id)
+
     # Execute all database operations within a transaction.
-    # If any operation fails and raises an exception (like RecordInvalid), 
-    # it rolls back everything, ensuring the database is never left in an inconsistent state.
     ActiveRecord::Base.transaction do
-      user = User.find_or_initialize_by(device_id: @device_id)
-      
       # Update user stats safely
       user.update!(
         username: @params[:username] || user.username,
@@ -25,11 +22,6 @@ class SyncService
       sync_sessions(user, @params[:sessions]) if @params[:sessions].present?
       sync_moko_items(user, @params[:moko_items]) if @params[:moko_items].present?
       sync_goal_nodes(user, @params[:goal_nodes]) if @params[:goal_nodes].present?
-      
-      # Invalidate ranking cache whenever XP or Level might have changed
-      RankingService.invalidate_cache
-      
-      user
     end
 
     # Side-load heavy data processing via ActiveJob so the API responds instantly
