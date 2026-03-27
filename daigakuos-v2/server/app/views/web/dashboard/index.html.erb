@@ -102,6 +102,41 @@
       </div>
     </div>
 
+    <h2 class="section-title">Community Intelligence & Performance</h2>
+    <div class="stats-grid">
+      <div class="stat-card" style="border-left: 4px solid var(--secondary);">
+        <div class="stat-title">Recent Activity Latency</div>
+        <div style="margin-top: 1rem; font-size: 0.8rem;">
+          <% if @recent_perf.any? %>
+            <% @recent_perf.each do |p| %>
+              <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                <span style="color: var(--text-muted);"><%= p[:path] %></span>
+                <span style="color: <%= p[:duration] > 200 ? '#f87171' : '#4ade80' %>;"><%= p[:duration] %>ms</span>
+              </div>
+            <% end %>
+          <% else %>
+            <div style="color: var(--text-muted);">No metrics yet. Try syncing from the app!</div>
+          <% end %>
+        </div>
+      </div>
+      
+      <% report = Rails.cache.read("global_report_#{Date.today}") %>
+      <div class="stat-card" style="border-left: 4px solid #c084fc;">
+        <div class="stat-title">Daily Community Pulse</div>
+        <% if report %>
+          <div style="margin-top: 1rem;">
+            <div style="font-size: 1.1rem; font-weight: 600;"><%= report[:popular_moko] || "???" %></div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Today's Most Popular Moko</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+              Updated: <%= report[:generated_at].strftime("%H:%M") %>
+            </div>
+          </div>
+        <% else %>
+          <div style="margin-top: 1rem; color: var(--text-muted);">Generating today's report...</div>
+        <% end %>
+      </div>
+    </div>
+
     <h2 class="section-title">Moko Dictionary (Server-Side)</h2>
     <div class="moko-grid">
       <% @mokos.each do |moko| %>
