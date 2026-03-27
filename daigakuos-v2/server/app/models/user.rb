@@ -11,9 +11,27 @@ class User < ApplicationRecord
   validates :level, numericality: { greater_than_or_equal_to: 1 }
   validates :xp, :streak, :coins, :rest_days, numericality: { greater_than_or_equal_to: 0 }
 
-  before_validation :ensure_username
+  before_validation :ensure_username, :ensure_mood
+
+  def update_moko_mood!
+    recent_sessions = sessions.where('started_at > ?', 24.hours.ago)
+    total_min = recent_sessions.sum(:duration) || 0
+    
+    self.moko_mood = if total_min > 120
+      "focus_god"
+    elsif total_min > 30
+      "happy"
+    else
+      "sleepy"
+    end
+    save!
+  end
 
   private
+
+  def ensure_mood
+    self.moko_mood ||= "sleepy"
+  end
 
   def ensure_username
     self.username ||= "MokoUser_#{device_id.last(4)}" if device_id.present?

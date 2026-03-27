@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_27_045804) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_27_055557) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -89,6 +89,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_27_045804) do
     t.datetime "updated_at", null: false
     t.string "username"
     t.json "whisper"
+    t.string "moko_mood"
     t.index ["device_id"], name: "index_users_on_device_id"
     t.index ["username"], name: "index_users_on_username"
   end
