@@ -102,6 +102,29 @@
       </div>
     </div>
 
+    <h2 class="section-title">Active Mokos in the World</h2>
+    <div class="moko-grid">
+      <% @users.each do |data| %>
+        <% u = data[:user] %>
+        <% evo = data[:evolution] %>
+        <div class="moko-card" style="position: relative; overflow: hidden;">
+          <% if evo[:unlocked] %>
+            <div style="position: absolute; top: 10px; right: 10px; font-size: 0.7rem; background: var(--primary); padding: 2px 8px; border-radius: 1rem; color: var(--bg); font-weight: bold;">
+              EVOLVED
+            </div>
+          <% end %>
+          <div class="moko-name"><%= u.username %> の相棒</div>
+          <div style="font-size: 1.2rem; margin: 1rem 0;"><%= evo[:name] %> 🐾</div>
+          <div style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 0.5rem;">
+            特性: <%= evo[:trait] %>
+          </div>
+          <div style="font-size: 0.85rem; font-style: italic; color: #e2e8f0; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0.5rem;">
+            「<%= u.whisper ? u.whisper["message"] : "もこもこ！一緒に頑張ろう！" %>」
+          </div>
+        </div>
+      <% end %>
+    </div>
+
     <h2 class="section-title">Community Intelligence & Performance</h2>
     <div class="stats-grid">
       <div class="stat-card" style="border-left: 4px solid var(--secondary);">
@@ -185,9 +208,67 @@
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 500);
           }, 4000);
+        } else if (data.type === "moko_party") {
+          console.log("🎉 Moko Party Event!", data);
+          
+          // Create a party announcement
+          const party = document.createElement('div');
+          party.style.position = 'fixed';
+          party.style.top = '50%';
+          party.style.left = '50%';
+          party.style.transform = 'translate(-50%, -50%)';
+          party.style.background = 'linear-gradient(135deg, #c084fc, #38bdf8)';
+          party.style.color = 'white';
+          party.style.padding = '2rem 3rem';
+          party.style.borderRadius = '2rem';
+          party.style.boxShadow = '0 20px 25px -5px rgba(0,0,0,0.5)';
+          party.style.zIndex = '10000';
+          party.style.textAlign = 'center';
+          party.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+          party.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🐾🎉🐾</div>
+            <div style="font-size: 1.5rem; font-weight: bold;">Moko Party Started!</div>
+            <div style="margin-top: 0.5rem;">${data.message}</div>
+          `;
+          
+          document.body.appendChild(party);
+          
+          // Confetti effect simulation (simple CSS)
+          for(let i=0; i<30; i++) {
+            const p = document.createElement('div');
+            p.style.position = 'fixed';
+            p.style.top = '-10px';
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.width = '10px';
+            p.style.height = '10px';
+            p.style.background = ['#38bdf8', '#c084fc', '#fbbf24', '#f87171'][Math.floor(Math.random()*4)];
+            p.style.borderRadius = '50%';
+            p.style.zIndex = '10001';
+            p.style.animation = `fall ${1 + Math.random() * 2}s linear forwards`;
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 3000);
+          }
+          
+          setTimeout(() => {
+            party.style.opacity = '0';
+            setTimeout(() => party.remove(), 500);
+          }, 6000);
         }
       }
     });
+
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes popIn {
+        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      }
+      @keyframes fall {
+        to { transform: translateY(110vh) rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
