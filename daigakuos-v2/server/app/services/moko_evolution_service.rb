@@ -28,7 +28,7 @@ class MokoEvolutionService
     end
     
     # Final data
-    avg_quality = user.sessions.average(:quality) || 0
+    avg_quality = (user.sessions.average(:quality) || 0).to_f
     special_trait = avg_quality > 4 ? "集中マスター" : "努力家"
     
     {
