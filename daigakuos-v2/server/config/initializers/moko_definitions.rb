@@ -17,4 +17,5 @@ if defined?(MokoDefinition)
       nil # Fallback to standard logic
     end
   end
+  end
 end
