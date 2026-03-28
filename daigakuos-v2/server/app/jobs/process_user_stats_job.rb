@@ -40,6 +40,8 @@ class ProcessUserStatsJob < ApplicationJob
     active_users = User.where('last_sync_at > ?', 10.minutes.ago).where.not(id: user.id)
     if active_users.any?
       ActivityFeedChannel.broadcast_moko_party(active_users + [user])
+      # Also trigger a gift from the current user's moko
+      MokoGiftJob.perform_later(user.id)
     end
 
     # 6. ActionCable: Broadcast individual sync
