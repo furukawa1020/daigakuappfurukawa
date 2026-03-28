@@ -18,7 +18,7 @@ class UserSerializer
         moko_mood: user.moko_mood,
         last_sync_at: user.last_sync_at
       },
-      vfx_hints: VFXHintService.determine_hints(user),
+      vfx_hints: VfxHintService.determine_hints(user),
       social_events: user.social_events.order(created_at: :desc).limit(5).map { |e| serialize_social_event(e) },
       sessions: user.sessions.map { |s| serialize_session(s) },
       moko_items: user.moko_items.map { |m| serialize_moko(m) },
