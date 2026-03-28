@@ -118,9 +118,18 @@
           <div style="font-size: 0.8rem; color: var(--secondary); margin-bottom: 0.5rem;">
             特性: <%= evo[:trait] %> | 気分: <span style="font-weight: bold; color: var(--primary);"><%= u.moko_mood&.upcase %></span>
           </div>
-          <div style="font-size: 0.85rem; font-style: italic; color: #e2e8f0; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0.5rem;">
+          <div style="font-size: 0.85rem; font-style: italic; color: #e2e8f0; background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem;">
             「<%= u.whisper ? u.whisper["message"] : "もこもこ！一緒に頑張ろう！" %>」
           </div>
+          <% recent_events = u.social_events.order(created_at: :desc).limit(2) %>
+          <% if recent_events.any? %>
+            <div style="text-align: left; font-size: 0.75rem; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 0.4rem;">
+              <div style="color: var(--primary); font-weight: bold; margin-bottom: 2px;">Recent Social:</div>
+              <% recent_events.each do |e| %>
+                <div style="margin-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.05);"><%= e.metadata["message"] || e.event_type %></div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
       <% end %>
     </div>
@@ -253,6 +262,26 @@
             party.style.opacity = '0';
             setTimeout(() => party.remove(), 500);
           }, 6000);
+        } else if (data.type === "moko_gift") {
+          console.log("🎁 Moko Gift Event!", data);
+          const toast = document.createElement('div');
+          toast.style.position = 'fixed';
+          toast.style.bottom = '80px';
+          toast.style.right = '20px';
+          toast.style.background = '#fbbf24';
+          toast.style.color = 'black';
+          toast.style.padding = '0.75rem 1rem';
+          toast.style.borderRadius = '0.5rem';
+          toast.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.3)';
+          toast.style.zIndex = '9999';
+          toast.style.fontWeight = 'bold';
+          toast.style.animation = 'popIn 0.3s ease-out';
+          toast.innerHTML = `🎁 ${data.message}`;
+          document.body.appendChild(toast);
+          setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+          }, 5000);
         }
       }
     });

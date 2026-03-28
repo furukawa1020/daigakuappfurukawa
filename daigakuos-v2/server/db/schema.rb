@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_27_055557) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_28_065425) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -77,6 +77,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_27_055557) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "social_events", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "event_type"
+    t.json "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_social_events_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "device_id"
     t.integer "level"
@@ -99,4 +108,5 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_27_055557) do
   add_foreign_key "moko_items", "users"
   add_foreign_key "reminders", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "social_events", "users"
 end
