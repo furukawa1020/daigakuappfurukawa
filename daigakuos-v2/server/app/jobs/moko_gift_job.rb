@@ -16,15 +16,15 @@ class MokoGiftJob < ApplicationJob
     gift_amount = rand(5..20)
     recipient.update!(coins: recipient.coins + gift_amount)
     
+    # Broadcast the news!
+    msg = "#{sender.username}のモコが、#{recipient.username}のモコに#{gift_amount}コインをプレゼントしました！🎁"
+    msg = MokoGrammarService.mokofize(msg)
+
     # Record the event for the recipient
     recipient.social_events.create!(
       event_type: "gift_received",
       metadata: { from: sender.username, amount: gift_amount, message: msg }
     )
-    
-    # Broadcast the news!
-    msg = "#{sender.username}のモコが、#{recipient.username}のモコに#{gift_amount}コインをプレゼントしました！🎁"
-    msg = MokoGrammarService.mokofize(msg)
     
     ActionCable.server.broadcast("activity_feed", {
       type: "moko_gift",
