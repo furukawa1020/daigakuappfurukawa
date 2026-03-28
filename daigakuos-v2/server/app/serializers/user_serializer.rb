@@ -54,6 +54,8 @@ class UserSerializer
       completed: goal.completed,
       completed_at: goal.completed_at
     }
+  end
+
   def serialize_social_event(event)
     {
       type: event.event_type,
