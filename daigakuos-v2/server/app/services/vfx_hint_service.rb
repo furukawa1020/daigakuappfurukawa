@@ -1,4 +1,4 @@
-class VFXHintService
+class VfxHintService
   # Suggest visual effects based on user events
   def self.determine_hints(user)
     hints = []
