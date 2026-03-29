@@ -11,9 +11,21 @@ class MokoDefinition
     @behaviors[:on_sync] = block
   end
 
-  # DSL method to define evolution rules
-  def evolution_rule(&block)
-    @behaviors[:evolution_rule] = block
+  # DSL method to  def on_sync(&block); @on_sync = block; end
+  def evolution_rule(&block); @evolution_rule = block; end
+  def on_global_event(&block); @on_global_event = block; end
+  
+  attr_reader :on_sync_block, :evolution_block, :on_global_event_block
+  
+  def initialize(name)
+    @name = name
+  end
+
+  def define(&block)
+    instance_eval(&block)
+    @on_sync_block = @on_sync
+    @evolution_block = @evolution_rule
+    @on_global_event_block = @on_global_event
   end
 
   def self.define(moko_id, &block)
