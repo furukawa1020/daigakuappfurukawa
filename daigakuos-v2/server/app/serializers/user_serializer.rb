@@ -20,6 +20,7 @@ class UserSerializer
       },
       vfx_hints: VfxHintService.determine_hints(user),
       social_events: user.social_events.order(created_at: :desc).limit(5).map { |e| serialize_social_event(e) },
+      world_status: MokoWorldService.current_status,
       sessions: user.sessions.map { |s| serialize_session(s) },
       moko_items: user.moko_items.map { |m| serialize_moko(m) },
       goal_nodes: user.goal_nodes.map { |g| serialize_goal(g) }
