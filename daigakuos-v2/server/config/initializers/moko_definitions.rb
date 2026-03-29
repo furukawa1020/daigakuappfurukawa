@@ -6,6 +6,14 @@ if defined?(MokoDefinition)
     MokoGrammarService.mokofize("今日も同期を完了しますもこよ！")
   end
 
+  on_global_event do |weather|
+    case weather
+    when "focus_storm" then "ストーム発生中もこ！一気に追い上げるチャンスもこ！🔥"
+    when "moko_festival" then "お祭り気分だもこ！みんなで楽しももこ！🎁"
+    else nil
+    end
+  end
+
   evolution_rule do
     # This block executes in context of User
     # Returns the target stage ID
