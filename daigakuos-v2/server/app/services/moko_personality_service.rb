@@ -27,6 +27,18 @@ class MokoPersonalityService
   }.freeze
 
   def self.generate_whisper(user)
+    # 1. Global Event Priority
+    world = MokoWorldService.current_status
+    moko_defn = MokoDefinition::Registry.get('default')
+    
+    if moko_defn && moko_defn.on_global_event_block
+      global_msg = user.instance_exec(world[:weather], &moko_defn.on_global_event_block)
+      if global_msg
+        return { message: global_msg, tags: ["ワールドイベント", world[:weather]] }
+      end
+    end
+
+    # 2. Personality Fallback
     personality = select_personality(user)
     raw_msg = PERSONALITIES[personality][:templates].sample
     msg = MokoGrammarService.mokofize(raw_msg)

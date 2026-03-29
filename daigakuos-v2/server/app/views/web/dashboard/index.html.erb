@@ -87,6 +87,13 @@
       <div style="color: var(--text-muted);">Ruby on Rails <%= Rails.version %></div>
     </header>
 
+  <!-- Moko World Status Banner -->
+  <% world = MokoWorldService.current_status %>
+  <div id="world-banner" style="background: linear-gradient(90deg, #3b82f6, #8b5cf6); padding: 1rem; text-align: center; font-weight: bold; margin-bottom: 2rem; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    🌍 <span id="world-weather"><%= world[:weather]&.upcase %></span>: 
+    <span id="world-event-name" style="color: #fbbf24; margin-left: 0.5rem;"><%= world[:event_name] %></span>
+  </div>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-title">Total Users</div>
@@ -282,6 +289,18 @@
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 500);
           }, 5000);
+        } else if (data.type === "world_weather_change") {
+          console.log("🌍 World Weather Changed!", data.status);
+          const weatherEl = document.getElementById('world-weather');
+          const eventEl = document.getElementById('world-event-name');
+          const banner = document.getElementById('world-banner');
+          
+          if (weatherEl) weatherEl.innerText = data.status.weather.toUpperCase();
+          if (eventEl) eventEl.innerText = data.status.event_name;
+          
+          // Flash effect
+          banner.style.animation = 'pulse 1s ease-in-out';
+          setTimeout(() => banner.style.animation = '', 1000);
         }
       }
     });
