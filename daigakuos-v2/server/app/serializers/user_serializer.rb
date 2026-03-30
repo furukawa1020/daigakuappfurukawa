@@ -16,8 +16,10 @@ class UserSerializer
         rest_days: user.rest_days,
         whisper: user.whisper,
         moko_mood: user.moko_mood,
+        materials: user.materials || {},
         last_sync_at: user.last_sync_at
       },
+      active_buffs: FocusSynergyService.calculate_buffs(user),
       vfx_hints: VfxHintService.determine_hints(user),
       social_events: user.social_events.order(created_at: :desc).limit(5).map { |e| serialize_social_event(e) },
       world_status: MokoWorldService.current_status,
