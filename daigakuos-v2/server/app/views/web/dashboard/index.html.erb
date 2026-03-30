@@ -130,11 +130,27 @@
           </div>
           <% recent_events = u.social_events.order(created_at: :desc).limit(2) %>
           <% if recent_events.any? %>
-            <div style="text-align: left; font-size: 0.75rem; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 0.4rem;">
+            <div style="text-align: left; font-size: 0.75rem; background: rgba(56, 189, 248, 0.1); padding: 0.5rem; border-radius: 0.4rem; margin-bottom: 0.5rem;">
               <div style="color: var(--primary); font-weight: bold; margin-bottom: 2px;">Recent Social:</div>
               <% recent_events.each do |e| %>
                 <div style="margin-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.05);"><%= e.metadata["message"] || e.event_type %></div>
               <% end %>
+            </div>
+          <% end %>
+
+          <!-- Phase 33: Materials & Synergy -->
+          <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.5rem;">
+            <% (u.materials || {}).each do |mat, qty| %>
+              <div title="<%= mat %>" style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px; font-size: 0.7rem;">
+                <%= mat == "moko_stone" ? "💎" : "✨" %> <%= qty %>
+              </div>
+            <% end %>
+          </div>
+
+          <% buffs = FocusSynergyService.calculate_buffs(u) %>
+          <% if buffs.any? %>
+            <div style="font-size: 0.7rem; color: #10b981; font-weight: bold;">
+              ⚡ BUFF: <%= buffs.map{|b| b[:name]}.join(", ") %>
             </div>
           <% end %>
         </div>
