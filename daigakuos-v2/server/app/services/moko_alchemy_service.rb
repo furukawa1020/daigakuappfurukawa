@@ -11,11 +11,11 @@ class MokoAlchemyService
     stones = (user.materials["moko_stone"] || 0).to_i
     if user.coins.to_i >= UPGRADE_COST_COINS && stones >= UPGRADE_COST_STONES
       ActiveRecord::Base.transaction do
-        user.update!(coins: user.coins - UPGRADE_COST_COINS)
-        user.materials["moko_stone"] -= UPGRADE_COST_STONES
+        user.update!(coins: user.coins.to_i - UPGRADE_COST_COINS)
+        user.materials["moko_stone"] = user.materials["moko_stone"].to_i - UPGRADE_COST_STONES
         user.save!
         
-        moko.update!(rarity: moko.rarity + 1)
+        moko.update!(rarity: moko.rarity.to_i + 1)
       end
       
       msg = MokoGrammarService.mokofize("#{moko_item_id}がランクアップしましたもこ！ピカピカだもこ！✨")
