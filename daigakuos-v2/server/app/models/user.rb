@@ -28,10 +28,17 @@ class User < ApplicationRecord
     save!
   end
 
+  def add_material!(name, amount = 1)
+    self.materials ||= {}
+    self.materials[name] = (self.materials[name] || 0) + amount
+    save!
+  end
+
   private
 
   def ensure_mood
     self.moko_mood ||= "sleepy"
+    self.materials ||= { "moko_stone" => 0, "star_dust" => 0 }
   end
 
   def ensure_username

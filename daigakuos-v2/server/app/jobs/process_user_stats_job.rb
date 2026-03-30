@@ -10,6 +10,12 @@ class ProcessUserStatsJob < ApplicationJob
     # 0. Mood Refresh
     user.update_moko_mood!
     
+    # 0.1 Material Drop (Meaningful rewards)
+    if (user.sessions.last&.quality || 0) >= 4
+      user.add_material!("moko_stone", rand(1..3))
+      user.add_material!("star_dust", 1) if rand > 0.7
+    end
+    
     total_duration = user.sessions.sum(:duration) || 0
     
     # 1. Advanced Reward Logic (Simulating heavy DB queries)
