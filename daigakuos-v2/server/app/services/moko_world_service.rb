@@ -1,33 +1,30 @@
 class MokoWorldService
   WEATHER_TYPES = %w[sunny focus_storm moko_festival foggy starry_night]
+  @@world_status = {
+    weather: "sunny",
+    event_name: "通常運行もこ",
+    started_at: Time.current
+  }.with_indifferent_access
 
   def self.current_status
-    status = Rails.cache.fetch("moko_world_status", expires_in: 1.hour) do
-      {
-        weather: "sunny",
-        event_name: "通常運行もこ",
-        started_at: Time.current
-      }
-    end
-    status.with_indifferent_access
+    @@world_status
   end
 
   def self.change_weather!(weather_type = nil)
     weather_type ||= WEATHER_TYPES.sample
-    new_status = {
+    @@world_status = {
       weather: weather_type,
       event_name: event_name_for(weather_type),
       started_at: Time.current
-    }
-    Rails.cache.write("moko_world_status", new_status)
+    }.with_indifferent_access
     
     # Broadcast to everyone!
     ActionCable.server.broadcast("activity_feed", {
       type: "world_weather_change",
-      status: new_status
+      status: @@world_status
     })
     
-    new_status
+    @@world_status
   end
 
   private
