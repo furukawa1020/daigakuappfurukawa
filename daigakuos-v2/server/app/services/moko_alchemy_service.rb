@@ -6,10 +6,10 @@ class MokoAlchemyService
   def self.craft_upgrade!(user, moko_item_id)
     moko = user.moko_items.find_by(item_id: moko_item_id)
     return { success: false, error: "Not found" } unless moko
-    return { success: false, error: "Max rarity reached" } if moko.rarity >= 5
+    return { success: false, error: "Max rarity reached" } if moko.rarity.to_i >= 5
 
-    stones = user.materials["moko_stone"] || 0
-    if user.coins >= UPGRADE_COST_COINS && stones >= UPGRADE_COST_STONES
+    stones = (user.materials["moko_stone"] || 0).to_i
+    if user.coins.to_i >= UPGRADE_COST_COINS && stones >= UPGRADE_COST_STONES
       ActiveRecord::Base.transaction do
         user.update!(coins: user.coins - UPGRADE_COST_COINS)
         user.materials["moko_stone"] -= UPGRADE_COST_STONES
