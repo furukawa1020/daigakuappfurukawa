@@ -11,7 +11,7 @@ class ProcessUserStatsJob < ApplicationJob
     user.update_moko_mood!
     
     # 0.1 Material Drop (Meaningful rewards)
-    if (user.sessions.last&.quality || 0) >= 4
+    if (user.sessions.last&.quality.to_i || 0) >= 4
       user.add_material!("moko_stone", rand(1..3))
       user.add_material!("star_dust", 1) if rand > 0.7
     end
@@ -28,7 +28,7 @@ class ProcessUserStatsJob < ApplicationJob
 
     # 2. Ranking Cache Invalidation
     # This ensures global leaderboard stays fresh after user data changes
-    RankingService.clear_cache
+    RankingService.invalidate_cache
     Rails.logger.info "[ActiveJob] 🏅 Ranking cache cleared after User ##{user.id} update."
 
     # 3. ActionMailer: Queueing weekly digest emails on Fridays
