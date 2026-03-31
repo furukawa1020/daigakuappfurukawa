@@ -14,6 +14,13 @@ class ProcessUserStatsJob < ApplicationJob
     if (user.sessions.last&.quality.to_i || 0) >= 4
       user.add_material!("moko_stone", rand(1..3))
       user.add_material!("star_dust", 1) if rand > 0.7
+    # 0.2 Moko Expeditions (Quest Progress & Boss Battles)
+    last_session = user.sessions.last
+    if last_session
+      expedition_result = ExpeditionEngineService.process_session!(user, last_session)
+      if expedition_result
+        Rails.logger.info "[ActiveJob] ⚔️ Expedition #{expedition_result[:status]}: Dealt #{expedition_result[:damage]} damage!"
+      end
     end
     
     total_duration = user.sessions.sum(:duration) || 0
