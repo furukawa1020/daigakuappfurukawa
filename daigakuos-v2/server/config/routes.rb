@@ -7,6 +7,8 @@ Rails.application.routes.draw do
 
   namespace :api do
     namespace :v1 do
+      get 'expeditions/start_quest'
+      get 'expeditions/abandon_quest'
       get 'alchemy/craft_upgrade'
       resources :rankings, only: [:index]
       resources :analytics, only: [:index] do
