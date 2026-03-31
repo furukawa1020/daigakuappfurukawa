@@ -10,7 +10,7 @@ class ApiService {
   // Use http://127.0.0.1:3000 for iOS Simulator and Windows Desktop.
   static String get baseUrl {
     if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/v1';
+      return 'http://10.103.176.253:3000/api/v1';
     } else {
       return 'http://127.0.0.1:3000/api/v1';
     }
