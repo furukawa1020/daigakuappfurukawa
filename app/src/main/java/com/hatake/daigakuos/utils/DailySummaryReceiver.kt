@@ -104,7 +104,7 @@ class DailySummaryReceiver : BroadcastReceiver() {
             context, 0, tapIntent, PendingIntent.FLAG_IMMUTABLE
         )
 
-        val streakText = if (streak > 0) "🔥 $streak日連続！" else "今日から始めよう！"
+        val streakText = if (streak > 0) "🔥 ${streak}日連続！" else "今日から始めよう！"
         val xpText = if (xp > 0) "今日の獲得XP: $xp" else "まだ記録がありません"
 
         val notif = NotificationCompat.Builder(context, channelId)
