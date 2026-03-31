@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_30_020020) do
+ActiveRecord::Schema[7.1].define(version: 2026_03_31_005904) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -30,6 +30,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_30_020020) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_goal_nodes_on_user_id"
+  end
+
+  create_table "moko_expeditions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "name"
+    t.integer "difficulty"
+    t.integer "required_focus_minutes"
+    t.float "progress"
+    t.string "status"
+    t.integer "monster_hp"
+    t.json "rewards"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_moko_expeditions_on_user_id"
   end
 
   create_table "moko_items", force: :cascade do |t|
@@ -106,6 +120,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_30_020020) do
 
   add_foreign_key "activities", "users"
   add_foreign_key "goal_nodes", "users"
+  add_foreign_key "moko_expeditions", "users"
   add_foreign_key "moko_items", "users"
   add_foreign_key "reminders", "users"
   add_foreign_key "sessions", "users"
