@@ -5,7 +5,7 @@ class ExpeditionEngineService
     return nil unless expedition
 
     # 1. Base Damage/Progress = Duration in minutes
-    base_progress = session.duration / 60.0
+    base_progress = session.duration.to_f
     
     # 2. Synergy Multiplier
     active_buffs = FocusSynergyService.calculate_buffs(user)
