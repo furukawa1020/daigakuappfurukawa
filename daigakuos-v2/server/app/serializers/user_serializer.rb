@@ -21,6 +21,7 @@ class UserSerializer
       },
       active_buffs: FocusSynergyService.calculate_buffs(user),
       vfx_hints: VfxHintService.determine_hints(user),
+      active_expedition: user.moko_expeditions.active.first&.as_json(only: [:name, :difficulty, :progress, :required_focus_minutes, :monster_hp, :rewards]),
       social_events: user.social_events.order(created_at: :desc).limit(5).map { |e| serialize_social_event(e) },
       world_status: MokoWorldService.current_status,
       sessions: user.sessions.map { |s| serialize_session(s) },
