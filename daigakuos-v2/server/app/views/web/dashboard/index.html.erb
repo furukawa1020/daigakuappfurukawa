@@ -138,6 +138,19 @@
             </div>
           <% end %>
 
+          <!-- Phase 34: Active Expedition (Boss Battle) -->
+          <% active_exp = u.moko_expeditions.active.first %>
+          <% if active_exp %>
+            <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 0.5rem; border-radius: 0.4rem; margin-bottom: 0.5rem;">
+              <div style="font-size: 0.75rem; color: #fca5a5; font-weight: bold; margin-bottom: 4px;">⚔️ <%= active_exp.name %></div>
+              <% hp_percent = [(active_exp.monster_hp.to_f / active_exp.required_focus_minutes) * 100, 100].min %>
+              <div style="background: rgba(0,0,0,0.3); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 2px;">
+                <div style="width: <%= hp_percent %>%; height: 100%; background: #ef4444;"></div>
+              </div>
+              <div style="font-size: 0.65rem; color: #fca5a5; text-align: right;">HP: <%= active_exp.monster_hp %></div>
+            </div>
+          <% end %>
+
           <!-- Phase 33: Materials & Synergy -->
           <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.5rem;">
             <% (u.materials || {}).each do |mat, qty| %>
