@@ -14,6 +14,7 @@ class ProcessUserStatsJob < ApplicationJob
     if (user.sessions.last&.quality.to_i || 0) >= 4
       user.add_material!("moko_stone", rand(1..3))
       user.add_material!("star_dust", 1) if rand > 0.7
+      MokoNativeCommandService.vibrate!(user, pattern: 'light')
     end
     
     # 0.2 Moko Expeditions (Quest Progress & Boss Battles)
@@ -22,6 +23,12 @@ class ProcessUserStatsJob < ApplicationJob
       expedition_result = ExpeditionEngineService.process_session!(user, last_session)
       if expedition_result
         Rails.logger.info "[ActiveJob] ⚔️ Expedition #{expedition_result[:status]}: Dealt #{expedition_result[:damage]} damage!"
+        
+        if expedition_result[:status] == 'completed'
+          MokoNativeCommandService.vibrate!(user, pattern: 'heavy')
+          MokoNativeCommandService.notify!(user, title: "クエスト達成🎉", body: "ボスを討伐したもこ！報酬をゲットしたよ！")
+          MokoNativeCommandService.play_sound!(user, sound_name: 'quest_clear.mp3')
+        end
       end
     end
     
@@ -57,6 +64,8 @@ class ProcessUserStatsJob < ApplicationJob
       ActivityFeedChannel.broadcast_moko_party(active_users + [user])
       # Also trigger a gift from the current user's moko
       MokoGiftJob.perform_later(user.id)
+      MokoNativeCommandService.vibrate!(user, pattern: 'medium')
+      MokoNativeCommandService.notify!(user, title: "モコパーティ開始！", body: "他のモコたちが集まってきたもこ！")
     end
 
     # 6. ActionCable: Broadcast individual sync
