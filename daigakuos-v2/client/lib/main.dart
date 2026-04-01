@@ -45,6 +45,9 @@ import 'moko_dictionary_screen.dart';
 import 'screens/social_screen.dart';
 import 'widgets/live_feed_widget.dart';
 
+import 'services/native_command_listener.dart';
+import 'services/api_service.dart';
+
 // -----------------------------------------------------------------------------
 // 1. Models & State
 // -----------------------------------------------------------------------------
@@ -121,9 +124,6 @@ final _router = GoRouter(
     GoRoute(path: '/social', builder: (context, state) => const SocialScreen()),
   ],
 );
-
-import 'services/native_command_listener.dart';
-import 'services/api_service.dart';
 
 void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
