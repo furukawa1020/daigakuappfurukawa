@@ -122,6 +122,9 @@ final _router = GoRouter(
   ],
 );
 
+import 'services/native_command_listener.dart';
+import 'services/api_service.dart';
+
 void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
   await NotificationService().init(); // Init notifications
@@ -132,6 +135,11 @@ void main() async { // Async main
       todayXP: ((stats['dailyPoints'] as double?) ?? 0.0).toInt(),
       streak: (stats['currentStreak'] as int?) ?? 0,
     );
+  });
+
+  // ActionCable Native Bridge Init
+  ApiService.getDeviceId().then((deviceId) {
+    NativeCommandListener.init(deviceId);
   });
 
   runApp(const ProviderScope(child: DaigakuAPPApp()));
