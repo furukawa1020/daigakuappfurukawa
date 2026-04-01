@@ -1,0 +1,89 @@
+class RaidEngineService
+  # Processes damage against the global raid boss based on user session duration.
+  # Handles concurrency by using database record locking.
+
+  def self.process_damage!(user, duration)
+    return nil if duration <= 0
+
+    # Base damage: 1 minute = 10 damage
+    damage = duration * 10
+
+    # Party Synergy: Calculate how many users synced recently
+    active_users_count = User.where('last_sync_at > ?', 15.minutes.ago).count
+    multiplier = 1.0 + (active_users_count * 0.1) # 10% bonus per active user
+    final_damage = (damage * multiplier).to_i
+
+    GlobalRaid.transaction do
+      # Fetch the active raid and lock it for updating (pessimistic locking) to prevent race conditions
+      raid = GlobalRaid.active.lock.first
+      return nil unless raid
+
+      # Update participant data
+      current_user_damage = (raid.participants_data[user.username] || 0)
+      raid.participants_data[user.username] = current_user_damage + final_damage
+      raid.participants_data_will_change!
+      
+      # Apply damage
+      new_hp = [raid.current_hp - final_damage, 0].max
+      raid.current_hp = new_hp
+
+      if new_hp == 0 && raid.status == 'active'
+        raid.status = 'defeated'
+        # Distribute rewards
+        distribute_rewards(raid)
+      end
+
+      raid.save!
+
+      # Broadcast real-time update
+      broadcast_raid_status(raid, user.username, final_damage)
+
+      return { damage: final_damage, boss_hp: new_hp, status: raid.status }
+    end
+  rescue StandardError => e
+    Rails.logger.error "[RaidEngine] Failed to process damage: #{e.message}"
+    nil
+  end
+
+  private
+
+  def self.distribute_rewards(raid)
+    Rails.logger.info "[RaidEngine] Boss #{raid.title} defeated! Distributing rewards..."
+    
+    # Sort participants by damage contribution
+    sorted_participants = raid.participants_data.to_a.sort_by { |_, dmg| -dmg }
+    
+    sorted_participants.each_with_index do |(username, dmg), index|
+      user = User.find_by(username: username)
+      next unless user
+
+      # Top 3 get Legendary drops
+      if index < 3
+        user.add_material!('dragon_scale', rand(1..3))
+        user.add_material!('star_dust', 5)
+        MokoNativeCommandService.notify!(user, title: "レイドボス討伐！🎖️", body: "トップ貢献者として伝説の素材を手に入れた！")
+      else
+        user.add_material!('moko_stone', rand(5..10))
+        MokoNativeCommandService.notify!(user, title: "レイドボス討伐！", body: "ボスを無事倒したもこ！報酬ゲット！")
+      end
+    end
+    
+    # Broadcast defeat
+    ActionCable.server.broadcast("raid_channel", {
+      type: "boss_defeated",
+      message: "#{raid.title} が討伐されました！🎉",
+      leaderboard: sorted_participants.first(5)
+    })
+  end
+
+  def self.broadcast_raid_status(raid, attacker_username, damage)
+    ActionCable.server.broadcast("raid_channel", {
+      type: "damage_dealt",
+      attacker: attacker_username,
+      damage: damage,
+      current_hp: raid.current_hp,
+      max_hp: raid.max_hp,
+      health_percentage: raid.health_percentage
+    })
+  end
+end
