@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_31_005904) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_01_171254) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -18,6 +18,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_31_005904) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "global_raids", force: :cascade do |t|
+    t.string "title"
+    t.integer "max_hp"
+    t.integer "current_hp"
+    t.string "status"
+    t.json "participants_data"
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "goal_nodes", force: :cascade do |t|
