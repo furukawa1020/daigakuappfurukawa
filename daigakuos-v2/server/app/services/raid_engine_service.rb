@@ -11,7 +11,11 @@ class RaidEngineService
     # Party Synergy: Calculate how many users synced recently
     active_users_count = User.where('last_sync_at > ?', 15.minutes.ago).count
     multiplier = 1.0 + (active_users_count * 0.1) # 10% bonus per active user
-    final_damage = (damage * multiplier).to_i
+    
+    # World Buff: Apply bonus if everyone is currently buffed from last victory
+    world_multiplier = MokoWorldService.current_status[:raid_buff] || 1.0
+    
+    final_damage = (damage * multiplier * world_multiplier).to_i
 
     GlobalRaid.transaction do
       # Fetch the active raid and lock it for updating (pessimistic locking) to prevent race conditions
