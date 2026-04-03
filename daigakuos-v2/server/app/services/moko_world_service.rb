@@ -8,6 +8,13 @@ class MokoWorldService
     raid_buff_ends_at: nil
   }.with_indifferent_access
 
+  def self.current_status
+    # Expire buff if time is up
+    if @@world_status[:raid_buff_ends_at] && @@world_status[:raid_buff_ends_at] < Time.current
+      @@world_status[:raid_buff] = 1.0
+      @@world_status[:raid_buff_ends_at] = nil
+    end
+
     raid = GlobalRaid.active.first
     
     # Apply Boss Skill Debuffs
