@@ -137,6 +137,8 @@ class GlobalRaid {
   final double healthPercentage;
   final DateTime endsAt;
   final int participantsCount;
+  final String? activeSkill;
+  final DateTime? skillEndsAt;
 
   GlobalRaid({
     required this.id,
@@ -146,6 +148,8 @@ class GlobalRaid {
     required this.healthPercentage,
     required this.endsAt,
     required this.participantsCount,
+    this.activeSkill,
+    this.skillEndsAt,
   });
 
   factory GlobalRaid.fromJson(Map<String, dynamic> json) {
@@ -157,6 +161,8 @@ class GlobalRaid {
       healthPercentage: (json['health_percentage'] as num).toDouble(),
       endsAt: DateTime.parse(json['ends_at'] as String),
       participantsCount: json['participants_count'] as int,
+      activeSkill: json['active_skill'] as String?,
+      skillEndsAt: json['skill_ends_at'] != null ? DateTime.parse(json['skill_ends_at'] as String) : null,
     );
   }
 }
