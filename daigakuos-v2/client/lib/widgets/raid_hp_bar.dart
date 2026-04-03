@@ -19,16 +19,23 @@ class RaidHPBar extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
+        final isCursed = raid.activeSkill != null &&
+            raid.skillEndsAt != null &&
+            raid.skillEndsAt!.isAfter(DateTime.now());
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF1E293B).withOpacity(0.9),
+            color: isCursed ? const Color(0xFF2E1065) : const Color(0xFF1E293B).withOpacity(0.9),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.redAccent.withOpacity(0.5), width: 2),
+            border: Border.all(
+              color: isCursed ? Colors.purpleAccent.withOpacity(0.6) : Colors.redAccent.withOpacity(0.5),
+              width: 2,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.red.withOpacity(0.2),
+                color: isCursed ? Colors.purple.withOpacity(0.3) : Colors.red.withOpacity(0.2),
                 blurRadius: 10,
                 spreadRadius: 2,
               )
@@ -45,11 +52,11 @@ class RaidHPBar extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "GLOBAL RAID EVENT",
+                          isCursed ? "BOSS SKILL ACTIVE! ⚠️" : "GLOBAL RAID EVENT",
                           style: GoogleFonts.outfit(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: Colors.redAccent,
+                            color: isCursed ? Colors.purpleAccent : Colors.redAccent,
                             letterSpacing: 1.2,
                           ),
                         ),
@@ -65,11 +72,37 @@ class RaidHPBar extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 32)
-                      .animate(onPlay: (controller) => controller.repeat())
-                      .shake(duration: 2000.ms, hz: 4),
+                  Icon(
+                    isCursed ? Icons.auto_fix_high : Icons.warning_amber_rounded,
+                    color: isCursed ? Colors.purpleAccent : Colors.redAccent,
+                    size: 32,
+                  ).animate(onPlay: (controller) => controller.repeat()).shake(duration: 2000.ms, hz: 4),
                 ],
               ),
+              if (isCursed)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.purpleAccent.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.history_toggle_off, color: Colors.purpleAccent, size: 16),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            "${raid.activeSkill == 'shadow_mist' ? '影の霧 (XP 0.5x)' : raid.activeSkill}: あと ${raid.skillEndsAt!.difference(DateTime.now()).inMinutes} 分",
+                            style: GoogleFonts.inter(fontSize: 12, color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ).animate().fadeIn().slideX(),
               const SizedBox(height: 12),
               LayoutBuilder(
                 builder: (context, constraints) {
@@ -88,13 +121,15 @@ class RaidHPBar extends ConsumerWidget {
                           curve: Curves.elasticOut,
                           width: constraints.maxWidth * (raid.healthPercentage / 100),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Colors.red, Color(0xFFB91C1C)],
+                            gradient: LinearGradient(
+                              colors: isCursed
+                                  ? [Colors.purple, Colors.deepPurple]
+                                  : [Colors.red, const Color(0xFFB91C1C)],
                             ),
                             borderRadius: BorderRadius.circular(7),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.red.withOpacity(0.4),
+                                color: isCursed ? Colors.purple.withOpacity(0.4) : Colors.red.withOpacity(0.4),
                                 blurRadius: 4,
                                 spreadRadius: 1,
                               )
