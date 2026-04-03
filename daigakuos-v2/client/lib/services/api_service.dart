@@ -131,4 +131,42 @@ class ApiService {
       return {};
     }
   }
+
+  static Future<Map<String, dynamic>?> fetchRaidStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/raid/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print('Fetch Raid Error: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchWorldStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/world/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('Fetch World Error: $e');
+      return {};
+    }
+  }
 }
