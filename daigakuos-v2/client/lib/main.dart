@@ -44,6 +44,7 @@ import 'tree_screen.dart';
 import 'moko_dictionary_screen.dart';
 import 'screens/social_screen.dart';
 import 'widgets/live_feed_widget.dart';
+import 'widgets/raid_hp_bar.dart';
 
 import 'services/native_command_listener.dart';
 import 'services/api_service.dart';
@@ -212,6 +213,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _resetIdleTimer();
+    
+    // Periodically refresh Global Raid and World Status
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        ref.invalidate(globalRaidProvider);
+        ref.invalidate(worldStatusProvider);
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   @override
