@@ -8,14 +8,23 @@ class MokoWorldService
     raid_buff_ends_at: nil
   }.with_indifferent_access
 
-  def self.current_status
-    # Expire buff if time is up
-    if @@world_status[:raid_buff_ends_at] && @@world_status[:raid_buff_ends_at] < Time.current
-      @@world_status[:raid_buff] = 1.0
-      @@world_status[:raid_buff_ends_at] = nil
+    raid = GlobalRaid.active.first
+    
+    # Apply Boss Skill Debuffs
+    if raid&.skill_active?
+      case raid.active_skill
+      when 'shadow_mist'
+        @@world_status[:raid_buff] *= 0.5 
+        @@world_status[:event_name] = "【警告】#{raid.title}の「影の霧」により集中効率が半減しているもこ！🌫️"
+      when 'primal_roar'
+        # Visual/Raid damage debuff (logic handled in RaidEngine)
+        @@world_status[:event_name] = "【警告】#{raid.title}の「咆哮」が響き渡っているもこ！⚡"
+      when 'memory_leak'
+        @@world_status[:event_name] = "【警告】#{raid.title}の「メモリリーク」で戦況が混乱しているもこ！🌀"
+      end
     end
 
-    @@world_status.merge(active_raid: GlobalRaid.active.first)
+    @@world_status.merge(active_raid: raid)
   end
 
   def self.trigger_victory_buff!(hours = 3)
