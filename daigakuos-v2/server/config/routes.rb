@@ -17,6 +17,8 @@ Rails.application.routes.draw do
         end
       end
       resources :mokos, only: [:index]
+      get 'raid/status'
+      get 'world/status'
       post 'sync/push'
       get  'sync/pull'
       get  'sync/insights'
