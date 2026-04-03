@@ -94,6 +94,32 @@
     <span id="world-event-name" style="color: #fbbf24; margin-left: 0.5rem;"><%= world[:event_name] %></span>
   </div>
 
+  <!-- Phase 36: Global Raid Boss Section -->
+  <% if @active_raid %>
+    <div id="raid-boss-container" class="stat-card" style="margin-bottom: 2rem; border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.05); position: relative; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+        <div>
+          <div style="font-size: 0.8rem; color: #fca5a5; font-weight: bold; text-transform: uppercase;">Global Raid Event</div>
+          <h2 style="font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin: 0; color: #fecaca;"><%= @active_raid.title %></h2>
+        </div>
+        <div style="text-align: right;">
+          <div id="raid-hp-text" style="font-size: 1.5rem; font-weight: 800; color: #ef4444;">
+            <%= number_with_delimiter(@active_raid.current_hp) %> / <%= number_with_delimiter(@active_raid.max_hp) %> HP
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);">Ends at: <%= @active_raid.ends_at.strftime("%H:%M") %></div>
+        </div>
+      </div>
+      
+      <div style="background: rgba(0,0,0,0.4); height: 24px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem;">
+        <div id="raid-hp-bar" style="width: <%= @active_raid.health_percentage %>%; height: 100%; background: linear-gradient(90deg, #ef4444, #b91c1c); transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);"></div>
+      </div>
+
+      <div id="raid-logs" style="font-size: 0.8rem; height: 60px; overflow-y: hidden; color: #fca5a5; border-top: 1px solid rgba(239,68,68,0.2); padding-top: 0.5rem;">
+        <div class="raid-log-entry">全員で集中してボスを倒そう！実績時間がダメージになるもこ！</div>
+      </div>
+    </div>
+  <% end %>
+
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-title">Total Users</div>
@@ -334,6 +360,44 @@
       }
     });
 
+    // Phase 36: Raid Channel Subscription
+    consumer.subscriptions.create("RaidChannel", {
+      received(data) {
+        console.log("Raid Event Received:", data);
+        
+        if (data.type === "damage_dealt") {
+          const hpBar = document.getElementById('raid-hp-bar');
+          const hpText = document.getElementById('raid-hp-text');
+          const logs = document.getElementById('raid-logs');
+          const container = document.getElementById('raid-boss-container');
+
+          if (hpBar) hpBar.style.width = data.health_percentage + '%';
+          if (hpText) hpText.innerText = `${data.current_hp.toLocaleString()} / ${data.max_hp.toLocaleString()} HP`;
+
+          // Add log entry
+          if (logs) {
+            const entry = document.createElement('div');
+            entry.className = 'raid-log-entry';
+            entry.style.animation = 'fadeInLeft 0.3s ease-out';
+            entry.innerHTML = `<span style="color:white; font-weight:bold;">${data.attacker}</span> が強烈な一撃！ <span style="color:yellow;">-${data.damage} DMG</span>`;
+            logs.prepend(entry);
+            if (logs.children.length > 3) logs.lastElementChild.remove();
+          }
+
+          // Shake effect
+          if (container) {
+            container.style.animation = 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both';
+            setTimeout(() => container.style.animation = '', 500);
+          }
+        } else if (data.type === "boss_spawned") {
+          window.location.reload(); // Quickest way to show the new UI
+        } else if (data.type === "boss_defeated") {
+          alert("🎉 " + data.message);
+          window.location.reload();
+        }
+      }
+    });
+
     // Add CSS animations
     const style = document.createElement('style');
     style.textContent = `
@@ -343,6 +407,16 @@
       }
       @keyframes fall {
         to { transform: translateY(110vh) rotate(360deg); }
+      }
+      @keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+      }
+      @keyframes fadeInLeft {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
       }
     `;
     document.head.appendChild(style);

@@ -30,6 +30,12 @@ class ProcessUserStatsJob < ApplicationJob
           MokoNativeCommandService.play_sound!(user, sound_name: 'quest_clear.mp3')
         end
       end
+      
+      # 0.3 Global Raid (MMO Damage)
+      raid_result = RaidEngineService.process_damage!(user, last_session.duration)
+      if raid_result
+        Rails.logger.info "[ActiveJob] 🐉 Global Raid: Dealt #{raid_result[:damage]} damage! Boss HP: #{raid_result[:boss_hp]}"
+      end
     end
     
     total_duration = user.sessions.sum(:duration) || 0

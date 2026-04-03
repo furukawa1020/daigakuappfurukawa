@@ -19,4 +19,8 @@ class GlobalRaid < ApplicationRecord
     return 0 if max_hp.to_i <= 0
     ((current_hp.to_f / max_hp.to_f) * 100).round(2)
   end
+
+  def leaderboard(limit = 10)
+    participants_data.to_a.sort_by { |_, dmg| -dmg }.first(limit)
+  end
 end

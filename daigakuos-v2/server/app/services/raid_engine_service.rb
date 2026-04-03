@@ -68,6 +68,9 @@ class RaidEngineService
       end
     end
     
+    # Broadcast final report
+    RaidReportService.broadcast_final_report(raid)
+    
     # Broadcast defeat
     ActionCable.server.broadcast("raid_channel", {
       type: "boss_defeated",
