@@ -1576,8 +1576,11 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
   Widget build(BuildContext context) {
     final session = ref.read(sessionProvider);
     final mins = session?.durationMinutes ?? 0;
+    final worldStatus = ref.watch(worldStatusProvider).asData?.value;
+    final raidBuff = worldStatus?.raidBuff ?? 1.0;
+    
     final previewXP = (30.0 * mins * (_focusRating / 3.0) *
-        (ref.read(locationBonusProvider) == LocationBonus.campus ? 1.5 : 1.0)).toStringAsFixed(0);
+        (ref.read(locationBonusProvider) == LocationBonus.campus ? 1.5 : 1.0) * raidBuff).toStringAsFixed(0);
 
     return Scaffold(
       body: Stack(
@@ -1657,6 +1660,51 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                       ],
                     ),
                   ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+
+                  const SizedBox(height: 16),
+                  
+                  // ── Phase 37: Global Raid Damage Card ──────────────────────
+                  Consumer(builder: (context, ref, _) {
+                    final raid = ref.watch(globalRaidProvider).asData?.value;
+                    if (raid == null) return const SizedBox.shrink();
+                    
+                    final damage = mins * 10;
+                    
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E293B),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                        boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.1), blurRadius: 10)],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.bolt, color: Colors.redAccent, size: 32)
+                            .animate(onPlay: (c) => c.repeat()).shake(hz: 3, duration: 1.seconds),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "GLOBAL RAID DAMAGE",
+                                  style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                                ),
+                                Text(
+                                  "ボスに $damage ダメージ！",
+                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text("⚔️", style: const TextStyle(fontSize: 24))
+                            .animate().scale(delay: 500.ms, curve: Curves.elasticOut),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 400.ms).slideX(begin: 0.2, end: 0);
+                  }),
 
                   const SizedBox(height: 16),
                   
