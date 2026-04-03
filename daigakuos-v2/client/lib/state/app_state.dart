@@ -194,3 +194,15 @@ final dailyChallengeProvider = FutureProvider<DailyChallenge>((ref) async {
   return DailyChallenge.fromJson(data);
 });
 
+final globalRaidProvider = FutureProvider<GlobalRaid?>((ref) async {
+  // We refresh this periodically or on sync
+  final data = await ApiService.fetchRaidStatus();
+  if (data == null || data['active'] == false) return null;
+  return GlobalRaid.fromJson(data['raid']);
+});
+
+final worldStatusProvider = FutureProvider<WorldStatus>((ref) async {
+  final data = await ApiService.fetchWorldStatus();
+  return WorldStatus.fromJson(data);
+});
+
