@@ -3,11 +3,33 @@ class MokoWorldService
   @@world_status = {
     weather: "sunny",
     event_name: "通常運行もこ",
-    started_at: Time.current
+    started_at: Time.current,
+    raid_buff: 1.0,
+    raid_buff_ends_at: nil
   }.with_indifferent_access
 
   def self.current_status
-    @@world_status
+    # Expire buff if time is up
+    if @@world_status[:raid_buff_ends_at] && @@world_status[:raid_buff_ends_at] < Time.current
+      @@world_status[:raid_buff] = 1.0
+      @@world_status[:raid_buff_ends_at] = nil
+    end
+
+    @@world_status.merge(active_raid: GlobalRaid.active.first)
+  end
+
+  def self.trigger_victory_buff!(hours = 3)
+    @@world_status[:raid_buff] = 1.3 # 30% XP/Point Bonus
+    @@world_status[:raid_buff_ends_at] = Time.current + hours.hours
+    
+    change_weather!("sunny") # Clear skies for victory
+    
+    # Notify world!
+    ActionCable.server.broadcast("activity_feed", {
+      type: "victory_buff_activated",
+      message: "レイドボス討伐により、世界中のみんなの集中効率が1.3倍になったもこ！🔥",
+      ends_at: @@world_status[:raid_buff_ends_at]
+    })
   end
 
   def self.change_weather!(weather_type = nil)
