@@ -71,10 +71,13 @@ class RaidEngineService
     # Broadcast final report
     RaidReportService.broadcast_final_report(raid)
     
+    # Activate Global Victory Buff (30% increase for everyone)
+    MokoWorldService.trigger_victory_buff!(3)
+
     # Broadcast defeat
     ActionCable.server.broadcast("raid_channel", {
       type: "boss_defeated",
-      message: "#{raid.title} が討伐されました！🎉",
+      message: "#{raid.title} が討伐されました！🎉 全員に3時間の集中バフが付与されたもこ！",
       leaderboard: sorted_participants.first(5)
     })
   end
