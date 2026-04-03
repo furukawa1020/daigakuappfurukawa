@@ -129,6 +129,67 @@ class DailyChallenge {
   }
 }
 
+class GlobalRaid {
+  final String id;
+  final String title;
+  final int currentHp;
+  final int maxHp;
+  final double healthPercentage;
+  final DateTime endsAt;
+  final int participantsCount;
+
+  GlobalRaid({
+    required this.id,
+    required this.title,
+    required this.currentHp,
+    required this.maxHp,
+    required this.healthPercentage,
+    required this.endsAt,
+    required this.participantsCount,
+  });
+
+  factory GlobalRaid.fromJson(Map<String, dynamic> json) {
+    return GlobalRaid(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      currentHp: json['current_hp'] as int,
+      maxHp: json['max_hp'] as int,
+      healthPercentage: (json['health_percentage'] as num).toDouble(),
+      endsAt: DateTime.parse(json['ends_at'] as String),
+      participantsCount: json['participants_count'] as int,
+    );
+  }
+}
+
+class WorldStatus {
+  final String weather;
+  final String eventName;
+  final DateTime startedAt;
+  final double raidBuff;
+  final DateTime? raidBuffEndsAt;
+  final bool activeRaid;
+
+  WorldStatus({
+    required this.weather,
+    required this.eventName,
+    required this.startedAt,
+    required this.raidBuff,
+    this.raidBuffEndsAt,
+    required this.activeRaid,
+  });
+
+  factory WorldStatus.fromJson(Map<String, dynamic> json) {
+    return WorldStatus(
+      weather: json['weather'] as String,
+      eventName: json['event_name'] as String,
+      startedAt: DateTime.parse(json['started_at'] as String),
+      raidBuff: (json['raid_buff'] as num).toDouble(),
+      raidBuffEndsAt: json['raid_buff_ends_at'] != null ? DateTime.parse(json['raid_buff_ends_at'] as String) : null,
+      activeRaid: json['active_raid'] as bool,
+    );
+  }
+}
+
 
 // -----------------------------------------------------------------------------
 // Providers
