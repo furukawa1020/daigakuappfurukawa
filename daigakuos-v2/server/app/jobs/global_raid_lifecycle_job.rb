@@ -21,6 +21,12 @@ class GlobalRaidLifecycleJob < ApplicationJob
     # 2. Ensure an active boss exists
     RaidBossSpawnerService.ensure_active_boss
     
+    # 3. Random skill casting (30% chance if no skill active)
+    active_raid = GlobalRaid.active.first
+    if active_raid && !active_raid.skill_active? && rand < 0.3
+      active_raid.cast_skill!
+    end
+    
     # 3. Schedule next check if not using a cron-like scheduler
     # GlobalRaidLifecycleJob.set(wait: 15.minutes).perform_later
   end
