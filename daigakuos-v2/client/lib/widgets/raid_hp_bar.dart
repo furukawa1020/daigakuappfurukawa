@@ -67,6 +67,8 @@ class RaidHPBar extends ConsumerWidget {
                                .animate(onPlay: (c) => c.repeat()).shake(hz: 3),
                         ],
                       ),
+                      if (worldAsync.asData?.value.monsterState != null)
+                        _buildMonsterStateBadge(worldAsync.asData!.value.monsterState!),
                       const SizedBox(height: 4),
                       Text(
                         raid.title,
@@ -221,6 +223,33 @@ class RaidHPBar extends ConsumerWidget {
         ),
       ),
     ).animate().fadeIn().slideX();
+  }
+
+  Widget _buildMonsterStateBadge(Map<String, dynamic> state) {
+    return Container(
+      margin: const EdgeInsets.top(4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(state['icon'] ?? '😐', style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 6),
+          Text(
+            "STATE: ${state['name']}".toUpperCase(),
+            style: GoogleFonts.outfit(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: Colors.white70,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildWorldBuffBanner(double buff) {
