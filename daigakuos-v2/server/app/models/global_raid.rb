@@ -15,11 +15,34 @@ class GlobalRaid < ApplicationRecord
     'primal_roar' => { name: "咆哮", effect: "受けるダメージが2倍になるもこ！", duration: 10.minutes }
   }
 
+  BOSS_GIMMICKS = {
+    'iron_defense' => { name: "鉄壁の構え", effect: "物理ダメージ90%カット！Tankのスキルで相殺可能もこ！", duration: 10.minutes }
+  }
+
   def set_defaults
     self.participants_data ||= {}
     self.status ||= 'active'
     self.current_hp ||= self.max_hp
     self.current_phase ||= 1
+  end
+
+  def gimmick_active?
+    active_gimmick.present? && gimmick_ends_at.present? && gimmick_ends_at > Time.current
+  end
+
+  def cast_gimmick!(gimmick_id = 'iron_defense')
+    gimmick = BOSS_GIMMICKS[gimmick_id]
+    update!(
+      active_gimmick: gimmick_id,
+      gimmick_ends_at: Time.current + gimmick[:duration]
+    )
+    
+    ActionCable.server.broadcast("raid_channel", {
+      type: "boss_gimmick_cast",
+      gimmick_id: gimmick_id,
+      gimmick_name: gimmick[:name],
+      message: "⚠️ 警告：ボスが特殊ギミック【#{gimmick[:name]}】を展開したもこ！"
+    })
   end
 
   def skill_active?
