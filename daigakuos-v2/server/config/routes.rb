@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       resources :skills, only: [] do
         collection do
           post :use
+          post :sharpen
           get :status
         end
       end
