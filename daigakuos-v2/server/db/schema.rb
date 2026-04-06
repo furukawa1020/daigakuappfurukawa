@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_06_033952) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_06_040308) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -32,6 +32,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_06_033952) do
     t.datetime "updated_at", null: false
     t.string "active_skill"
     t.datetime "skill_ends_at"
+    t.integer "current_phase"
   end
 
   create_table "goal_nodes", force: :cascade do |t|
@@ -145,6 +146,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_06_033952) do
     t.json "whisper"
     t.string "moko_mood"
     t.json "materials"
+    t.integer "role"
     t.index ["device_id"], name: "index_users_on_device_id"
     t.index ["username"], name: "index_users_on_username"
   end

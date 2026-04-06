@@ -11,6 +11,8 @@ class User < ApplicationRecord
   has_one :party_membership, dependent: :destroy
   has_one :party, through: :party_membership
 
+  enum role: { tank: 0, healer: 1, dps: 2 }
+
   validates :device_id, presence: true, uniqueness: true
   validates :username, presence: true
   validates :level, numericality: { greater_than_or_equal_to: 1 }
