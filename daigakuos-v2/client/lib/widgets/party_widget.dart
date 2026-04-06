@@ -1,3 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../state/app_state.dart';
+import '../services/api_service.dart';
 import 'role_selection_dialog.dart';
 
 class PartyWidget extends ConsumerWidget {
@@ -123,6 +129,24 @@ class PartyWidget extends ConsumerWidget {
     );
   }
 
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'tank': return Colors.blueAccent;
+      case 'healer': return Colors.purpleAccent;
+      case 'dps': return Colors.redAccent;
+      default: return Colors.white54;
+    }
+  }
+
+  IconData _getRoleIcon(String role) {
+    switch (role) {
+      case 'tank': return Icons.shield;
+      case 'healer': return Icons.auto_fix_high;
+      case 'dps': return Icons.swords;
+      default: return Icons.person;
+    }
+  }
+
   Widget _buildMemberAvatar(PartyMember member) {
     return Container(
       margin: const EdgeInsets.only(right: 12),
@@ -226,7 +250,6 @@ class PartyWidget extends ConsumerWidget {
           ElevatedButton(
             onPressed: () async {
               final deviceId = ref.read(deviceIdProvider);
-              // Try joining first, if not found, create (simplified logic for demo)
               final success = await ApiService().joinParty(deviceId, nameCtrl.text, passCtrl.text);
               if (!success) {
                 await ApiService().createParty(deviceId, nameCtrl.text, passCtrl.text);
