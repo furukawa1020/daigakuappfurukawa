@@ -23,10 +23,30 @@ class RaidEngineService
     
     multiplier = party_multiplier * global_multiplier
     
+    # Phase 40: Role Specific Multipliers
+    role_multiplier = 1.0
+    is_crit = false
+
+    case user.role
+    when 'tank'
+      # Tanks boost the whole party's synergy more effectively
+      party_multiplier *= 1.3 
+    when 'dps'
+      # DPS dealt more raw damage + Crit chance
+      role_multiplier = 1.5
+      if rand < 0.1 # 10% Critical Hit chance
+        role_multiplier *= 2.0
+        is_crit = true
+      end
+    when 'healer'
+      # Healers deal normal damage but will provide XP bonuses elsewhere
+      role_multiplier = 1.0
+    end
+
     # World Buff: Apply bonus if everyone is currently buffed from last victory
     world_multiplier = MokoWorldService.current_status[:raid_buff] || 1.0
     
-    final_damage = (damage * multiplier * world_multiplier).to_i
+    final_damage = (damage * multiplier * role_multiplier * world_multiplier).to_i
 
     GlobalRaid.transaction do
       # Fetch the active raid and lock it for updating (pessimistic locking) to prevent race conditions
@@ -46,14 +66,17 @@ class RaidEngineService
         raid.status = 'defeated'
         # Distribute rewards
         distribute_rewards(raid)
+      else
+        # Phase 40: Check for phase transition
+        raid.update_phase!
       end
 
       raid.save!
 
       # Broadcast real-time update
-      broadcast_raid_status(raid, user.username, final_damage)
+      broadcast_raid_status(raid, user.username, final_damage, is_crit, user.role)
 
-      return { damage: final_damage, boss_hp: new_hp, status: raid.status }
+      return { damage: final_damage, boss_hp: new_hp, status: raid.status, is_crit: is_crit }
     end
   rescue StandardError => e
     Rails.logger.error "[RaidEngine] Failed to process damage: #{e.message}"
