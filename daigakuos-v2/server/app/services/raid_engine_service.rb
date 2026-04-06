@@ -120,14 +120,17 @@ class RaidEngineService
     })
   end
 
-  def self.broadcast_raid_status(raid, attacker_username, damage)
+  def self.broadcast_raid_status(raid, attacker_username, damage, is_crit = false, role = 'dps')
     ActionCable.server.broadcast("raid_channel", {
       type: "damage_dealt",
       attacker: attacker_username,
+      attacker_role: role,
       damage: damage,
+      is_crit: is_crit,
       current_hp: raid.current_hp,
       max_hp: raid.max_hp,
-      health_percentage: raid.health_percentage
+      health_percentage: raid.health_percentage,
+      current_phase: raid.current_phase
     })
   end
 end
