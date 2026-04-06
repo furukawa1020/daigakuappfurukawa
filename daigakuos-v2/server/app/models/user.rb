@@ -61,6 +61,21 @@ class User < ApplicationRecord
   def ensure_mood
     self.moko_mood ||= "sleepy"
     self.materials ||= { "moko_stone" => 0, "star_dust" => 0 }
+    self.max_sharpness ||= 100
+    self.current_sharpness ||= self.max_sharpness
+  end
+
+  def sharpen!
+    update!(current_sharpness: max_sharpness, last_sharpened_at: Time.current)
+  end
+
+  def sharpness_color
+    return 'red' if current_sharpness <= 10
+    return 'orange' if current_sharpness <= 25
+    return 'yellow' if current_sharpness <= 50
+    return 'green' if current_sharpness <= 75
+    return 'blue' if current_sharpness <= 90
+    'white' # Max
   end
 
   def ensure_username
