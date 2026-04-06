@@ -35,7 +35,8 @@ class MokoWorldService
       active_raid: raid,
       current_phase: raid&.current_phase || 1,
       active_gimmick: raid&.active_gimmick,
-      gimmick_name: raid&.gimmick_active? ? GlobalRaid::BOSS_GIMMICKS[raid.active_gimmick][:name] : nil
+      gimmick_name: raid&.gimmick_active? ? GlobalRaid::BOSS_GIMMICKS[raid.active_gimmick][:name] : nil,
+      monster_state: MonsterAIEngine.get_state_modifiers(raid)
     })
   end
 
