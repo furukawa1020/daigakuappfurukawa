@@ -8,9 +8,20 @@ class RaidEngineService
     # Base damage: 1 minute = 10 damage
     damage = duration * 10
 
-    # Party Synergy: Calculate how many users synced recently
+    # Party Synergy: Calculate how many PARTY members are active recently
+    party = user.party
+    if party
+      active_party_members = party.users.where.not(id: user.id).where('last_sync_at > ?', 15.minutes.ago).count
+      party_multiplier = 1.0 + (active_party_members * 0.2) # 20% bonus per active party member
+    else
+      party_multiplier = 1.0
+    end
+    
+    # Global Activity: Still apply a small global bonus
     active_users_count = User.where('last_sync_at > ?', 15.minutes.ago).count
-    multiplier = 1.0 + (active_users_count * 0.1) # 10% bonus per active user
+    global_multiplier = 1.0 + (active_users_count * 0.05)
+    
+    multiplier = party_multiplier * global_multiplier
     
     # World Buff: Apply bonus if everyone is currently buffed from last victory
     world_multiplier = MokoWorldService.current_status[:raid_buff] || 1.0
