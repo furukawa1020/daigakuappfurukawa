@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_06_041710) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_06_231053) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -150,6 +150,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_06_041710) do
     t.json "materials"
     t.integer "role"
     t.datetime "last_skill_used_at"
+    t.text "boss_archive"
+    t.text "passive_buffs"
     t.index ["device_id"], name: "index_users_on_device_id"
     t.index ["username"], name: "index_users_on_username"
   end
