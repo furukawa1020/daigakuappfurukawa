@@ -22,6 +22,13 @@ Rails.application.routes.draw do
           get :heatmap
         end
       end
+
+      resources :skills, only: [] do
+        collection do
+          post :use
+          get :status
+        end
+      end
       resources :mokos, only: [:index]
       get 'raid/status'
       get 'world/status'
