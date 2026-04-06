@@ -33,12 +33,11 @@ class RaidHPBar extends ConsumerWidget {
               color: isCursed ? Colors.purpleAccent.withOpacity(0.6) : Colors.redAccent.withOpacity(0.5),
               width: 2,
             ),
+            color: const Color(0xFF1E293B).withOpacity(0.9),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: barColor.withOpacity(0.3)),
             boxShadow: [
-              BoxShadow(
-                color: isCursed ? Colors.purple.withOpacity(0.3) : Colors.red.withOpacity(0.2),
-                blurRadius: 10,
-                spreadRadius: 2,
-              )
+              BoxShadow(color: barColor.withOpacity(0.1), blurRadius: 10)
             ],
           ),
           child: Column(
@@ -47,37 +46,6 @@ class RaidHPBar extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isCursed ? "BOSS SKILL ACTIVE! ⚠️" : "GLOBAL RAID EVENT",
-                          style: GoogleFonts.outfit(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: isCursed ? Colors.purpleAccent : Colors.redAccent,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          raid.title,
-                          style: GoogleFonts.outfit(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Icon(
-                    isCursed ? Icons.auto_fix_high : Icons.warning_amber_rounded,
-                    color: isCursed ? Colors.purpleAccent : Colors.redAccent,
-                    size: 32,
-                  ).animate(onPlay: (controller) => controller.repeat()).shake(duration: 2000.ms, hz: 4),
-                ],
               ),
               if (isCursed)
                 Padding(
