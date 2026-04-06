@@ -93,8 +93,10 @@ class RaidHPBar extends ConsumerWidget {
                 ],
               ),
               if (isCursed) _buildCurseBanner(raid),
+              if (worldAsync.asData?.value.activeGimmick != null)
+                _buildGimmickBanner(worldAsync.asData!.value.gimmickName ?? "ギミック発動中"),
               const SizedBox(height: 16),
-              _buildHPBar(context, raid, barColor),
+              _buildHPBar(context, raid, barColor, worldAsync.asData?.value.activeGimmick),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -128,7 +130,9 @@ class RaidHPBar extends ConsumerWidget {
     );
   }
 
-  Widget _buildHPBar(BuildContext context, GlobalRaid raid, Color color) {
+  Widget _buildHPBar(BuildContext context, GlobalRaid raid, Color color, String? gimmick) {
+    final hasIronDefense = gimmick == 'iron_defense';
+    
     return LayoutBuilder(
       builder: (context, constraints) {
         return Container(
@@ -155,11 +159,42 @@ class RaidHPBar extends ConsumerWidget {
                   ],
                 ),
               ).animate().shimmer(duration: 3.seconds, color: Colors.white24),
+              // Gimmick Shield Effect
+              if (hasIronDefense)
+                const Positioned.fill(
+                  child: Icon(Icons.shield, color: Colors.white24, size: 14)
+                ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1.seconds),
             ],
           ),
         );
       },
     );
+  }
+
+  Widget _buildGimmickBanner(String name) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.orange.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.orangeAccent.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.warning, color: Colors.orangeAccent, size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                "ギミック：【$name】発動中！",
+                style: GoogleFonts.inter(fontSize: 12, color: Colors.orangeAccent, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate(onPlay: (c) => c.repeat()).shake(hz: 2);
   }
 
   Widget _buildCurseBanner(GlobalRaid raid) {
