@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  # Phase 39: Party Synergy
+  post 'parties/create', to: 'parties#create'
+  post 'parties/join', to: 'parties#join'
+  post 'parties/leave', to: 'parties#leave'
+  get 'parties/show', to: 'parties#show'
+  get 'parties/status'
   root 'web/dashboard#index'
 
   namespace :web do
