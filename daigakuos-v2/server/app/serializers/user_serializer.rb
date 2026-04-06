@@ -18,6 +18,8 @@ class UserSerializer
         moko_mood: user.moko_mood,
         materials: user.materials || {},
         role: user.role,
+        can_use_skill: user.can_use_skill?,
+        skill_cooldown: user.skill_cooldown_remaining,
         last_sync_at: user.last_sync_at
       },
       active_buffs: FocusSynergyService.calculate_buffs(user),
