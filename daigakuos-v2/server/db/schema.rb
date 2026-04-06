@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_01_171254) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_06_033952) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -30,6 +30,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_01_171254) do
     t.datetime "ends_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "active_skill"
+    t.datetime "skill_ends_at"
   end
 
   create_table "goal_nodes", force: :cascade do |t|
@@ -78,6 +80,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_01_171254) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_moko_templates_on_code"
+  end
+
+  create_table "parties", force: :cascade do |t|
+    t.string "name"
+    t.integer "leader_id"
+    t.string "passcode"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "party_memberships", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "party_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_party_memberships_on_party_id"
+    t.index ["user_id"], name: "index_party_memberships_on_user_id"
   end
 
   create_table "reminders", force: :cascade do |t|
@@ -134,6 +153,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_01_171254) do
   add_foreign_key "goal_nodes", "users"
   add_foreign_key "moko_expeditions", "users"
   add_foreign_key "moko_items", "users"
+  add_foreign_key "party_memberships", "parties"
+  add_foreign_key "party_memberships", "users"
   add_foreign_key "reminders", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "social_events", "users"

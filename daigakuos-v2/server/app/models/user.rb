@@ -7,6 +7,9 @@ class User < ApplicationRecord
   has_many :goal_nodes, dependent: :destroy
   has_many :social_events, dependent: :destroy
   has_many :moko_expeditions, dependent: :destroy
+  
+  has_one :party_membership, dependent: :destroy
+  has_one :party, through: :party_membership
 
   validates :device_id, presence: true, uniqueness: true
   validates :username, presence: true
