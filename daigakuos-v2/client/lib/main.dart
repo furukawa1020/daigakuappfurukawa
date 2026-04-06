@@ -51,7 +51,7 @@ import 'services/api_service.dart';
 import 'services/action_cable_service.dart';
 import 'widgets/chat_overlay.dart';
 import 'widgets/party_widget.dart';
-import 'widgets/skill_action_button.dart';
+import 'screens/boss_archive_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
