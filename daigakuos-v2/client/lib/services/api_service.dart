@@ -217,4 +217,17 @@ class ApiService {
       throw Exception(error);
     }
   }
+
+  Future<Map<String, dynamic>> sharpen(String deviceId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/sharpen'),
+      body: {'device_id': deviceId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Sharpening failed';
+      throw Exception(error);
+    }
+  }
 }
