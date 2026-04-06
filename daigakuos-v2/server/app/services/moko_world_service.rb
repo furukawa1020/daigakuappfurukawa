@@ -33,7 +33,9 @@ class MokoWorldService
 
     @@world_status.merge({
       active_raid: raid,
-      current_phase: raid&.current_phase || 1
+      current_phase: raid&.current_phase || 1,
+      active_gimmick: raid&.active_gimmick,
+      gimmick_name: raid&.gimmick_active? ? GlobalRaid::BOSS_GIMMICKS[raid.active_gimmick][:name] : nil
     })
   end
 
