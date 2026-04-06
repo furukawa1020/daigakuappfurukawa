@@ -168,5 +168,11 @@ class ApiService {
       print('Fetch World Error: $e');
       return {};
     }
+  Future<bool> updateRole(String deviceId, String role) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/sync/update_role'),
+      body: {'device_id': deviceId, 'role': role},
+    );
+    return response.statusCode == 200;
   }
 }
