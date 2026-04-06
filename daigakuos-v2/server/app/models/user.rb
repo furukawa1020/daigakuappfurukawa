@@ -63,9 +63,31 @@ class User < ApplicationRecord
     self.materials ||= { "moko_stone" => 0, "star_dust" => 0 }
     self.max_sharpness ||= 100
     self.current_sharpness ||= self.max_sharpness
+    
+    # Phase 45: Vitality Defaults
+    self.max_hp ||= 100
+    self.hp ||= self.max_hp
+    self.max_stamina ||= 100
+    self.stamina ||= self.max_stamina
+    
+    # Initialize Pouch if empty
+    self.inventory ||= { "potion" => 5, "whetstone" => 20 }
+  end
+
+  def consume_item!(item_id, count = 1)
+    return false if (inventory[item_id] || 0) < count
+    inventory[item_id] -= count
+    save!
+  end
+
+  def heal!(amount = 30)
+    return false unless consume_item!('potion')
+    new_hp = [hp + amount, max_hp].min
+    update!(hp: new_hp)
   end
 
   def sharpen!
+    return false unless consume_item!('whetstone')
     update!(current_sharpness: max_sharpness, last_sharpened_at: Time.current)
   end
 
