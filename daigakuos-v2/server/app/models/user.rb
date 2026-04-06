@@ -11,6 +11,9 @@ class User < ApplicationRecord
   has_one :party_membership, dependent: :destroy
   has_one :party, through: :party_membership
 
+  serialize :boss_archive, coder: JSON
+  serialize :passive_buffs, coder: JSON
+
   enum role: { tank: 0, healer: 1, dps: 2 }
 
   def skill_cooldown_remaining
