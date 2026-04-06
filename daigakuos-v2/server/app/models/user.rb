@@ -13,6 +13,16 @@ class User < ApplicationRecord
 
   enum role: { tank: 0, healer: 1, dps: 2 }
 
+  def skill_cooldown_remaining
+    return 0 unless last_skill_used_at
+    remaining = (last_skill_used_at + 1.hour) - Time.current
+    [remaining.to_i, 0].max
+  end
+
+  def can_use_skill?
+    skill_cooldown_remaining <= 0
+  end
+
   validates :device_id, presence: true, uniqueness: true
   validates :username, presence: true
   validates :level, numericality: { greater_than_or_equal_to: 1 }
