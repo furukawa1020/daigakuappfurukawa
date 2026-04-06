@@ -1,11 +1,10 @@
-# app/controllers/api/v1/quests_controller.rb
 class Api::V1::QuestsController < ApplicationController
   def index
     user = User.find_by!(device_id: params[:device_id])
-    available_monsters = PartBreakService::MONSTERS.keys
     
     # Generate random available quests if none exist
-    if user.hunting_quests.available.empty?
+    if user.hunting_quests.empty?
+      available_monsters = PartBreakService::MONSTERS.keys
       available_monsters.each do |monster|
         user.hunting_quests.create!(
           target_monster: monster,
@@ -32,28 +31,5 @@ class Api::V1::QuestsController < ApplicationController
     quest.active!
     
     render json: { success: true, quest: quest }
-  end
-end
-
-# app/controllers/api/v1/blacksmith_controller.rb
-class Api::V1::BlacksmithController < ApplicationController
-  def index
-    user = User.find_by!(device_id: params[:device_id])
-    render json: {
-      inventory: user.inventory || {},
-      recipes: BlacksmithService::RECIPES,
-      passive_buffs: user.passive_buffs || {}
-    }
-  end
-
-  def craft
-    user = User.find_by!(device_id: params[:device_id])
-    result = BlacksmithService.craft!(user, params[:item_id])
-    
-    if result[:success]
-      render json: result
-    else
-      render json: result, status: :unprocessable_entity
-    end
   end
 end
