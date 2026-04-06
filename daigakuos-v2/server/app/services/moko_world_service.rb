@@ -31,7 +31,10 @@ class MokoWorldService
       end
     end
 
-    @@world_status.merge(active_raid: raid)
+    @@world_status.merge({
+      active_raid: raid,
+      current_phase: raid&.current_phase || 1
+    })
   end
 
   def self.trigger_victory_buff!(hours = 3)
