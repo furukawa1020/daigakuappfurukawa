@@ -1,9 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../state/app_state.dart';
-import '../services/api_service.dart';
+import 'role_selection_dialog.dart';
 
 class PartyWidget extends ConsumerWidget {
   const PartyWidget({super.key});
@@ -11,6 +6,7 @@ class PartyWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final partyAsync = ref.watch(partyProvider);
+    final user = ref.watch(userProvider).asData?.value;
 
     return partyAsync.when(
       data: (party) {
@@ -56,6 +52,32 @@ class PartyWidget extends ConsumerWidget {
                           color: Colors.white,
                         ),
                       ),
+                      if (user != null)
+                        GestureDetector(
+                          onTap: () => showDialog(context: context, builder: (ctx) => const RoleSelectionDialog()),
+                          child: Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getRoleColor(user.role).withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: _getRoleColor(user.role).withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(_getRoleIcon(user.role), size: 12, color: _getRoleColor(user.role)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  user.role.toUpperCase(),
+                                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: _getRoleColor(user.role)),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.edit, size: 10, color: Colors.white54),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                   const Icon(Icons.groups, color: Colors.cyanAccent, size: 32)
