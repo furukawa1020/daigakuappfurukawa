@@ -213,12 +213,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _resetIdleTimer();
-    
-    // Periodically refresh Global Raid and World Status
+    _connectRealTime();
+    _startPolling();
+  }
+
+  void _connectRealTime() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(actionCableProvider).connect();
+    });
+  }
+
+  void _startPolling() {
     Timer.periodic(const Duration(seconds: 30), (timer) {
       if (mounted) {
         ref.invalidate(globalRaidProvider);
         ref.invalidate(worldStatusProvider);
+        ref.invalidate(partyProvider);
       } else {
         timer.cancel();
       }
