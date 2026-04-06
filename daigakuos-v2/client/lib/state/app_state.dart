@@ -196,6 +196,56 @@ class WorldStatus {
   }
 }
 
+class Party {
+  final int id;
+  final String name;
+  final int leaderId;
+  final List<PartyMember> members;
+
+  Party({required this.id, required this.name, required this.leaderId, required this.members});
+
+  factory Party.fromJson(Map<String, dynamic> json) {
+    return Party(
+      id: json['id'],
+      name: json['name'],
+      leaderId: json['leader_id'],
+      members: (json['members'] as List).map((m) => PartyMember.fromJson(m)).toList(),
+    );
+  }
+}
+
+class PartyMember {
+  final String username;
+  final String mokoMood;
+  final int level;
+
+  PartyMember({required this.username, required this.mokoMood, required this.level});
+
+  factory PartyMember.fromJson(Map<String, dynamic> json) {
+    return PartyMember(
+      username: json['username'],
+      mokoMood: json['moko_mood'],
+      level: json['level'],
+    );
+  }
+}
+
+class ChatMessage {
+  final String username;
+  final String content;
+  final String timestamp;
+
+  ChatMessage({required this.username, required this.content, required this.timestamp});
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      username: json['username'],
+      content: json['content'],
+      timestamp: json['timestamp'],
+    );
+  }
+}
+
 
 // -----------------------------------------------------------------------------
 // Providers
@@ -252,9 +302,16 @@ final historyProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   return await DatabaseHelper().getSessions();
 });
 
-final weeklyAggProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
-  return await DatabaseHelper().getWeeklyAgg();
+final weeklyAggProvider = FutureProvider<Map<String, double>>((ref) async {
+  return await DatabaseHelper().getWeeklyAggregation();
 });
+
+final partyProvider = FutureProvider<Party?>((ref) async {
+  final deviceId = ref.watch(deviceIdProvider);
+  return await ApiService().fetchParty(deviceId);
+});
+
+final chatProvider = StateProvider<List<ChatMessage>>((ref) => []);
 
 final dailyChallengeProvider = FutureProvider<DailyChallenge>((ref) async {
   final data = await DatabaseHelper().getDailyChallenge();
