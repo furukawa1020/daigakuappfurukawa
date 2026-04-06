@@ -175,4 +175,17 @@ class ApiService {
     );
     return response.statusCode == 200;
   }
+
+  Future<Map<String, dynamic>> useSkill(String deviceId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/use'),
+      body: {'device_id': deviceId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Skill failed';
+      throw Exception(error);
+    }
+  }
 }
