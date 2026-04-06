@@ -19,6 +19,7 @@ class GlobalRaid < ApplicationRecord
     self.participants_data ||= {}
     self.status ||= 'active'
     self.current_hp ||= self.max_hp
+    self.current_phase ||= 1
   end
 
   def skill_active?
@@ -49,6 +50,18 @@ class GlobalRaid < ApplicationRecord
       type: "skill_cleared",
       message: "ボスのスキル効果が消えたもこ！"
     })
+  end
+
+  def update_phase!
+    new_phase = health_percentage <= 50 ? 2 : 1
+    if new_phase > current_phase
+      self.current_phase = new_phase
+      ActionCable.server.broadcast("raid_channel", {
+        type: "phase_transition",
+        phase: new_phase,
+        message: "⚠️ 警告：ボスの形態が変化したもこ！攻撃が激化するもこ！ (PHASE #{new_phase})"
+      })
+    end
   end
 
   def health_percentage
