@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         collection do
           post :use
           post :sharpen
+          post :heal
           get :status
         end
       end
