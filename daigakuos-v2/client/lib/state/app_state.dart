@@ -22,17 +22,9 @@ class Session {
   Session({this.id, this.nodeId, required this.startAt, this.durationMinutes, this.targetMinutes, this.moodPre, this.moodPost});
 }
 
-class User {
-  final String deviceId;
-  final int level;
-  final int xp;
-  final int streak;
-  final int coins;
-  final int rest_days;
-  final String username;
-  final String? whisper;
-  final String mokoMood;
   final String role; // Phase 40: tank, healer, dps
+  final bool canUseSkill; // Phase 41
+  final int skillCooldown; // Phase 41
   final Map<String, int> materials;
 
   User({
@@ -46,6 +38,8 @@ class User {
     this.whisper,
     required this.mokoMood,
     required this.role,
+    required this.canUseSkill,
+    required this.skillCooldown,
     required this.materials,
   });
 
@@ -61,6 +55,8 @@ class User {
       whisper: json['whisper'],
       mokoMood: json['moko_mood'] ?? 'happy',
       role: json['role'] ?? 'dps',
+      canUseSkill: json['can_use_skill'] ?? false,
+      skillCooldown: json['skill_cooldown'] ?? 0,
       materials: Map<String, int>.from(json['materials'] ?? {}),
     );
   }
@@ -216,26 +212,32 @@ class WorldStatus {
   final String eventName;
   final DateTime startedAt;
   final double raidBuff;
-  final DateTime? raidBuffEndsAt;
-  final bool activeRaid;
+  final GlobalRaid? activeRaid;
+  final int currentPhase;
+  final String? activeGimmick; // Phase 41
+  final String? gimmickName; // Phase 41
 
   WorldStatus({
     required this.weather,
     required this.eventName,
     required this.startedAt,
-    required this.raidBuff,
-    this.raidBuffEndsAt,
-    required this.activeRaid,
+    this.raidBuff = 1.0,
+    this.activeRaid,
+    this.currentPhase = 1,
+    this.activeGimmick,
+    this.gimmickName,
   });
 
   factory WorldStatus.fromJson(Map<String, dynamic> json) {
     return WorldStatus(
-      weather: json['weather'] as String,
-      eventName: json['event_name'] as String,
-      startedAt: DateTime.parse(json['started_at'] as String),
-      raidBuff: (json['raid_buff'] as num).toDouble(),
-      raidBuffEndsAt: json['raid_buff_ends_at'] != null ? DateTime.parse(json['raid_buff_ends_at'] as String) : null,
-      activeRaid: json['active_raid'] as bool,
+      weather: json['weather'] ?? 'sunny',
+      eventName: json['event_name'] ?? 'Moko Day',
+      startedAt: DateTime.parse(json['started_at'] ?? DateTime.now().toIso8601String()),
+      raidBuff: (json['raid_buff'] ?? 1.0).toDouble(),
+      activeRaid: json['active_raid'] != null ? GlobalRaid.fromJson(json['active_raid']) : null,
+      currentPhase: json['current_phase'] ?? 1,
+      activeGimmick: json['active_gimmick'],
+      gimmickName: json['gimmick_name'],
     );
   }
 }
