@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_06_231053) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_06_231552) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -47,6 +47,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_06_231053) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_goal_nodes_on_user_id"
+  end
+
+  create_table "hunting_quests", force: :cascade do |t|
+    t.string "target_monster"
+    t.integer "difficulty"
+    t.integer "required_minutes"
+    t.text "reward_pool"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "moko_expeditions", force: :cascade do |t|
@@ -152,6 +162,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_06_231053) do
     t.datetime "last_skill_used_at"
     t.text "boss_archive"
     t.text "passive_buffs"
+    t.text "inventory"
     t.index ["device_id"], name: "index_users_on_device_id"
     t.index ["username"], name: "index_users_on_username"
   end
