@@ -17,6 +17,8 @@ class User {
   final bool canUseSkill; // Phase 41
   final int skillCooldown; // Phase 41
   final Map<String, int> materials;
+  final Map<String, dynamic> bossArchive; // Phase 42
+  final Map<String, dynamic> passiveBuffs; // Phase 42
 
   User({
     required this.deviceId,
@@ -32,6 +34,8 @@ class User {
     required this.canUseSkill,
     required this.skillCooldown,
     required this.materials,
+    required this.bossArchive,
+    required this.passiveBuffs,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -49,6 +53,8 @@ class User {
       canUseSkill: json['can_use_skill'] ?? false,
       skillCooldown: json['skill_cooldown'] ?? 0,
       materials: Map<String, int>.from(json['materials'] ?? {}),
+      bossArchive: Map<String, dynamic>.from(json['boss_archive'] ?? {}),
+      passiveBuffs: Map<String, dynamic>.from(json['passive_buffs'] ?? {}),
     );
   }
 }
