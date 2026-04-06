@@ -29,6 +29,18 @@ Rails.application.routes.draw do
           get :status
         end
       end
+
+      resources :quests, only: [:index] do
+        member do
+          post :start
+        end
+      end
+
+      resources :blacksmith, only: [:index] do
+        collection do
+          post :craft
+        end
+      end
       resources :mokos, only: [:index]
       get 'raid/status'
       get 'world/status'
