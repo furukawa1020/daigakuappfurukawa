@@ -20,6 +20,8 @@ class UserSerializer
         role: user.role,
         can_use_skill: user.can_use_skill?,
         skill_cooldown: user.skill_cooldown_remaining,
+        boss_archive: user.boss_archive || {},
+        passive_buffs: user.passive_buffs || {},
         last_sync_at: user.last_sync_at
       },
       active_buffs: FocusSynergyService.calculate_buffs(user),
