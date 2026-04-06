@@ -16,34 +16,54 @@ class CombatEngineService
   }
 
   def self.calculate_damage(user, raid, base_damage)
+    # 0. Faint Check (力尽き判定)
+    return { damage: 0, hp: 0, fainted: true } if user.hp <= 0
+
     # 1. Sharpness Multiplier
     color = user.sharpness_color
     sharpness_mult = SHARPNESS_MULTIPLIERS[color] || 1.0
     
-    # 2. Target Hitzone (Randomly decide focus but weighted towards head/body)
+    # 2. Target Hitzone
     hitzones = MONSTER_HITZONES[raid.title.parameterize.underscore] || { head: 50, body: 50 }
     target = decide_hitzone(user, hitzones)
     hzv = hitzones[target] || 50
     
     # 3. Bounce Check (弾かれ判定)
-    # Formula: Multiplier * HZV < 25
     is_bounce = (sharpness_mult * hzv) < 25
     bounce_mult = is_bounce ? 0.5 : 1.0
     
-    # 4. Sharpness Loss
-    loss_amount = is_bounce ? 2 : 1
-    user.update!(current_sharpness: [user.current_sharpness - loss_amount, 0].max)
+    # 4. Sharpness & Stamina Loss
+    sharpness_loss = is_bounce ? 2 : 1
+    stamina_loss = 10
     
-    # 5. Final Calculation
-    # Damage = (Base * Sharpness * HZV / 100) * Bounce Penalty
+    # 5. Monster Counter-Attack (反撃)
+    monster_state = MonsterAIEngine.get_state_modifiers(raid)
+    counter_damage = (monster_state[:damage_mult] * 10).to_i # Base 10 dmg
+    
+    # Resolve User States
+    new_sharpness = [user.current_sharpness - sharpness_loss, 0].max
+    new_hp = [user.hp - counter_damage, 0].max
+    new_stamina = [user.stamina - stamina_loss, 0].max
+    
+    user.update!(
+      current_sharpness: new_sharpness,
+      hp: new_hp,
+      stamina: new_stamina
+    )
+    
+    # 6. Final Calculation
     final_damage = (base_damage * sharpness_mult * (hzv / 100.0) * bounce_mult).to_i
+    final_damage = 0 if new_stamina <= 0 # Fatiqued cannot attack effectively
     
     {
       damage: final_damage,
       is_bounce: is_bounce,
       target_part: target,
       sharpness_color: color,
-      hzv: hzv
+      hp: new_hp,
+      stamina: new_stamina,
+      fainted: new_hp <= 0,
+      fatigued: new_stamina <= 0
     }
   end
 
