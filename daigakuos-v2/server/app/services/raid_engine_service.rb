@@ -23,50 +23,18 @@ class RaidEngineService
     
     multiplier = party_multiplier * global_multiplier
     
-    # Phase 41: Boss Gimmicks & Active Skills
-    raid = GlobalRaid.active.first
-    gimmick_penalty = 1.0
+    # Phase 44: Authentic MH Combat Engine (Reverse Engineered)
+    # The new engine handles Sharpness, HZV (肉質), and Bouncing (弾かれ判定)
+    combat_result = CombatEngineService.calculate_damage(user, raid, damage * multiplier)
     
-    if raid&.gimmick_active?
-      case raid.active_gimmick
-      when 'iron_defense'
-        # 90% reduction unless someone used Aegis Shield recently?
-        # For simplicity, we just check if any TANK in the world is currently buffed.
-        any_tank_buffed = User.where(role: 'tank').where('last_skill_used_at > ?', 10.minutes.ago).exists?
-        gimmick_penalty = any_tank_buffed ? 1.0 : 0.1
-      end
-    end
+    final_damage = combat_result[:damage]
+    is_bounce = combat_result[:is_bounce]
+    target_part = combat_result[:target_part]
 
-    # Phase 40 & 41: Role Specific Multipliers
-    role_multiplier = 1.0
-    is_crit = false
-
-    case user.role
-    when 'tank'
-      # Tanks boost the whole party's synergy more effectively
-      party_multiplier *= 1.3 
-    when 'dps'
-      # DPS dealt more raw damage + Crit chance
-      role_multiplier = 1.5
-      # Phase 41: Limit Break means 100% Critical!
-      if RoleSkillService.is_buff_active?(user, 'limit_break')
-        role_multiplier *= 2.0
-        is_crit = true
-      elsif rand < 0.1 # 10% Critical Hit chance
-        role_multiplier *= 2.0
-        is_crit = true
-      end
-    when 'healer'
-      # Phase 41: Healer buff gives everyone 2x damage if "Sanctuary" is active?
-      # Let's say healer skill gives THE PARTY 2x XP (handled in Finish job)
-      role_multiplier = 1.0
-    end
-
-    # World Buff: Apply bonus if everyone is currently buffed from last victory
-    world_multiplier = MokoWorldService.current_status[:raid_buff] || 1.0
+    # Apply Monster State Modifiers (Enraged, Exhausted, etc.)
+    monster_state = MonsterAIEngine.get_state_modifiers(raid)
+    final_damage = (final_damage * monster_state[:damage_mult]).to_i if monster_state
     
-    final_damage = (damage * multiplier * role_multiplier * world_multiplier * gimmick_penalty).to_i
-
     GlobalRaid.transaction do
       # Fetch the active raid and lock it for updating (pessimistic locking) to prevent race conditions
       raid = GlobalRaid.active.lock.first
