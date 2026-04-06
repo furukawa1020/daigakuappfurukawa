@@ -17,6 +17,7 @@ class UserSerializer
         whisper: user.whisper,
         moko_mood: user.moko_mood,
         materials: user.materials || {},
+        role: user.role,
         last_sync_at: user.last_sync_at
       },
       active_buffs: FocusSynergyService.calculate_buffs(user),
