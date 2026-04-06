@@ -118,10 +118,14 @@ class RaidEngineService
       if index < 3
         user.add_material!('dragon_scale', rand(1..3))
         user.add_material!('star_dust', 5)
-        MokoNativeCommandService.notify!(user, title: "レイドボス討伐！🎖️", body: "トップ貢献者として伝説の素材を手に入れた！")
+        # Phase 42: Legendary Loot & Boss Parts
+        loot = LootService.distribute_boss_loot!(user, raid, index)
+        MokoNativeCommandService.notify!(user, title: "レイドボス討伐！🎖️", body: "伝説の素材とボス素材【#{loot[:new_part]}】を手に入れた！")
       else
         user.add_material!('moko_stone', rand(5..10))
-        MokoNativeCommandService.notify!(user, title: "レイドボス討伐！", body: "ボスを無事倒したもこ！報酬ゲット！")
+        # Phase 42: Guaranteed Boss Part
+        loot = LootService.distribute_boss_loot!(user, raid, index)
+        MokoNativeCommandService.notify!(user, title: "レイドボス討伐！", body: "討伐成功！ボス素材【#{loot[:new_part]}】を手に入れたもこ！")
       end
     end
     
