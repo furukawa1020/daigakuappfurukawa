@@ -17,6 +17,7 @@ class User {
   final bool canUseSkill; // Phase 41
   final int skillCooldown; // Phase 41
   final Map<String, int> materials;
+  final Map<String, int> inventory; // Phase 43: MH materials
   final Map<String, dynamic> bossArchive; // Phase 42
   final Map<String, dynamic> passiveBuffs; // Phase 42
 
@@ -34,6 +35,7 @@ class User {
     required this.canUseSkill,
     required this.skillCooldown,
     required this.materials,
+    required this.inventory,
     required this.bossArchive,
     required this.passiveBuffs,
   });
@@ -53,8 +55,38 @@ class User {
       canUseSkill: json['can_use_skill'] ?? false,
       skillCooldown: json['skill_cooldown'] ?? 0,
       materials: Map<String, int>.from(json['materials'] ?? {}),
+      inventory: Map<String, int>.from(json['inventory'] ?? {}),
       bossArchive: Map<String, dynamic>.from(json['boss_archive'] ?? {}),
       passiveBuffs: Map<String, dynamic>.from(json['passive_buffs'] ?? {}),
+    );
+  }
+}
+
+class HuntingQuest {
+  final int id;
+  final String targetMonster;
+  final int difficulty;
+  final int requiredMinutes;
+  final int progress;
+  final String status;
+
+  HuntingQuest({
+    required this.id,
+    required this.targetMonster,
+    required this.difficulty,
+    required this.requiredMinutes,
+    required this.progress,
+    required this.status,
+  });
+
+  factory HuntingQuest.fromJson(Map<String, dynamic> json) {
+    return HuntingQuest(
+      id: json['id'] ?? 0,
+      targetMonster: json['target_monster'] ?? '',
+      difficulty: json['difficulty'] ?? 1,
+      requiredMinutes: json['required_minutes'] ?? 60,
+      progress: json['progress'] ?? 0,
+      status: json['status'] ?? 'available',
     );
   }
 }

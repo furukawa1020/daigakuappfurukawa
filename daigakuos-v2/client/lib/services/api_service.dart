@@ -188,4 +188,33 @@ class ApiService {
       throw Exception(error);
     }
   }
+
+  // Phase 43: Monster Hunter Loop
+  Future<Map<String, dynamic>> fetchQuests(String deviceId) async {
+    final response = await http.get(Uri.parse('$baseUrl/quests?device_id=$deviceId'));
+    return jsonDecode(response.body);
+  }
+
+  Future<bool> startQuest(String deviceId, int questId) async {
+    final response = await http.post(Uri.parse('$baseUrl/quests/$questId/start'), body: {'device_id': deviceId});
+    return response.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>> fetchBlacksmith(String deviceId) async {
+    final response = await http.get(Uri.parse('$baseUrl/blacksmith?device_id=$deviceId'));
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> craftItem(String deviceId, String itemId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/blacksmith/craft'),
+      body: {'device_id': deviceId, 'item_id': itemId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Crafting failed';
+      throw Exception(error);
+    }
+  }
 }
