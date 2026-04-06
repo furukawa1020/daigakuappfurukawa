@@ -13,13 +13,16 @@ class User {
   final String username;
   final String? whisper;
   final String mokoMood;
-  final String role; // Phase 40: tank, healer, dps
-  final bool canUseSkill; // Phase 41
-  final int skillCooldown; // Phase 41
+  final String role; 
+  final bool canUseSkill;
+  final int skillCooldown;
+  final int currentSharpness; // Phase 44
+  final int maxSharpness; // Phase 44
+  final String sharpnessColor; // Phase 44
   final Map<String, int> materials;
-  final Map<String, int> inventory; // Phase 43: MH materials
-  final Map<String, dynamic> bossArchive; // Phase 42
-  final Map<String, dynamic> passiveBuffs; // Phase 42
+  final Map<String, int> inventory; 
+  final Map<String, dynamic> bossArchive; 
+  final Map<String, dynamic> passiveBuffs; 
 
   User({
     required this.deviceId,
@@ -34,6 +37,9 @@ class User {
     required this.role,
     required this.canUseSkill,
     required this.skillCooldown,
+    required this.currentSharpness,
+    required this.maxSharpness,
+    required this.sharpnessColor,
     required this.materials,
     required this.inventory,
     required this.bossArchive,
@@ -54,6 +60,9 @@ class User {
       role: json['role'] ?? 'dps',
       canUseSkill: json['can_use_skill'] ?? false,
       skillCooldown: json['skill_cooldown'] ?? 0,
+      currentSharpness: json['current_sharpness'] ?? 100,
+      maxSharpness: json['max_sharpness'] ?? 100,
+      sharpnessColor: json['sharpness_color'] ?? 'white',
       materials: Map<String, int>.from(json['materials'] ?? {}),
       inventory: Map<String, int>.from(json['inventory'] ?? {}),
       bossArchive: Map<String, dynamic>.from(json['boss_archive'] ?? {}),
@@ -138,6 +147,7 @@ class WorldStatus {
   final int currentPhase;
   final String? activeGimmick;
   final String? gimmickName;
+  final Map<String, dynamic>? monsterState; // Phase 44
 
   WorldStatus({
     required this.weather,
@@ -148,6 +158,7 @@ class WorldStatus {
     this.currentPhase = 1,
     this.activeGimmick,
     this.gimmickName,
+    this.monsterState,
   });
 
   factory WorldStatus.fromJson(Map<String, dynamic> json) {
@@ -160,6 +171,7 @@ class WorldStatus {
       currentPhase: json['current_phase'] ?? 1,
       activeGimmick: json['active_gimmick'],
       gimmickName: json['gimmick_name'],
+      monsterState: json['monster_state'],
     );
   }
 }
