@@ -51,6 +51,7 @@ import 'services/api_service.dart';
 import 'services/action_cable_service.dart';
 import 'widgets/chat_overlay.dart';
 import 'widgets/party_widget.dart';
+import 'widgets/skill_action_button.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -1235,7 +1236,15 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
                            child: Text(taskTitle ?? "DaigakuAPP 実行中...", style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
-                         )
+                         ),
+                         // Phase 37: Raid HP Bar
+                         const RaidHPBar(),
+                         
+                         // Phase 41: Skill Action Button
+                         const SkillActionButton(),
+                         
+                         // Phase 39: Party Widget
+                         const PartyWidget(),
                        ],
                      ),
                    ),
