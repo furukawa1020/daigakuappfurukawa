@@ -103,8 +103,27 @@ class CombatEngineService
       hit_stop: is_critical ? 200 : 80,
       shake: 2.0 + (chaos * 6.0), # Chaos increases screen shake intensity
       chaos_level: chaos,
-      order_level: order
+      order_level: order,
+      moko_message: generate_moko_message(is_critical, is_bounce, is_flinched, new_hp, chaos)
     }
+  end
+
+  private
+
+  def self.generate_moko_message(crit, bounce, flinch, hp, chaos)
+    if hp <= 0
+      "わあああ！！しっかりするもこ！もう限界だもこ！！😭"
+    elsif bounce
+      "カキン！同調が合ってないもこ！今の自分を見つめ直すもこ...！💢"
+    elsif crit
+      "すごいもこ！！その調子でもっと自分を追い込むもこ！✨🔥"
+    elsif flinch
+      "チャンスだもこ！一気に畳み掛けるもこ！！🐾⚔️"
+    elsif chaos > 0.8
+      "危ないもこ！タスクが溜まりすぎてモンスターが狂暴になってるもこ...！😱"
+    else
+      "いい感じだもこ。一歩ずつ、確実に進むもこ。🐾"
+    end
   end
 
   private
