@@ -50,6 +50,8 @@ import 'widgets/sharpness_gauge.dart';
 import 'widgets/quick_item_pouch.dart';
 import 'widgets/bio_sync_hud.dart';
 import 'widgets/chaos_atmosphere.dart';
+import 'widgets/moko_reaction_overlay.dart';
+import 'widgets/task_slash_effect.dart';
 import 'widgets/impact_effect_overlay.dart';
 import 'dart:async';
 
@@ -228,6 +230,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   Timer? _idleTimer;
   final StreamController<ImpactEvent> _impactController = StreamController<ImpactEvent>.broadcast();
+  final StreamController<void> _slashController = StreamController<void>.broadcast();
+  
+  MokoEmotion _currentEmotion = MokoEmotion.normal;
+  String _mokoMessage = "";
+  bool _showMoko = false;
+  Timer? _mokoTimer;
 
   @override
   void initState() {
@@ -250,16 +258,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             final hitStop = (data['hit_stop'] as num?)?.toInt() ?? 0;
             final shake = (data['shake'] as num?)?.toDouble() ?? 0.0;
             final isCrit = data['is_crit'] as bool? ?? false;
+            final mokoMessage = data['moko_message'] as String? ?? "";
             
             _impactController.add(ImpactEvent(
               hitStop: hitStop,
               shake: shake,
               isCritical: isCrit,
             ));
+
+            if (mokoMessage.isNotEmpty) {
+               _triggerMoko(mokoMessage, isCrit ? MokoEmotion.happy : (data['is_bounce'] == true ? MokoEmotion.pained : MokoEmotion.normal));
+            }
           }
         }
       });
     });
+  }
+
+  void _triggerMoko(String message, MokoEmotion emotion) {
+     setState(() {
+       _mokoMessage = message;
+       _currentEmotion = emotion;
+       _showMoko = true;
+     });
+     _mokoTimer?.cancel();
+     _mokoTimer = Timer(const Duration(seconds: 4), () {
+       if (mounted) setState(() => _showMoko = false);
+     });
   }
 
   void _startPolling() {
@@ -277,7 +302,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _idleTimer?.cancel();
+    _mokoTimer?.cancel();
     _impactController.close();
+    _slashController.close();
     super.dispose();
   }
 
@@ -1066,240 +1093,106 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
       final s = ref.read(sessionProvider);
       if (s != null) {
         final now = DateTime.now();
-        final diff = now.difference(s.startAt);
-        setState(() => _elapsed = diff);
-
-        // Just 5 Minutes Mode Logic
-        if (s.targetMinutes != null && diff.inMinutes >= s.targetMinutes!) {
-          _timer.cancel();
-          _showTimeUpDialog(context, ref);
-        }
-      }
-    });
-
-    // Enable WakeLock if setting is true
-    _enableWakeLock();
-  }
-
-  Future<void> _enableWakeLock() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('wakelock') ?? true) {
-      WakelockPlus.enable();
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    _pulseController.dispose();
-    WakelockPlus.disable(); // Always disable on exit
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    String twoDigits(int n) => n.toString().padLeft(2, "0");
-    final minutes = twoDigits(_elapsed.inMinutes);
-    final seconds = twoDigits(_elapsed.inSeconds % 60);
-    final taskTitle = ref.watch(selectedTaskProvider);
+    final userAsync = ref.watch(userProvider);
+    final user = userAsync.value;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111827), // Dark Mode
-      body: Stack(
-        children: [
-          // Background Glow
-           Center(
-             child: AnimatedBuilder(
-               animation: _pulseController,
-               builder: (_, __) {
-                 return Container(
-                   width: 300 + (_pulseController.value * 20),
-                   height: 300 + (_pulseController.value * 20),
-                   decoration: BoxDecoration(
-                     shape: BoxShape.circle,
-                     color: const Color(0xFF4F46E5).withOpacity(0.1 + (_pulseController.value * 0.1)),
-                     boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.3), blurRadius: 50 + (_pulseController.value * 20))]
-                   ),
-                 );
-               },
-             ),
-           ),
-           
-           SafeArea(
-             child: Column(
-               children: [
-                  const SizedBox(height: 20),
-                  const Text("Deep Focus", style: TextStyle(color: Colors.white54, letterSpacing: 4, fontSize: 14)),
-                  
-                  // Mood Selector (v3)
-                  const SizedBox(height: 24),
-                  Consumer(builder: (context, ref, _) {
-                    final session = ref.watch(sessionProvider);
-                    if (session?.moodPre != null) return const SizedBox();
-                    
-                    final moods = [
-                      {'e': '😃', 'l': 'Energetic'},
-                      {'e': '🙂', 'l': 'Good'},
-                      {'e': '😐', 'l': 'Neutral'},
-                      {'e': '😔', 'l': 'Tired'},
-                      {'e': '😫', 'l': 'Stressed'},
-                    ];
-                    
-                    return Column(
-                      children: [
-                        const Text("今の気分は？", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: moods.map((m) => GestureDetector(
-                            onTap: () {
-                              ref.read(hapticsProvider.notifier).lightImpact();
-                              ref.read(sessionProvider.notifier).state = Session(
-                                id: session?.id,
-                                startAt: session?.startAt ?? DateTime.now(),
-                                durationMinutes: session?.durationMinutes,
-                                moodPre: m['e'],
-                                moodPost: session?.moodPost,
-                              );
-                            },
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 8),
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.05),
-                                shape: BoxShape.circle,
+      backgroundColor: Colors.transparent,
+      body: ChaosAtmosphere(
+        chaosLevel: user?.chaosLevel ?? 0.0,
+        child: ImpactEffectOverlay(
+          events: _impactController.stream,
+          child: Stack(
+            children: [
+              // 1. Background layer
+              const PremiumBackground(),
+              
+              // 2. Main Scrollable Content
+              RefreshIndicator(
+                onRefresh: () async => ref.refresh(userProvider),
+                child: CustomScrollView(
+                  slivers: [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
+                        child: Column(
+                          children: [
+                            _buildHeader(context, user),
+                            const SizedBox(height: 16),
+                            
+                            // Phase 48: Bio-Sync HUD (Original Helix Design)
+                            if (user != null)
+                              BioSyncHUD(
+                                orderLevel: user.orderLevel,
+                                chaosLevel: user.chaosLevel,
+                                hp: user.hp,
+                                maxHp: user.maxHp,
                               ),
-                              child: Text(m['e']!, style: const TextStyle(fontSize: 24)),
-                            ),
-                          )).toList(),
-                        ),
-                      ],
-                    ).animate().fadeIn().slideY(begin: -0.2, end: 0);
-                  }),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Pet Display Card (Phase 14)
-                  const PetDisplay().animate().fadeIn(delay: 100.ms).slideY(begin: 0.2, end: 0),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Currency Display (Phase 14)
-                  Consumer(builder: (context, ref, _) {
-                    final currencies = ref.watch(currencyProvider);
-                    
-                    return MokoCard(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Column(
-                            children: [
-                              const Text("💰", style: TextStyle(fontSize: 24)),
-                              const SizedBox(height: 4),
-                              Text("${currencies.mokoCoins}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                              const Text("コイン", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                            ],
-                          ),
-                          Container(width: 1, height: 40, color: Colors.grey[300]),
-                          Column(
-                            children: [
-                              const Text("⭐", style: TextStyle(fontSize: 24)),
-                              const SizedBox(height: 4),
-                              Text("${currencies.starCrystals}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                              const Text("スター", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                            ],
-                          ),
-                          Container(width: 1, height: 40, color: Colors.grey[300]),
-                          Column(
-                            children: [
-                              const Text("💎", style: TextStyle(fontSize: 24)),
-                              const SizedBox(height: 4),
-                              Text("${currencies.campusGems}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                          const Text("今の気分は？", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: moods.map((m) => GestureDetector(
+                            const SizedBox(height: 16),
+                            
+                            // Quest & Action Cards
+                            const RaidHPBar(),
+                            const SizedBox(height: 12),
+                            const SkillActionButton(),
+                            const SizedBox(height: 12),
+                            const QuickItemPouch(),
+                            const SizedBox(height: 20),
+                            
+                            // Preparation Row (Meta Actions)
+                            _buildMetaRow(context),
+                            const SizedBox(height: 20),
+                            
+                            // Phase 49: Interactive "Focus Attack" (Test Trigger)
+                            MokoCard(
                               onTap: () {
-                                ref.read(hapticsProvider.notifier).lightImpact();
-                                ref.read(sessionProvider.notifier).state = Session(
-                                  id: session?.id,
-                                  startAt: session?.startAt ?? DateTime.now(),
-                                  durationMinutes: session?.durationMinutes,
-                                  moodPre: m['e'],
-                                  moodPost: session?.moodPost,
-                                );
+                                _slashController.add(null);
+                                ref.read(hapticsProvider.notifier).heavyImpact();
                               },
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 8),
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.05),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Text(m['e']!, style: const TextStyle(fontSize: 24)),
+                              child: Row(
+                                children: [
+                                  const Text("⚔️", style: TextStyle(fontSize: 24)),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text("任務を完了して攻撃もこ！", style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14)),
+                                      const Text("タップして「一閃」をシミュレート", style: TextStyle(fontSize: 10, color: Colors.grey)),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            )).toList(),
-                          ),
-                        ],
-                          style: FilledButton.styleFrom(
-                          ),
+                            ),
+                            
+                            const SizedBox(height: 20),
+                            // Party Status
+                            const PartyWidget(),
+                            const Spacer(),
+                          ],
                         ),
                       ),
-                    ],
-                  ).animate().fadeIn(delay: 300.ms),
-                  
-                           VitalityHUD(
-                             hp: user.hp,
-                             maxHp: user.maxHp,
-                             stamina: user.stamina,
-                             maxStamina: user.maxStamina,
-                           ),
-                         const SizedBox(height: 8),
-                         
-                         // Phase 34: Moko Card
-                         const MokoCard(),
-                         
-                         // Phase 37: Raid HP Bar
-                         const RaidHPBar(),
-                         
-                         // Phase 41: Skill Action Button
-                         const SkillActionButton(),
-                         
-                         // Phase 42: Quick Item Pouch
-                         const QuickItemPouch(),
-                         
-                         const SizedBox(height: 12),
-                         // Preparation Row
-                         _buildMetaRow(context),
-
-                         const SizedBox(height: 12),
-                         // Phase 39: Party Widget
-                         const PartyWidget(),
-                       ],
-                     ),
-                   ),
-                  ),
-                  
-                  // Focus Sound Controls
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 24),
-                    child: FocusSoundPlayer(),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  // Slider to Finish
-                 Padding(
-                   padding: const EdgeInsets.all(40),
-                   child: GestureDetector(
-                     onTap: () {
-                        ref.read(hapticsProvider.notifier).heavyImpact();
-                        // Complete logic
-                        final s = ref.read(sessionProvider);
-                        if (s != null) {
-                           int duration = _elapsed.inMinutes;
-                           if (duration < 1) duration = 1;
-                           ref.read(sessionProvider.notifier).state = Session(id: s.id, startAt: s.startAt, durationMinutes: duration);
+                    ),
+                  ],
+                ),
+              ),
+              
+              // 3. Phase 49: Alive Character Overlay (Moko)
+              MokoReactionOverlay(
+                emotion: _currentEmotion,
+                message: _mokoMessage,
+                visible: _showMoko,
+              ),
+              
+              // 4. Physical Interaction Overlay
+              TaskSlashEffect(trigger: _slashController.stream),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
                         }
                         context.pushReplacement('/finish');
                      },
