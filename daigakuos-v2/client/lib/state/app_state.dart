@@ -19,14 +19,16 @@ class User {
   final int currentSharpness; 
   final int maxSharpness; 
   final String sharpnessColor; 
-  final int hp; // Phase 45
-  final int maxHp; // Phase 45
-  final int stamina; // Phase 45
-  final int maxStamina; // Phase 45
+  final int hp; 
+  final int maxHp; 
+  final int stamina; 
+  final int maxStamina; 
   final Map<String, int> materials;
   final Map<String, int> inventory; 
   final Map<String, dynamic> bossArchive; 
   final Map<String, dynamic> passiveBuffs; 
+  final Map<String, dynamic> mealBuffs; // Phase 46
+  final Map<String, dynamic> statusEffects; // Phase 46
 
   User({
     required this.deviceId,
@@ -52,6 +54,8 @@ class User {
     required this.inventory,
     required this.bossArchive,
     required this.passiveBuffs,
+    required this.mealBuffs,
+    required this.statusEffects,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -79,6 +83,8 @@ class User {
       inventory: Map<String, int>.from(json['inventory'] ?? {}),
       bossArchive: Map<String, dynamic>.from(json['boss_archive'] ?? {}),
       passiveBuffs: Map<String, dynamic>.from(json['passive_buffs'] ?? {}),
+      mealBuffs: Map<String, dynamic>.from(json['meal_buffs'] ?? {}),
+      statusEffects: Map<String, dynamic>.from(json['status_effects'] ?? {}),
     );
   }
 }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_06_233732) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_07_231856) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -170,6 +170,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_06_233732) do
     t.integer "max_hp"
     t.integer "stamina"
     t.integer "max_stamina"
+    t.text "meal_buffs"
+    t.text "status_effects"
     t.index ["device_id"], name: "index_users_on_device_id"
     t.index ["username"], name: "index_users_on_username"
   end
