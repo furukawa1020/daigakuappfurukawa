@@ -243,4 +243,28 @@ class ApiService {
       throw Exception(error);
     }
   }
+
+  Future<Map<String, dynamic>> eat(String deviceId, String mealId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/eat'),
+      body: {'device_id': deviceId, 'meal_id': mealId},
+    );
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> combine(String deviceId, String itemId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/combine'),
+      body: {'device_id': deviceId, 'item_id': itemId},
+    );
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> useItem(String deviceId, String itemId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/use_item'),
+      body: {'device_id': deviceId, 'item_id': itemId},
+    );
+    return jsonDecode(response.body);
+  }
 }
