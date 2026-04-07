@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_04_07_231856) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_07_232406) do
   create_table "activities", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "activity_type"
@@ -35,6 +35,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_04_07_231856) do
     t.integer "current_phase"
     t.string "active_gimmick"
     t.datetime "gimmick_ends_at"
+    t.text "part_durabilities"
   end
 
   create_table "goal_nodes", force: :cascade do |t|
