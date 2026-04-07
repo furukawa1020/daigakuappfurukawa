@@ -58,6 +58,8 @@ import 'widgets/party_widget.dart';
 import 'screens/boss_archive_screen.dart';
 import 'screens/quest_board_screen.dart';
 import 'screens/blacksmith_screen.dart';
+import 'screens/canteen_screen.dart';
+import 'screens/combination_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -133,6 +135,10 @@ final _router = GoRouter(
     GoRoute(path: '/tree', builder: (context, state) => const TreeScreen()),
     GoRoute(path: '/server_dictionary', builder: (context, state) => const MokoDictionaryScreen()),
     GoRoute(path: '/social', builder: (context, state) => const SocialScreen()),
+    GoRoute(path: '/quest_board', builder: (context, state) => const QuestBoardScreen()),
+    GoRoute(path: '/blacksmith', builder: (context, state) => const BlacksmithScreen()),
+    GoRoute(path: '/canteen', builder: (context, state) => const CanteenScreen()),
+    GoRoute(path: '/combination', builder: (context, state) => const CombinationScreen()),
   ],
 );
 
@@ -1265,6 +1271,11 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                          // Phase 42: Quick Item Pouch
                          const QuickItemPouch(),
                          
+                         const SizedBox(height: 12),
+                         // Preparation Row
+                         _buildMetaRow(context),
+
+                         const SizedBox(height: 12),
                          // Phase 39: Party Widget
                          const PartyWidget(),
                        ],
