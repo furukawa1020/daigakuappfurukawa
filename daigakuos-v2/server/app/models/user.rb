@@ -14,6 +14,8 @@ class User < ApplicationRecord
   serialize :boss_archive, coder: JSON
   serialize :passive_buffs, coder: JSON
   serialize :inventory, coder: JSON
+  serialize :meal_buffs, coder: JSON
+  serialize :status_effects, coder: JSON
 
   has_many :hunting_quests, dependent: :destroy
 
