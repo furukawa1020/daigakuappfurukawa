@@ -28,6 +28,9 @@ Rails.application.routes.draw do
           post :use
           post :sharpen
           post :heal
+          post :eat
+          post :combine
+          post :use_item
           get :status
         end
       end

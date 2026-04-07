@@ -25,6 +25,8 @@ class _QuickItemPouchState extends ConsumerState<QuickItemPouch> {
         await ApiService().heal(deviceId);
       } else if (type == 'whetstone') {
         await ApiService().sharpen(deviceId);
+      } else {
+        await ApiService().useItem(deviceId, type);
       }
       ref.refresh(userProvider);
     } catch (e) {
@@ -44,34 +46,36 @@ class _QuickItemPouchState extends ConsumerState<QuickItemPouch> {
 
     return userAsync.when(
       data: (user) {
-        final potionCount = user.inventory['potion'] ?? 0;
-        final whetstoneCount = user.inventory['whetstone'] ?? 0;
+        final items = [
+          {'id': 'potion', 'label': 'POTION', 'icon': Icons.science, 'color': Colors.greenAccent},
+          {'id': 'whetstone', 'label': 'WHETSTONE', 'icon': Icons.hardware, 'color': Colors.amberAccent},
+          {'id': 'antidote', 'label': 'ANTIDOTE', 'icon': Icons.health_and_safety, 'color': Colors.deepPurpleAccent},
+          {'id': 'energy_drink', 'label': 'ENERGY', 'icon': Icons.bolt, 'color': Colors.yellowAccent},
+        ];
 
         return Container(
-          height: 100,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              _buildItemBox(
-                label: "POTION",
-                icon: Icons.science,
-                color: Colors.greenAccent,
-                count: potionCount,
-                onTap: () => _useItem('potion'),
-              ),
-              const SizedBox(width: 12),
-              _buildItemBox(
-                label: "WHETSTONE",
-                icon: Icons.hardware,
-                color: Colors.amberAccent,
-                count: whetstoneCount,
-                onTap: () => _useItem('whetstone'),
-              ),
-            ],
+          height: 90,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            separatorBuilder: (c, i) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final count = user.inventory[item['id']] ?? 0;
+              return _buildItemBox(
+                label: item['label'] as String,
+                icon: item['icon'] as IconData,
+                color: item['color'] as Color,
+                count: count,
+                onTap: () => _useItem(item['id'] as String),
+              );
+            },
           ),
         );
       },
-      loading: () => const SizedBox(height: 100),
+      loading: () => const SizedBox(height: 90),
       error: (e, st) => Container(),
     );
   }
@@ -92,22 +96,23 @@ class _QuickItemPouchState extends ConsumerState<QuickItemPouch> {
           color: Colors.white.withOpacity(0.05),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isEmpty ? Colors.white10 : color.withOpacity(0.5),
-            width: 2,
+            color: isEmpty ? Colors.white10 : color.withOpacity(0.3),
+            width: 1.5,
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Stack(
+              clipBehavior: Clip.none,
               children: [
-                Icon(icon, color: isEmpty ? Colors.white24 : color, size: 32),
+                Icon(icon, color: isEmpty ? Colors.white24 : color, size: 28),
                 if (!isEmpty)
                    Positioned(
-                     right: 0,
-                     bottom: 0,
+                     right: -8,
+                     top: -4,
                      child: Container(
-                       padding: const EdgeInsets.all(2),
+                       padding: const EdgeInsets.all(4),
                        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                        child: Text(
                          count.toString(),
@@ -117,7 +122,7 @@ class _QuickItemPouchState extends ConsumerState<QuickItemPouch> {
                    ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Text(
               label,
               style: GoogleFonts.outfit(
