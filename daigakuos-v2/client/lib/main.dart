@@ -238,7 +238,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _connectRealTime() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(actionCableProvider).connect();
+      final cable = ref.read(actionCableProvider);
+      cable.connect();
+      
+      // Phase 47: Kinetic Feedback Listener
+      cable.subscribe("raid_channel", (data) {
+        if (data['type'] == 'damage_dealt') {
+          final currentUser = ref.read(userProvider).value;
+          if (data['attacker'] == currentUser?.username) {
+            final hitStop = (data['hit_stop'] as num?)?.toInt() ?? 0;
+            final shake = (data['shake'] as num?)?.toDouble() ?? 0.0;
+            final isCrit = data['is_crit'] as bool? ?? false;
+            
+            _impactController.add(ImpactEvent(
+              hitStop: hitStop,
+              shake: shake,
+              isCritical: isCrit,
+            ));
+          }
+        }
+      });
     });
   }
 

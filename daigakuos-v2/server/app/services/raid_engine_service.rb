@@ -23,22 +23,23 @@ class RaidEngineService
     
     multiplier = party_multiplier * global_multiplier
     
-    # Phase 44: Authentic MH Combat Engine (Reverse Engineered)
-    # The new engine handles Sharpness, HZV (肉質), and Bouncing (弾かれ判定)
-    combat_result = CombatEngineService.calculate_damage(user, raid, damage * multiplier)
-    
-    final_damage = combat_result[:damage]
-    is_bounce = combat_result[:is_bounce]
-    target_part = combat_result[:target_part]
-
-    # Apply Monster State Modifiers (Enraged, Exhausted, etc.)
-    monster_state = MonsterAIEngine.get_state_modifiers(raid)
-    final_damage = (final_damage * monster_state[:damage_mult]).to_i if monster_state
-    
     GlobalRaid.transaction do
       # Fetch the active raid and lock it for updating (pessimistic locking) to prevent race conditions
       raid = GlobalRaid.active.lock.first
       return nil unless raid
+
+      # Phase 44/47: Authentic MH Combat Engine (Reverse Engineered)
+      # The new engine handles Sharpness, HZV (肉質), Bouncing, Affinity, and Impact Meta
+      combat_result = CombatEngineService.calculate_damage(user, raid, damage * multiplier)
+      
+      final_damage = combat_result[:damage]
+      is_bounce = combat_result[:is_bounce]
+      is_crit = combat_result[:is_critical]
+      target_part = combat_result[:target_part]
+
+      # Apply Monster State Modifiers (Enraged, Exhausted, etc.)
+      monster_state = MonsterAIEngine.get_state_modifiers(raid)
+      final_damage = (final_damage * monster_state[:damage_mult]).to_i if monster_state
 
       # Update participant data
       current_user_damage = (raid.participants_data[user.username] || 0)
@@ -61,9 +62,18 @@ class RaidEngineService
       raid.save!
 
       # Broadcast real-time update
-      broadcast_raid_status(raid, user.username, final_damage, is_crit, user.role)
+      broadcast_raid_status(raid, user.username, final_damage, is_crit, user.role, combat_result)
 
-      return { damage: final_damage, boss_hp: new_hp, status: raid.status, is_crit: is_crit }
+      return { 
+        damage: final_damage, 
+        boss_hp: new_hp, 
+        status: raid.status, 
+        is_crit: is_crit,
+        hit_stop: combat_result[:hit_stop],
+        shake: combat_result[:shake],
+        flinched: combat_result[:flinched],
+        broken: combat_result[:broken]
+      }
     end
   rescue StandardError => e
     Rails.logger.error "[RaidEngine] Failed to process damage: #{e.message}"
@@ -111,7 +121,7 @@ class RaidEngineService
     })
   end
 
-  def self.broadcast_raid_status(raid, attacker_username, damage, is_crit = false, role = 'dps')
+  def self.broadcast_raid_status(raid, attacker_username, damage, is_crit, role, combat_result = {})
     ActionCable.server.broadcast("raid_channel", {
       type: "damage_dealt",
       attacker: attacker_username,
@@ -121,7 +131,13 @@ class RaidEngineService
       current_hp: raid.current_hp,
       max_hp: raid.max_hp,
       health_percentage: raid.health_percentage,
-      current_phase: raid.current_phase
+      current_phase: raid.current_phase,
+      # Phase 47: Master Rank Meta
+      hit_stop: combat_result[:hit_stop],
+      shake: combat_result[:shake],
+      target_part: combat_result[:target_part],
+      flinched: combat_result[:flinched],
+      broken: combat_result[:broken]
     })
   end
 end
