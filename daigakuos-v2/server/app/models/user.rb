@@ -82,6 +82,24 @@ class User < ApplicationRecord
     save!
   end
 
+  # Phase 48: Bio-Sync Parameters
+  def chaos_level
+    # Normalized 0.0 to 1.0 based on incomplete tasks
+    unfilled = goal_nodes.where(completed: false).count
+    (unfilled / 10.0).clamp(0.0, 1.0)
+  end
+
+  def order_level
+    # Normalized 0.0 to 1.0 based on streak
+    (streak / 21.0).clamp(0.0, 1.0) # 21 days for a habit
+  end
+
+  def neural_resonance
+    # Derived from focus sessions and order
+    # This acts as the new "Sharpness"
+    @neural_resonance ||= ((order_level * 100) + (sessions.where('created_at > ?', 24.hours.ago).count * 10)).clamp(0, 100).to_i
+  end
+
   def heal!(amount = 30)
     return false unless consume_item!('potion')
     new_hp = [hp + amount, max_hp].min

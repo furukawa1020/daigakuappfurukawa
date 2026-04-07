@@ -30,6 +30,9 @@ class UserSerializer
         inventory: user.inventory || {},
         boss_archive: user.boss_archive || {},
         passive_buffs: user.passive_buffs || {},
+        chaos_level: user.chaos_level,
+        order_level: user.order_level,
+        neural_resonance: user.neural_resonance,
         last_sync_at: user.last_sync_at
       },
       active_buffs: FocusSynergyService.calculate_buffs(user),
