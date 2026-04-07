@@ -49,6 +49,52 @@ class Api::V1::SkillsController < ApplicationController
       render json: { success: false, error: "回復薬がないもこ！絶体絶命だもこ！" }, status: :unprocessable_entity
     end
   end
+
+  def eat
+    user = User.find_by!(device_id: params.require(:device_id))
+    result = CanteenService.eat!(user, params.require(:meal_id))
+    if result[:success]
+      render json: result
+    else
+      render json: result, status: :unprocessable_entity
+    end
+  end
+
+  def combine
+    user = User.find_by!(device_id: params.require(:device_id))
+    result = CombinationService.combine!(user, params.require(:item_id))
+    if result[:success]
+      render json: result
+    else
+      render json: result, status: :unprocessable_entity
+    end
+  end
+
+  def use_item
+    user = User.find_by!(device_id: params.require(:device_id))
+    item_id = params.require(:item_id)
+    
+    case item_id
+    when 'antidote'
+      if user.consume_item!('antidote')
+        status = user.status_effects || {}
+        status.delete('poisoned')
+        user.update!(status_effects: status)
+        render json: { success: true, message: '毒を洗い流したもこ！✨' }
+      else
+        render json: { success: false, error: '解毒薬がないもこ！' }, status: :unprocessable_entity
+      end
+    when 'energy_drink'
+       if user.consume_item!('energy_drink')
+        user.update!(stamina: user.max_stamina)
+        render json: { success: true, message: 'スタミナ全快だもこ！⚡' }
+      else
+        render json: { success: false, error: 'エナジードリンクがないもこ！' }, status: :unprocessable_entity
+      end
+    else
+      render json: { success: false, error: '使い方がわからないもこ...' }, status: :bad_request
+    end
+  end
   
   def status
     user = User.find_by!(device_id: params.require(:device_id))
