@@ -47,7 +47,8 @@ import 'widgets/live_feed_widget.dart';
 import 'widgets/raid_hp_bar.dart';
 import 'widgets/skill_action_button.dart';
 import 'widgets/sharpness_gauge.dart';
-import 'widgets/whetstone_action_button.dart';
+import 'widgets/quick_item_pouch.dart';
+import 'widgets/vitality_hud.dart';
 
 import 'services/native_command_listener.dart';
 import 'services/api_service.dart';
@@ -1242,11 +1243,27 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
                            child: Text(taskTitle ?? "DaigakuAPP 実行中...", style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
                          ),
+                         // Phase 45: Vitality HUD (Self-Management)
+                         if (user != null)
+                           VitalityHUD(
+                             hp: user.hp,
+                             maxHp: user.maxHp,
+                             stamina: user.stamina,
+                             maxStamina: user.maxStamina,
+                           ),
+                         const SizedBox(height: 8),
+                         
+                         // Phase 34: Moko Card
+                         const MokoCard(),
+                         
                          // Phase 37: Raid HP Bar
                          const RaidHPBar(),
                          
                          // Phase 41: Skill Action Button
                          const SkillActionButton(),
+                         
+                         // Phase 42: Quick Item Pouch
+                         const QuickItemPouch(),
                          
                          // Phase 39: Party Widget
                          const PartyWidget(),

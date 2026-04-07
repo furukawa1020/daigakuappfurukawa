@@ -23,6 +23,11 @@ class UserSerializer
         current_sharpness: user.current_sharpness,
         max_sharpness: user.max_sharpness,
         sharpness_color: user.sharpness_color,
+        hp: user.hp,
+        max_hp: user.max_hp,
+        stamina: user.stamina,
+        max_stamina: user.max_stamina,
+        inventory: user.inventory || {},
         boss_archive: user.boss_archive || {},
         passive_buffs: user.passive_buffs || {},
         last_sync_at: user.last_sync_at

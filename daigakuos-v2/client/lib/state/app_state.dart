@@ -16,9 +16,13 @@ class User {
   final String role; 
   final bool canUseSkill;
   final int skillCooldown;
-  final int currentSharpness; // Phase 44
-  final int maxSharpness; // Phase 44
-  final String sharpnessColor; // Phase 44
+  final int currentSharpness; 
+  final int maxSharpness; 
+  final String sharpnessColor; 
+  final int hp; // Phase 45
+  final int maxHp; // Phase 45
+  final int stamina; // Phase 45
+  final int maxStamina; // Phase 45
   final Map<String, int> materials;
   final Map<String, int> inventory; 
   final Map<String, dynamic> bossArchive; 
@@ -40,6 +44,10 @@ class User {
     required this.currentSharpness,
     required this.maxSharpness,
     required this.sharpnessColor,
+    required this.hp,
+    required this.maxHp,
+    required this.stamina,
+    required this.maxStamina,
     required this.materials,
     required this.inventory,
     required this.bossArchive,
@@ -63,6 +71,10 @@ class User {
       currentSharpness: json['current_sharpness'] ?? 100,
       maxSharpness: json['max_sharpness'] ?? 100,
       sharpnessColor: json['sharpness_color'] ?? 'white',
+      hp: json['hp'] ?? 100,
+      maxHp: json['max_hp'] ?? 100,
+      stamina: json['stamina'] ?? 100,
+      maxStamina: json['max_stamina'] ?? 100,
       materials: Map<String, int>.from(json['materials'] ?? {}),
       inventory: Map<String, int>.from(json['inventory'] ?? {}),
       bossArchive: Map<String, dynamic>.from(json['boss_archive'] ?? {}),
@@ -147,7 +159,7 @@ class WorldStatus {
   final int currentPhase;
   final String? activeGimmick;
   final String? gimmickName;
-  final Map<String, dynamic>? monsterState; // Phase 44
+  final Map<String, dynamic>? monsterState; 
 
   WorldStatus({
     required this.weather,
