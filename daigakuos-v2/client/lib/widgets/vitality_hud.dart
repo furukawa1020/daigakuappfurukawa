@@ -7,6 +7,7 @@ class VitalityHUD extends StatelessWidget {
   final int maxHp;
   final int stamina;
   final int maxStamina;
+  final Map<String, dynamic> statusEffects; // Phase 46
 
   const VitalityHUD({
     super.key,
@@ -14,6 +15,7 @@ class VitalityHUD extends StatelessWidget {
     required this.maxHp,
     required this.stamina,
     required this.maxStamina,
+    required this.statusEffects,
   });
 
   @override
@@ -38,8 +40,9 @@ class VitalityHUD extends StatelessWidget {
             label: "HP",
             current: hp,
             max: maxHp,
-            color: const Color(0xFF22C55E),
+            color: statusEffects.containsKey('poisoned') ? const Color(0xFF9333EA) : const Color(0xFF22C55E),
             icon: Icons.favorite,
+            statusIcon: statusEffects.containsKey('poisoned') ? '🤢' : null,
           ),
           const SizedBox(height: 6),
           // Stamina Bar
@@ -49,6 +52,7 @@ class VitalityHUD extends StatelessWidget {
             max: maxStamina,
             color: const Color(0xFFEAB308),
             icon: Icons.bolt,
+            statusIcon: statusEffects.containsKey('stunned') ? '💫' : null,
           ),
         ],
       ),
@@ -61,6 +65,7 @@ class VitalityHUD extends StatelessWidget {
     required int max,
     required Color color,
     required IconData icon,
+    String? statusIcon,
   }) {
     final double width = 180.0;
     final double ratio = current / max;
@@ -80,6 +85,7 @@ class VitalityHUD extends StatelessWidget {
           ),
         ),
         Stack(
+          clipBehavior: Clip.none,
           children: [
             // Background
             Container(
@@ -100,7 +106,7 @@ class VitalityHUD extends StatelessWidget {
               height: 12,
               width: width * ratio,
               decoration: BoxDecoration(
-                color: isLow && label == "HP" ? Colors.redAccent : color,
+                color: isLow && label == "HP" && statusIcon == null ? Colors.redAccent : color,
                 borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(8),
                   bottomRight: Radius.circular(8),
@@ -113,6 +119,12 @@ class VitalityHUD extends StatelessWidget {
                 ],
               ),
             ).animate(target: isLow ? 1 : 0).shimmer(duration: 1.seconds),
+            if (statusIcon != null)
+              Positioned(
+                right: -20,
+                top: -4,
+                child: Text(statusIcon, style: const TextStyle(fontSize: 14)).animate().shake(),
+              ),
           ],
         ),
       ],
