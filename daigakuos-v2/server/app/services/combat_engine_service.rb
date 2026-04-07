@@ -1,11 +1,11 @@
 class CombatEngineService
-  SHARPNESS_MULTIPLIERS = {
-    'white' => 1.32,
-    'blue' => 1.20,
-    'green' => 1.05,
-    'yellow' => 1.00,
-    'orange' => 0.75,
-    'red' => 0.50
+  # Phase 48: Neural Resonance Multipliers (Replaces Sharpness)
+  RESONANCE_MULTIPLIERS = {
+    80..100 => 1.50, # Harmonized (Gold)
+    60..79  => 1.25, # High Sync (Cyan)
+    40..59  => 1.05, # Stable (Green)
+    20..39  => 0.80, # Decaying (Yellow)
+    0..19   => 0.40  # Muted (Red)
   }
 
   # HZV (Hitzone Values / 肉質) for each monster
@@ -23,56 +23,49 @@ class CombatEngineService
     if current_status['stunned']
       current_status.delete('stunned')
       user.update!(status_effects: current_status)
-      return { damage: 0, hp: user.hp, stunned: true, message: '気絶して動けないもこ！💫' }
+      return { damage: 0, hp: user.hp, stunned: true, message: '気絶状態もこ...集中力を奪われているもこ！' }
     end
 
-    # 1. Apply Meal Buffs
-    meal = user.meal_buffs || {}
-    atk_mult = 1.0 + (meal['atk_boost'] || 0)
-    def_mult = 1.0 - (meal['def_boost'] || 0)
-
-    # 2. Master Rank Logic: Affinity (会心判定)
-    affinity = 25 # Base Master Rank Affinity
-    is_critical = rand(100) < affinity
-    crit_mult = is_critical ? 1.25 : 1.0
-
-    # 3. Sharpness Multiplier
-    color = user.sharpness_color
-    sharpness_mult = SHARPNESS_MULTIPLIERS[color] || 1.0
+    # 1. Bio-Sync Modifiers (Phase 48 Core)
+    order = user.order_level # 0.0 - 1.0
+    chaos = user.chaos_level # 0.0 - 1.0
     
-    # 4. Target Hitzone
+    order_mult = 1.0 + (order * 0.5) # Up to 50% dmg bonus for high streak
+    chaos_mult = 1.0 + (chaos * 0.5) # Up to 50% monster counter bonus for too many tasks
+
+    # 2. Neural Resonance (斬れ味に代わる同調率)
+    res_value = user.neural_resonance
+    resonance_mult = RESONANCE_MULTIPLIERS.find { |range, _| range.include?(res_value) }&.last || 1.0
+
+    # 3. Target Hitzone
     hitzones = MONSTER_HITZONES[raid.title.parameterize.underscore] || { head: 50, body: 50 }
     target = decide_hitzone(user, hitzones)
     hzv = hitzones[target] || 50
     
-    # 5. Bounce Check
-    is_bounce = (sharpness_mult * hzv) < 25
-    bounce_mult = is_bounce ? 0.5 : 1.0
+    # 4. Neural Bounce Check (同調拒絶判定)
+    is_bounce = (resonance_mult * hzv) < 25
+    bounce_mult = is_bounce ? 0.3 : 1.0
     
-    # 6. Sharpness & Stamina Loss
-    sharpness_loss = is_bounce ? 2 : 1
-    stamina_loss = 10
-    
-    # 7. Monster Counter-Attack
+    # 5. Monster Counter-Attack (のカオス倍率)
     monster_state = MonsterAIEngine.get_state_modifiers(raid)
-    counter_damage = (monster_state[:damage_mult] * 10 * def_mult).to_i
+    counter_damage = (monster_state[:damage_mult] * 12 * chaos_mult).to_i # Procrastination hurts!
     
-    # Status Chance
-    if rand < (monster_state[:damage_mult] * 0.1)
-      effect = raid.title.include?('Wyvern') ? 'poisoned' : 'stunned'
+    # Status Chance: Affected by Chaos
+    if rand < (chaos * 0.3)
+      effect = 'poisoned'
       current_status[effect] = true
     end
 
-    # 8. Poison Damage
-    if current_status['poisoned']
-      counter_damage += 5
-    end
-    
-    # 9. Final Calculation
-    final_damage = (base_damage * sharpness_mult * (hzv / 100.0) * bounce_mult * atk_mult * crit_mult).to_i
+    # 6. Final Damage Calculation
+    # Affinity is now purely linked to Order (Streak)
+    affinity = (order * 50).to_i + 10 # Base 10% + up to 50%
+    is_critical = rand(100) < affinity
+    crit_mult = is_critical ? 1.35 : 1.0 # Slightly stronger crit for Master Rank
+
+    final_damage = (base_damage * resonance_mult * (hzv / 100.0) * bounce_mult * order_mult * crit_mult).to_i
     final_damage = 0 if user.stamina <= 0 
     
-    # 10. Part Durability & Flinch Logic (部位耐久値)
+    # 7. Part Durability & Flinch
     durabilities = raid.part_durabilities || {}
     is_flinched = false
     is_broken = false
@@ -81,24 +74,18 @@ class CombatEngineService
       durabilities[target] -= final_damage
       if durabilities[target] <= 0
         is_flinched = true
-        is_broken = true if durabilities[target] < -500 # Major break
-        durabilities[target] = 2000 # Reset durability for next flinch
+        is_broken = true if durabilities[target] < -1000
+        durabilities[target] = 3000 # Higher resistance in Master Rank
       end
     end
     raid.update!(part_durabilities: durabilities)
 
-    # 11. Kinetic Feedback Calculation (インパクトデータ)
-    hit_stop = is_critical ? 150 : (final_damage > 100 ? 100 : 50) # ms
-    shake = is_critical ? 8.0 : (is_bounce ? 5.0 : 2.0) # units
-
-    # Resolve User States
+    # 8. Impact & User State Resolve
     new_hp = [user.hp - counter_damage, 0].max
-    new_stamina = [user.stamina - stamina_loss, 0].max
     
     user.update!(
-      current_sharpness: [user.current_sharpness - sharpness_loss, 0].max,
       hp: new_hp,
-      stamina: new_stamina,
+      stamina: [user.stamina - 15, 0].max, # Higher drain
       status_effects: current_status
     )
     
@@ -107,16 +94,16 @@ class CombatEngineService
       is_bounce: is_bounce,
       is_critical: is_critical,
       target_part: target,
-      sharpness_color: color,
+      resonance_level: res_value,
       hp: new_hp,
-      stamina: new_stamina,
+      stamina: user.stamina,
       status_effects: current_status,
       fainted: new_hp <= 0,
-      fatigued: new_stamina <= 0,
       flinched: is_flinched,
-      broken: is_broken,
-      hit_stop: hit_stop,
-      shake: shake
+      hit_stop: is_critical ? 200 : 80,
+      shake: 2.0 + (chaos * 6.0), # Chaos increases screen shake intensity
+      chaos_level: chaos,
+      order_level: order
     }
   end
 
