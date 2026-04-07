@@ -48,7 +48,8 @@ import 'widgets/raid_hp_bar.dart';
 import 'widgets/skill_action_button.dart';
 import 'widgets/sharpness_gauge.dart';
 import 'widgets/quick_item_pouch.dart';
-import 'widgets/vitality_hud.dart';
+import 'widgets/bio_sync_hud.dart';
+import 'widgets/chaos_atmosphere.dart';
 import 'widgets/impact_effect_overlay.dart';
 import 'dart:async';
 
@@ -1214,41 +1215,34 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                               const Text("💎", style: TextStyle(fontSize: 24)),
                               const SizedBox(height: 4),
                               Text("${currencies.campusGems}", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                              const Text("ジェム", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                            ],
+                          const Text("今の気分は？", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: moods.map((m) => GestureDetector(
+                              onTap: () {
+                                ref.read(hapticsProvider.notifier).lightImpact();
+                                ref.read(sessionProvider.notifier).state = Session(
+                                  id: session?.id,
+                                  startAt: session?.startAt ?? DateTime.now(),
+                                  durationMinutes: session?.durationMinutes,
+                                  moodPre: m['e'],
+                                  moodPost: session?.moodPost,
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.05),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(m['e']!, style: const TextStyle(fontSize: 24)),
+                              ),
+                            )).toList(),
                           ),
                         ],
-                      ),
-                    ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.2, end: 0);
-                  }),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // Quick Action Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () => context.go('/collection'),
-                          icon: const Icon(Icons.auto_awesome, size: 18),
-                          label: const Text("コレクション"),
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFB5EAD7),
-                            foregroundColor: Colors.brown,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: FilledButton.icon(
-                          onPressed: () => context.go('/achievements'),
-                          icon: const Icon(Icons.workspace_premium, size: 18),
-                          label: const Text("称号・勲章"),
-                          style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFC7CEEA),
-                            foregroundColor: Colors.deepPurple,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
                           ),
                         ),
                       ),

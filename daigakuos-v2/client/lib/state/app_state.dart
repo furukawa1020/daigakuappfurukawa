@@ -27,8 +27,11 @@ class User {
   final Map<String, int> inventory; 
   final Map<String, dynamic> bossArchive; 
   final Map<String, dynamic> passiveBuffs; 
-  final Map<String, dynamic> mealBuffs; // Phase 46
-  final Map<String, dynamic> statusEffects; // Phase 46
+  final Map<String, dynamic> mealBuffs;
+  final Map<String, dynamic> statusEffects;
+  final double chaosLevel; // Phase 48
+  final double orderLevel; // Phase 48
+  final int neuralResonance; // Phase 48
 
   User({
     required this.deviceId,
@@ -56,6 +59,9 @@ class User {
     required this.passiveBuffs,
     required this.mealBuffs,
     required this.statusEffects,
+    required this.chaosLevel,
+    required this.orderLevel,
+    required this.neuralResonance,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -85,6 +91,9 @@ class User {
       passiveBuffs: Map<String, dynamic>.from(json['passive_buffs'] ?? {}),
       mealBuffs: Map<String, dynamic>.from(json['meal_buffs'] ?? {}),
       statusEffects: Map<String, dynamic>.from(json['status_effects'] ?? {}),
+      chaosLevel: (json['chaos_level'] ?? 0.0).toDouble(),
+      orderLevel: (json['order_level'] ?? 0.0).toDouble(),
+      neuralResonance: json['neural_resonance'] ?? 50,
     );
   }
 }
