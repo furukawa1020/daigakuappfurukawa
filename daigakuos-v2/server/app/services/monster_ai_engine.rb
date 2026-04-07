@@ -45,4 +45,10 @@ class MonsterAIEngine
       modifiers: state
     })
   end
+
+  # Phase 50: Action Selection
+  def self.decide_action(raid)
+    global_entropy = MokoWorldService.calculate_global_entropy
+    ActionPatternService.select_action(raid, global_entropy)
+  end
 end
