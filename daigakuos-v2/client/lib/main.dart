@@ -49,6 +49,8 @@ import 'widgets/skill_action_button.dart';
 import 'widgets/sharpness_gauge.dart';
 import 'widgets/quick_item_pouch.dart';
 import 'widgets/vitality_hud.dart';
+import 'widgets/impact_effect_overlay.dart';
+import 'dart:async';
 
 import 'services/native_command_listener.dart';
 import 'services/api_service.dart';
@@ -224,6 +226,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   Timer? _idleTimer;
+  final StreamController<ImpactEvent> _impactController = StreamController<ImpactEvent>.broadcast();
 
   @override
   void initState() {
@@ -254,6 +257,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void dispose() {
     _idleTimer?.cancel();
+    _impactController.close();
     super.dispose();
   }
 
@@ -1232,25 +1236,6 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                     ],
                   ).animate().fadeIn(delay: 300.ms),
                   
-                  const SizedBox(height: 24),
-
-                  Expanded(
-                    child: Center(
-                     child: Column(
-                       mainAxisSize: MainAxisSize.min,
-                       children: [
-                         VisualTimer(
-                           elapsed: _elapsed,
-                           targetMinutes: ref.watch(sessionProvider)?.targetMinutes,
-                         ).animate().fadeIn(duration: 1.seconds),
-                         const SizedBox(height: 10),
-                         Container(
-                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                           decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
-                           child: Text(taskTitle ?? "DaigakuAPP 実行中...", style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
-                         ),
-                         // Phase 45: Vitality HUD (Self-Management)
-                         if (user != null)
                            VitalityHUD(
                              hp: user.hp,
                              maxHp: user.maxHp,
