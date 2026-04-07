@@ -1,5 +1,6 @@
 class GlobalRaid < ApplicationRecord
   serialize :participants_data, coder: JSON
+  serialize :part_durabilities, coder: JSON
   
   validates :title, presence: true
   validates :max_hp, numericality: { greater_than: 0 }
@@ -21,6 +22,7 @@ class GlobalRaid < ApplicationRecord
 
   def set_defaults
     self.participants_data ||= {}
+    self.part_durabilities ||= { head: 1000, body: 2000, tail: 800, leg: 1000 }
     self.status ||= 'active'
     self.current_hp ||= self.max_hp
     self.current_phase ||= 1
