@@ -36,8 +36,19 @@ class MokoWorldService
       current_phase: raid&.current_phase || 1,
       active_gimmick: raid&.active_gimmick,
       gimmick_name: raid&.gimmick_active? ? GlobalRaid::BOSS_GIMMICKS[raid.active_gimmick][:name] : nil,
-      monster_state: MonsterAIEngine.get_state_modifiers(raid)
+      monster_state: MonsterAIEngine.get_state_modifiers(raid),
+      global_entropy: calculate_global_entropy
     })
+  end
+
+  def self.calculate_global_entropy
+    # Phase 50: Synchronized Depths
+    # Calculate average chaos of all users active in the last 10 minutes
+    active_users = User.where('last_sync_at > ?', 10.minutes.ago)
+    return 0.0 if active_users.empty?
+    
+    total_chaos = active_users.sum(&:chaos_level)
+    (total_chaos / active_users.count).clamp(0.0, 1.0)
   end
 
   def self.trigger_victory_buff!(hours = 3)
