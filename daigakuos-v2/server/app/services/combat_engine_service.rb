@@ -46,12 +46,39 @@ class CombatEngineService
     is_bounce = (resonance_mult * hzv) < 25
     bounce_mult = is_bounce ? 0.3 : 1.0
     
-    # 5. Monster Counter-Attack (のカオス倍率)
-    monster_state = MonsterAIEngine.get_state_modifiers(raid)
-    counter_damage = (monster_state[:damage_mult] * 12 * chaos_mult).to_i # Procrastination hurts!
+    # 5. Monster Action Evaluation & Counter-Attack (Phase 50 Core)
+    monster_action = MonsterAIEngine.decide_action(raid)
+    base_counter = monster_action[:base_damage]
     
-    # Status Chance: Affected by Chaos
-    if rand < (chaos * 0.3)
+    # Role-Based Synergies
+    if user.role == 'tank'
+      # Tank: Halves incoming damage, and mitigates Chaos impact
+      counter_damage = (base_counter * 0.5 * chaos_mult).to_i
+      chaos_mult = [chaos_mult - 0.2, 1.0].max
+      hit_message = "【Tank】#{monster_action[:name]} を防御！"
+    elsif user.role == 'support'
+      # Support: Frail, but creates a chance to dodge entirely
+      if rand < 0.3
+        counter_damage = 0
+        hit_message = "【Support】#{monster_action[:name]} を華麗に回避！"
+      else
+        counter_damage = (base_counter * 1.5 * chaos_mult).to_i
+        hit_message = "【Support】痛恨！#{monster_action[:name]}が直撃...！"
+      end
+    else
+      # DPS: Standard calculation
+      counter_damage = (base_counter * chaos_mult).to_i
+      hit_message = "【DPS】#{monster_action[:name]} を受けたもこ！"
+    end
+    
+    # Action Specific Effects
+    if monster_action[:id] == 'data_void'
+      # Forces Resonance down
+      user.update!(sessions: user.sessions.where('created_at < ?', 24.hours.ago)) rescue nil
+    end
+
+    # Status Chance: Affected by Chaos and Action Type
+    if rand < (chaos * 0.3) || (monster_action[:type] == :chaos && rand < 0.5)
       effect = 'poisoned'
       current_status[effect] = true
     end
@@ -104,6 +131,8 @@ class CombatEngineService
       shake: 2.0 + (chaos * 6.0), # Chaos increases screen shake intensity
       chaos_level: chaos,
       order_level: order,
+      monster_action: monster_action[:name],
+      combat_message: hit_message,
       moko_message: generate_moko_message(is_critical, is_bounce, is_flinched, new_hp, chaos)
     }
   end
