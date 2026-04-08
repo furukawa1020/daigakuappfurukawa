@@ -23,13 +23,19 @@ class LocalStore
         hp: 100, max_hp: 100, stamina: 100, max_stamina: 100,
         streak: 0, coins: 0, role: 'dps',
         order_level: 0.0, chaos_level: 0.0, neural_resonance: 50,
-        status_effects: {}
+        status_effects: {},
+        last_tick_at: Time.now.to_i
       },
       raid: {
         title: 'Moko Wyvern',
         max_hp: 1000000, current_hp: 1000000,
-        current_phase: 1, status: 'active'
+        current_phase: 1, status: 'active',
+        hunger: 0.0, fatigue: 0.0, alertness: 0.0
       },
+      environment: {
+        toxins: 0.0, oxygen: 50.0, weather: 'sunny'
+      },
+      history: [], # Past sessions for Markov Chain
       global_entropy: 0.0
     }
   end
