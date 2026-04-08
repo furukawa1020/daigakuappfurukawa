@@ -74,6 +74,8 @@ class BioSyncHUD extends StatefulWidget {
   final double chaosLevel;
   final int hp;
   final int maxHp;
+  final double oxygenLevel; // Phase 52
+  final double toxinLevel;  // Phase 52
 
   const BioSyncHUD({
     super.key,
@@ -81,6 +83,8 @@ class BioSyncHUD extends StatefulWidget {
     required this.chaosLevel,
     required this.hp,
     required this.maxHp,
+    required this.oxygenLevel,
+    required this.toxinLevel,
   });
 
   @override
@@ -105,6 +109,8 @@ class _BioSyncHUDState extends State<BioSyncHUD> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final double hpRatio = (widget.hp / widget.maxHp).clamp(0.0, 1.0);
+    final double oxRatio = (widget.oxygenLevel / 100.0).clamp(0.0, 1.0);
+    final double toxRatio = (widget.toxinLevel / 100.0).clamp(0.0, 1.0);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -163,6 +169,44 @@ class _BioSyncHUDState extends State<BioSyncHUD> with SingleTickerProviderStateM
               _buildStatInfo("ORDER", widget.orderLevel, Colors.amberAccent),
               _buildStatInfo("CHAOS", widget.chaosLevel, Colors.redAccent),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Phase 52: Metabolic Depth
+          Row(
+            children: [
+              _buildMetabolicBar("OXYGEN", oxRatio, Colors.greenAccent),
+              const SizedBox(width: 12),
+              _buildMetabolicBar("TOXINS", toxRatio, Colors.deepPurpleAccent),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetabolicBar(String label, double ratio, Color color) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: GoogleFonts.inter(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.white24)),
+          const SizedBox(height: 2),
+          Container(
+            height: 3,
+            decoration: BoxDecoration(
+              color: Colors.black45,
+              borderRadius: BorderRadius.circular(1),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: ratio,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  boxShadow: [BoxShadow(color: color.withOpacity(0.5), blurRadius: 4)],
+                ),
+              ),
+            ),
           ),
         ],
       ),
