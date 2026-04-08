@@ -167,14 +167,11 @@ class GlobalRaid {
 
 class WorldStatus {
   final String weather;
-  final String eventName;
-  final DateTime startedAt;
-  final double raidBuff;
-  final GlobalRaid? activeRaid;
-  final int currentPhase;
-  final String? activeGimmick;
   final String? gimmickName;
   final Map<String, dynamic>? monsterState; 
+  final double oxygenLevel; // Phase 52
+  final double toxinLevel;  // Phase 52
+  final double monsterHunger; // Phase 52
 
   WorldStatus({
     required this.weather,
@@ -186,6 +183,9 @@ class WorldStatus {
     this.activeGimmick,
     this.gimmickName,
     this.monsterState,
+    this.oxygenLevel = 50.0,
+    this.toxinLevel = 0.0,
+    this.monsterHunger = 0.0,
   });
 
   factory WorldStatus.fromJson(Map<String, dynamic> json) {
@@ -235,12 +235,17 @@ final worldStatusProvider = FutureProvider<WorldStatus>((ref) async {
   final engine = RubyEngineService();
   final response = await engine.sendCommand({'command': 'get_status'});
   
-  // World status mock from local engine for now
+  final env = response['environment'] ?? {};
+  final raid = response['raid'] ?? {};
+
   return WorldStatus(
-    weather: "sunny",
-    eventName: "Native Engine RUNNING 🐾",
+    weather: env['weather'] ?? "sunny",
+    eventName: "Native Engine: DEEP SIMULATION 🐾",
     startedAt: DateTime.now(),
-    activeRaid: GlobalRaid.fromJson(response['raid']),
+    activeRaid: GlobalRaid.fromJson(raid),
+    oxygenLevel: (env['oxygen'] ?? 50.0).toDouble(),
+    toxinLevel: (env['toxins'] ?? 0.0).toDouble(),
+    monsterHunger: (raid['hunger'] ?? 0.0).toDouble(),
   );
 });
 
