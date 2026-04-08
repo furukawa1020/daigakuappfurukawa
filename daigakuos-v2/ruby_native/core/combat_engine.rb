@@ -17,26 +17,30 @@ class CombatEngine
     # ⚖️ Modifiers
     order = user_state[:order_level] || 0.0
     chaos = user_state[:chaos_level] || 0.0
+    toxin_mult = 1.0 - ((user_state[:toxins] || 0.0) / 200.0)
+    oxygen_mult = 1.0 + ((user_state[:oxygen] || 0.0) / 200.0)
+    
     res_value = user_state[:neural_resonance] || 50
     resonance_mult = RESONANCE_MULTIPLIERS.find { |range, _| range.include?(res_value) }&.last || 1.0
     
     # 🎯 Targeting
-    hzv = 50 # Default hitzone
+    hzv = 50 
     affinity = (order * 50).to_i + 10
     is_critical = rand(100) < affinity
     crit_mult = is_critical ? 1.35 : 1.0
     
-    final_damage = (base_damage * resonance_mult * (hzv / 100.0) * crit_mult * (1.0 + order * 0.5)).to_i
+    # 💥 Final Damage: Now influenced by the Ecosystem Oxygen!
+    final_damage = (base_damage * resonance_mult * (hzv / 100.0) * crit_mult * (1.0 + order * 0.5) * oxygen_mult).to_i
     final_damage = 0 if (user_state[:stamina] || 0) <= 0
 
-    # 🐉 Monster AI Evaluation
-    monster_action = ActionPatterns.select_action(raid_state[:current_phase], global_entropy)
+    # 🐉 Monster AI Evaluation (Biological Brain)
+    monster_action = MonsterBrain.decide_action(raid_state, global_entropy)
     base_counter = monster_action[:base_damage]
     
-    # 🛡️ Role-Based Synergy
+    # 🛡️ Role-Based Synergy (Affected by Toxins!)
     case user_state[:role]
     when 'tank'
-      counter_damage = (base_counter * 0.5 * (1.0 + chaos * 0.5)).to_i
+      counter_damage = (base_counter * 0.5 * (1.0 + chaos * 0.5) * (2.0 - toxin_mult)).to_i
       hit_msg = "【Tank】#{monster_action[:name]} を防御！"
     when 'support'
       if rand < 0.3
