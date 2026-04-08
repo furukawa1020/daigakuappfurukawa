@@ -64,7 +64,8 @@ import 'screens/boss_archive_screen.dart';
 import 'screens/quest_board_screen.dart';
 import 'screens/blacksmith_screen.dart';
 import 'screens/canteen_screen.dart';
-import 'screens/combination_screen.dart';
+import 'services/combination_screen.dart';
+import 'services/ruby_engine_service.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -149,6 +150,10 @@ final _router = GoRouter(
 
 void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
+  
+  // Phase 51: Initialize Native Ruby Engine
+  await RubyEngineService().init();
+
   await NotificationService().init(); // Init notifications
 
   // Schedule daily 9 PM summary (fire-and-forget on startup)
@@ -247,17 +252,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _connectRealTime() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final cable = ref.read(actionCableProvider);
-      cable.connect();
-      
-      // Phase 47: Kinetic Feedback Listener
-      cable.subscribe("raid_channel", (data) {
-        if (data['type'] == 'damage_dealt') {
-          final currentUser = ref.read(userProvider).value;
-          if (data['attacker'] == currentUser?.username) {
+      // Phase 51: Listen to Native Engine Stream instead of ActionCable
+      RubyEngineService().responses.listen((data) {
+        if (data.containsKey('damage')) {
             final hitStop = (data['hit_stop'] as num?)?.toInt() ?? 0;
             final shake = (data['shake'] as num?)?.toDouble() ?? 0.0;
-            final isCrit = data['is_crit'] as bool? ?? false;
+            final isCrit = data['is_critical'] as bool? ?? false;
             final mokoMessage = data['moko_message'] as String? ?? "";
             
             _impactController.add(ImpactEvent(
@@ -269,7 +269,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             if (mokoMessage.isNotEmpty) {
                _triggerMoko(mokoMessage, isCrit ? MokoEmotion.happy : (data['is_bounce'] == true ? MokoEmotion.pained : MokoEmotion.normal));
             }
-          }
         }
       });
     });
