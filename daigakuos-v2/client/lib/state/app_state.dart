@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/api_service.dart';
+import '../services/ruby_engine_service.dart';
 
 // --- Models ---
 
@@ -224,13 +224,24 @@ class ChatMessage {
 final deviceIdProvider = StateProvider<String>((ref) => "EMULATOR_DEVICE_ID");
 
 final userProvider = FutureProvider<User>((ref) async {
-  final deviceId = ref.watch(deviceIdProvider);
-  return ApiService().fetchUser(deviceId);
+  // Phase 51: Native Ruby Engine Bridge
+  final engine = RubyEngineService();
+  final response = await engine.sendCommand({'command': 'get_status'});
+  return User.fromJson(response['user']);
 });
 
 final worldStatusProvider = FutureProvider<WorldStatus>((ref) async {
-  final data = await ApiService().fetchWorldStatus();
-  return WorldStatus.fromJson(data);
+  // Phase 51: Native Ruby Engine Bridge
+  final engine = RubyEngineService();
+  final response = await engine.sendCommand({'command': 'get_status'});
+  
+  // World status mock from local engine for now
+  return WorldStatus(
+    weather: "sunny",
+    eventName: "Native Engine RUNNING 🐾",
+    startedAt: DateTime.now(),
+    activeRaid: GlobalRaid.fromJson(response['raid']),
+  );
 });
 
 final globalRaidProvider = FutureProvider<GlobalRaid?>((ref) async {
