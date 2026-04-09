@@ -3,6 +3,7 @@ require 'json'
 require_relative 'core/combat_engine'
 require_relative 'core/ecosystem'
 require_relative 'core/monster_brain'
+require_relative 'core/alchemist'
 require_relative 'storage/local_store'
 
 # 🚀 Moko Native Engine: Zero-Latency Logic Core
@@ -18,7 +19,7 @@ def simulate_chronology!(state)
   Ecosystem.tick(state, elapsed_hours)
   
   # 🧬 Run Monster Bio Tick (Hunger & Alertness)
-  MonsterBrain.tick(state[:raid], elapsed_hours, state[:history] || [])
+  MonsterBrain.tick(state[:raid], elapsed_hours, state[:history] || [], state[:environment])
   
   # ⚖️ Apply Metabolic Effects
   Ecosystem.apply_metabolic_effects(state[:user], state[:environment])
@@ -60,6 +61,20 @@ def process_command(line)
     state[:user][:chaos_level] = request[:chaos].to_f
     LocalStore.save_state(state)
     { success: true, chaos: state[:user][:chaos_level] }
+  when 'combine_items'
+    item_a = request[:item_a]
+    item_b = request[:item_b]
+    result = Alchemist.combine(item_a, item_b)
+    
+    if result[:success]
+      # Update user inventory (logic simplified for brevity)
+      state[:user][:inventory] ||= {}
+      state[:user][:inventory][item_a] -= 1
+      state[:user][:inventory][item_b] -= 1
+      state[:user][:inventory][result[:item]] = (state[:user][:inventory][result[:item]] || 0) + 1
+      LocalStore.save_state(state)
+    end
+    result
   else
     { error: 'Unknown command' }
   end
