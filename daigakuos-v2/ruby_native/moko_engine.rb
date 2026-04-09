@@ -27,6 +27,23 @@ def simulate_chronology!(state)
   state[:user][:last_tick_at] = Time.now.to_i
 end
 
+def generate_chronicle(state)
+  env = state[:environment]
+  user = state[:user]
+  raid = state[:raid]
+  
+  # 📜 Poetic String Interpolation
+  time_str = Time.now.strftime("%H:%M")
+  
+  [
+    "【刻の記録: #{time_str}】",
+    "空は #{env[:weather]} に染まり、酸素濃度は #{env[:oxygen].to_i}% を示している。",
+    env[:toxins] > 50 ? "🌪️ 淀んだ風が吹き抜け、毒素が大地を侵食しつつある..." : "🌿 清らかな風が吹き、世界は調律されている。",
+    "#{raid[:display_name]} は現在、#{MonsterBrain::BEHAVIOR_MODES[raid[:behavior_mode]][:name]} の相にある。",
+    user[:hp] < 30 ? "⚠️ あなたのバイタルが低下している。休息が必要だ。" : "✨ あなたの魂は共鳴し、#{user[:order_level].to_i}段階の秩序を保っている。"
+  ].join("\n")
+end
+
 def process_command(line)
   request = JSON.parse(line, symbolize_names: true) rescue nil
   return { error: 'Invalid JSON' } unless request
@@ -61,6 +78,8 @@ def process_command(line)
     state[:user][:chaos_level] = request[:chaos].to_f
     LocalStore.save_state(state)
     { success: true, chaos: state[:user][:chaos_level] }
+  when 'generate_chronicle'
+    { success: true, chronicle: generate_chronicle(state) }
   when 'combine_items'
     item_a = request[:item_a]
     item_b = request[:item_b]
