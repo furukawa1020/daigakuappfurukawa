@@ -3,6 +3,7 @@ require 'json'
 require_relative 'core/combat_engine'
 require_relative 'core/ecosystem'
 require_relative 'core/monster_brain'
+require_relative 'core/bio_physics'
 require_relative 'core/alchemist'
 require_relative 'storage/local_store'
 
@@ -23,6 +24,14 @@ def simulate_chronology!(state)
   
   # ⚖️ Apply Metabolic Effects
   Ecosystem.apply_metabolic_effects(state[:user], state[:environment])
+  
+  # 🧪 Run Bio-Physics Engine Tick
+  # We use a delta-time of ~0.1s for simulation logic if not specified
+  dt = elapsed_seconds > 10 ? 0.1 : [elapsed_seconds, 1.0].min 
+  monster_type = state[:raid][:title] || "Slime"
+  
+  state[:physics_state] ||= {}
+  state[:physics] = BioPhysics.calculate(monster_type, state[:physics_state], dt)
   
   state[:user][:last_tick_at] = Time.now.to_i
 end
