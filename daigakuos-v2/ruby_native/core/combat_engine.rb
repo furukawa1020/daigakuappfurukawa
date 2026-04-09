@@ -35,9 +35,12 @@ class CombatEngine
 
     # 🐉 Monster AI Evaluation (Biological Brain)
     monster_action = MonsterBrain.decide_action(raid_state, global_entropy)
-    base_counter = monster_action[:base_damage]
+    mode_info = MonsterBrain::BEHAVIOR_MODES[raid_state[:behavior_mode] || :grazing]
     
-    # 🛡️ Role-Based Synergy (Affected by Toxins!)
+    # Base Counter influenced by behavioral multi
+    base_counter = monster_action[:base_damage] * (monster_action[:damage_mult] || 1.0)
+    
+    # 🛡️ Role-Based Synergy (Affected by Toxins & Behavior!)
     case user_state[:role]
     when 'tank'
       counter_damage = (base_counter * 0.5 * (1.0 + chaos * 0.5) * (2.0 - toxin_mult)).to_i
@@ -51,12 +54,15 @@ class CombatEngine
         hit_msg = "【Support】直撃！#{monster_action[:name]}"
       end
     else
-      counter_damage = (base_counter * (1.0 + chaos * 0.5)).to_i
-      hit_msg = "【DPS】#{monster_action[:name]} を受けた！"
+      # Enraged monsters hit much harder on DPS
+      mult = (raid_state[:behavior_mode] == :enraged) ? 1.4 : 1.0
+      counter_damage = (base_counter * (1.0 + chaos * 0.5) * mult).to_i
+      hit_msg = "【#{user_state[:role].upcase}】#{monster_action[:name]} を受けた！"
     end
 
-    # 🌪️ Status Effects
-    if rand < (chaos * 0.3)
+    # 🌪️ Status Effects (Probability increased in Starving/Enraged modes)
+    status_threshold = 0.3 + (raid_state[:behavior_mode] == :starving ? 0.3 : 0.0)
+    if rand < (chaos * status_threshold)
       current_status['poisoned'] = true
     end
 
@@ -67,8 +73,9 @@ class CombatEngine
       stamina: [user_state[:stamina] - 15, 0].max,
       status_effects: current_status,
       monster_action: monster_action[:name],
+      behavior_mode: raid_state[:behavior_mode], # Send mode back to Flutter
       combat_message: hit_msg,
-      shake: 2.0 + (chaos * 6.0),
+      shake: 2.0 + (chaos * 6.0) + (raid_state[:behavior_mode] == :enraged ? 4.0 : 0.0),
       hit_stop: is_critical ? 200 : 80
     }
   end
