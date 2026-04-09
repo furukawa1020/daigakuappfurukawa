@@ -22,21 +22,30 @@ class LocalStore
       user: {
         hp: 100, max_hp: 100, stamina: 100, max_stamina: 100,
         streak: 0, coins: 0, role: 'dps',
-        order_level: 0.0, chaos_level: 0.0, neural_resonance: 50,
+        order_level: 0.0, chaos_level: 0.0,
+        metabolic_sync: 50, # Formerly neural_resonance
         status_effects: {},
         last_tick_at: Time.now.to_i
       },
       raid: {
         title: 'Moko Wyvern',
+        display_name: 'Moko Wyvern',
         max_hp: 1000000, current_hp: 1000000,
         current_phase: 1, status: 'active',
-        hunger: 0.0, fatigue: 0.0, alertness: 0.0
+        hunger: 0.0, fatigue: 0.0, alertness: 0.0,
+        behavior_mode: :grazing,
+        bloodline: { # Physical Inheritance
+          bone_density: 1.0, 
+          muscle_type: :balanced, 
+          lung_capacity: 1.0,
+          metabolic_rate: 1.0
+        }
       },
       environment: {
         toxins: 0.0, oxygen: 50.0, weather: 'sunny'
       },
-      history: [], # Past sessions for Markov Chain
-      global_entropy: 0.0
+      history: [],
+      toxin_load: 0.0 # Formerly global_entropy
     }
   end
 end
