@@ -2,7 +2,8 @@
 require_relative 'action_patterns'
 
 class CombatEngine
-  RESONANCE_MULTIPLIERS = {
+  # 🧬 Biological Metabolic Multipliers
+  METABOLIC_MULTIPLIERS = {
     80..100 => 1.50,
     60..79  => 1.25,
     40..59  => 1.05,
@@ -10,7 +11,7 @@ class CombatEngine
     0..19   => 0.40
   }
 
-  def self.calculate_damage(user_state, raid_state, base_damage, global_entropy)
+  def self.calculate_damage(user_state, raid_state, base_damage, toxin_load)
     current_status = user_state[:status_effects] || {}
     return { damage: 0, hp: 0, fainted: true } if (user_state[:hp] || 0) <= 0
     
@@ -20,8 +21,8 @@ class CombatEngine
     toxin_mult = 1.0 - ((user_state[:toxins] || 0.0) / 200.0)
     oxygen_mult = 1.0 + ((user_state[:oxygen] || 0.0) / 200.0)
     
-    res_value = user_state[:neural_resonance] || 50
-    resonance_mult = RESONANCE_MULTIPLIERS.find { |range, _| range.include?(res_value) }&.last || 1.0
+    sync_value = user_state[:metabolic_sync] || 50
+    metabolic_mult = METABOLIC_MULTIPLIERS.find { |range, _| range.include?(sync_value) }&.last || 1.0
     
     # 🎯 Targeting
     hzv = 50 
@@ -29,12 +30,12 @@ class CombatEngine
     is_critical = rand(100) < affinity
     crit_mult = is_critical ? 1.35 : 1.0
     
-    # 💥 Final Damage: Now influenced by the Ecosystem Oxygen!
-    final_damage = (base_damage * resonance_mult * (hzv / 100.0) * crit_mult * (1.0 + order * 0.5) * oxygen_mult).to_i
+    # 💥 Final Damage: Now influenced by the Biological Ecosystem!
+    final_damage = (base_damage * metabolic_mult * (hzv / 100.0) * crit_mult * (1.0 + order * 0.5) * oxygen_mult).to_i
     final_damage = 0 if (user_state[:stamina] || 0) <= 0
 
     # 🐉 Monster AI Evaluation (Biological Brain)
-    monster_action = MonsterBrain.decide_action(raid_state, global_entropy)
+    monster_action = MonsterBrain.decide_action(raid_state, toxin_load)
     mode_info = MonsterBrain::BEHAVIOR_MODES[raid_state[:behavior_mode] || :grazing]
     
     # Base Counter influenced by behavioral multi
