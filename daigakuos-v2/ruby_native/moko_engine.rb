@@ -5,6 +5,8 @@ require_relative 'core/ecosystem'
 require_relative 'core/monster_brain'
 require_relative 'core/bio_physics'
 require_relative 'core/alchemist'
+require_relative 'core/bloodline_engine'
+require_relative 'core/field_observer'
 require_relative 'storage/local_store'
 
 # 🚀 Moko Native Engine: Zero-Latency Logic Core
@@ -25,6 +27,9 @@ def simulate_chronology!(state)
   # ⚖️ Apply Metabolic Effects
   Ecosystem.apply_metabolic_effects(state[:user], state[:environment])
   
+  # 🩸 Apply Bloodline Biological Modifiers
+  BloodlineEngine.apply_biology(state[:raid], state[:raid]) # Applies bone_density etc. to stats
+  
   # 🧪 Run Bio-Physics Engine Tick
   # We use a delta-time of ~0.1s for simulation logic if not specified
   dt = elapsed_seconds > 10 ? 0.1 : [elapsed_seconds, 1.0].min 
@@ -37,20 +42,8 @@ def simulate_chronology!(state)
 end
 
 def generate_field_notes(state)
-  env = state[:environment]
-  user = state[:user]
-  raid = state[:raid]
-  
-  # 📜 Naturalist Observation Notes
-  time_str = Time.now.strftime("%H:%M")
-  
-  [
-    "【観測記録: #{time_str}】",
-    "生息環境の天候は #{env[:weather]} 。酸素濃度は #{env[:oxygen].to_i}% と良好だ。",
-    env[:toxins] > 50 ? "🌪️ 汚染源の拡大を確認。空気中の毒素濃度が閾値を超え、生物への負荷が増大している。" : "🌿 環境清浄度は極めて高い。生物の代謝バランスは安定している。",
-    "#{raid[:display_name]} の現在のバイタルは「#{MonsterBrain::BEHAVIOR_MODES[raid[:behavior_mode]][:name]}」。",
-    user[:hp] < 30 ? "⚠️ 被験者の生命反応が減衰。強制的な休息を推奨する。" : "✨ 被験者の代謝リズムは #{user[:order_level].to_i}段階の安定期にあり、非常に効率的だ。"
-  ].join("\n")
+  # Delegate to the specialized Naturalist module
+  FieldObserver.generate_report(state)
 end
 
 def process_command(line)
