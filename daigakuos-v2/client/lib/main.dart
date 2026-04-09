@@ -49,6 +49,7 @@ import 'widgets/skill_action_button.dart';
 import 'widgets/sharpness_gauge.dart';
 import 'widgets/quick_item_pouch.dart';
 import 'widgets/vitality_hud.dart';
+import 'widgets/bio_sync_hud.dart';
 
 import 'services/native_command_listener.dart';
 import 'services/api_service.dart';
@@ -1254,15 +1255,22 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
                            child: Text(taskTitle ?? "DaigakuAPP 実行中...", style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
                          ),
-                         // Phase 45: Vitality HUD (Self-Management)
-                         if (user != null)
-                           VitalityHUD(
-                             hp: user.hp,
-                             maxHp: user.maxHp,
-                             stamina: user.stamina,
-                             maxStamina: user.maxStamina,
-                           ),
-                         const SizedBox(height: 8),
+                         // Phase 53: Living Ecosystem & Vitality HUD
+                         Consumer(builder: (context, ref, _) {
+                            final world = ref.watch(worldStatusProvider).value;
+                            final userData = ref.watch(userProvider).value;
+                            if (world == null || userData == null) return const SizedBox(height: 10, child: LinearProgressIndicator());
+                            
+                            return BioSyncHUD(
+                              orderLevel: userData.orderLevel,
+                              chaosLevel: userData.chaosLevel,
+                              hp: userData.hp,
+                              maxHp: userData.maxHp,
+                              oxygenLevel: world.oxygenLevel,
+                              toxinLevel: world.toxinLevel,
+                            );
+                         }),
+                         const SizedBox(height: 12),
                          
                          // Phase 34: Moko Card
                          const MokoCard(),
