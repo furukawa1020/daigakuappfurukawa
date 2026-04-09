@@ -36,6 +36,7 @@ class MonsterBrain
 
   def self.update_behavior!(raid_state, env_state)
     toxins = env_state[:toxins] || 0.0
+    oxygen = env_state[:oxygen] || 0.0
     hp_ratio = raid_state[:current_hp].to_f / raid_state[:max_hp]
     
     # Priority State Logic
@@ -48,6 +49,26 @@ class MonsterBrain
     else
       raid_state[:behavior_mode] = :grazing
     end
+
+    # 🎭 Meta-programming: Generate Procedural Title
+    raid_state[:display_name] = generate_title(raid_state, toxins, oxygen)
+  end
+
+  def self.generate_title(raid_state, toxins, oxygen)
+    base_name = "Moko Wyvern"
+    prefix = if toxins > 60.0 then "死を纏う" 
+             elsif oxygen > 80.0 then "浄化されし"
+             elsif raid_state[:behavior_mode] == :starving then "飢えた"
+             else ""
+             end
+    
+    trait = if toxins > 80.0 then "【深毒】"
+            elsif oxygen > 80.0 then "【秩序】"
+            elsif raid_state[:behavior_mode] == :enraged then "【逆鱗】"
+            else ""
+            end
+            
+    "#{prefix}#{trait} #{base_name}"
   end
 
   def self.calculate_alertness(hour, sessions)
