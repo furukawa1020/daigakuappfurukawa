@@ -189,16 +189,21 @@ class WorldStatus {
   });
 
   factory WorldStatus.fromJson(Map<String, dynamic> json) {
+    final env = json['environment'] ?? {};
+    final raid = json['raid'] ?? {};
     return WorldStatus(
-      weather: json['weather'] ?? 'sunny',
-      eventName: json['event_name'] ?? 'Moko Day',
+      weather: env['weather'] ?? 'sunny',
+      eventName: json['event_name'] ?? 'Native Engine: DEEP SIMULATION 🐾',
       startedAt: DateTime.parse(json['started_at'] ?? DateTime.now().toIso8601String()),
       raidBuff: (json['raid_buff'] ?? 1.0).toDouble(),
-      activeRaid: json['active_raid'] != null ? GlobalRaid.fromJson(json['active_raid']) : null,
-      currentPhase: json['current_phase'] ?? 1,
-      activeGimmick: json['active_gimmick'],
-      gimmickName: json['gimmick_name'],
-      monsterState: json['monster_state'],
+      activeRaid: raid.isNotEmpty ? GlobalRaid.fromJson(raid) : null,
+      currentPhase: json['current_phase'] ?? env['current_phase'] ?? 1,
+      activeGimmick: env['active_gimmick'],
+      gimmickName: env['gimmick_name'],
+      monsterState: raid['monster_state'],
+      oxygenLevel: (env['oxygen'] ?? 50.0).toDouble(),
+      toxinLevel: (env['toxins'] ?? 0.0).toDouble(),
+      monsterHunger: (raid['hunger'] ?? 0.0).toDouble(),
     );
   }
 }

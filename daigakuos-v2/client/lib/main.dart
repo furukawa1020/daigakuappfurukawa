@@ -52,7 +52,7 @@ import 'widgets/vitality_hud.dart';
 
 import 'services/native_command_listener.dart';
 import 'services/api_service.dart';
-import 'services/action_cable_service.dart';
+import 'services/ruby_engine_service.dart';
 import 'widgets/chat_overlay.dart';
 import 'widgets/party_widget.dart';
 import 'screens/boss_archive_screen.dart';
@@ -146,7 +146,11 @@ void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
   await NotificationService().init(); // Init notifications
 
-  // Schedule daily 9 PM summary (fire-and-forget on startup)
+  // Start Native Ruby Engine Sidecar
+  final rubyEngine = RubyEngineService();
+  await rubyEngine.init();
+
+  // Schedule daily 9 PM summary
   DatabaseHelper().getUserStats().then((stats) {
     NotificationService().scheduleDailySummary(
       todayXP: ((stats['dailyPoints'] as double?) ?? 0.0).toInt(),
@@ -154,7 +158,7 @@ void main() async { // Async main
     );
   });
 
-  // ActionCable Native Bridge Init
+  // Native Bridge Init
   ApiService.getDeviceId().then((deviceId) {
     NativeCommandListener.init(deviceId);
   });
@@ -188,9 +192,12 @@ class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindi
     if (state == AppLifecycleState.paused) {
       // Schedule invitation when app goes to background
       NotificationService().scheduleMokoInvitation();
+      // Kill ruby sidecar on pause to save energy on mobile
+      RubyEngineService().dispose();
     } else if (state == AppLifecycleState.resumed) {
-      // Cancel when app comes back
+      // Cancel notifications and restart Ruby engine
       NotificationService().cancelAll();
+      RubyEngineService().init();
     }
   }
 
@@ -234,9 +241,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _connectRealTime() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(actionCableProvider).connect();
-    });
+    // Phase 53: Now handled by the persistent RubyEngineService
   }
 
   void _startPolling() {
