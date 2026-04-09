@@ -1266,6 +1266,8 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                               chaosLevel: userData.chaosLevel,
                               hp: userData.hp,
                               maxHp: userData.maxHp,
+                              stamina: userData.stamina,
+                              maxStamina: userData.maxStamina,
                               oxygenLevel: world.oxygenLevel,
                               toxinLevel: world.toxinLevel,
                             );
