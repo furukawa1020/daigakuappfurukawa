@@ -36,20 +36,20 @@ def simulate_chronology!(state)
   state[:user][:last_tick_at] = Time.now.to_i
 end
 
-def generate_chronicle(state)
+def generate_field_notes(state)
   env = state[:environment]
   user = state[:user]
   raid = state[:raid]
   
-  # 📜 Poetic String Interpolation
+  # 📜 Naturalist Observation Notes
   time_str = Time.now.strftime("%H:%M")
   
   [
-    "【刻の記録: #{time_str}】",
-    "空は #{env[:weather]} に染まり、酸素濃度は #{env[:oxygen].to_i}% を示している。",
-    env[:toxins] > 50 ? "🌪️ 淀んだ風が吹き抜け、毒素が大地を侵食しつつある..." : "🌿 清らかな風が吹き、世界は調律されている。",
-    "#{raid[:display_name]} は現在、#{MonsterBrain::BEHAVIOR_MODES[raid[:behavior_mode]][:name]} の相にある。",
-    user[:hp] < 30 ? "⚠️ あなたのバイタルが低下している。休息が必要だ。" : "✨ あなたの魂は共鳴し、#{user[:order_level].to_i}段階の秩序を保っている。"
+    "【観測記録: #{time_str}】",
+    "生息環境の天候は #{env[:weather]} 。酸素濃度は #{env[:oxygen].to_i}% と良好だ。",
+    env[:toxins] > 50 ? "🌪️ 汚染源の拡大を確認。空気中の毒素濃度が閾値を超え、生物への負荷が増大している。" : "🌿 環境清浄度は極めて高い。生物の代謝バランスは安定している。",
+    "#{raid[:display_name]} の現在のバイタルは「#{MonsterBrain::BEHAVIOR_MODES[raid[:behavior_mode]][:name]}」。",
+    user[:hp] < 30 ? "⚠️ 被験者の生命反応が減衰。強制的な休息を推奨する。" : "✨ 被験者の代謝リズムは #{user[:order_level].to_i}段階の安定期にあり、非常に効率的だ。"
   ].join("\n")
 end
 
@@ -74,7 +74,7 @@ def process_command(line)
       state[:user],
       state[:raid],
       base_damage,
-      state[:global_entropy]
+      state[:toxin_load]
     )
     
     # 📝 Update Local State
@@ -87,8 +87,8 @@ def process_command(line)
     state[:user][:chaos_level] = request[:chaos].to_f
     LocalStore.save_state(state)
     { success: true, chaos: state[:user][:chaos_level] }
-  when 'generate_chronicle'
-    { success: true, chronicle: generate_chronicle(state) }
+  when 'generate_field_notes'
+    { success: true, notes: generate_field_notes(state) }
   when 'combine_items'
     item_a = request[:item_a]
     item_b = request[:item_b]
