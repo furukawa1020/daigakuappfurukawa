@@ -76,6 +76,8 @@ class BioSyncHUD extends StatefulWidget {
   final int maxHp;
   final double oxygenLevel; // Phase 52
   final double toxinLevel;  // Phase 52
+  final int stamina;        // Phase 53
+  final int maxStamina;     // Phase 53
 
   const BioSyncHUD({
     super.key,
@@ -85,6 +87,8 @@ class BioSyncHUD extends StatefulWidget {
     required this.maxHp,
     required this.oxygenLevel,
     required this.toxinLevel,
+    required this.stamina,
+    required this.maxStamina,
   });
 
   @override
@@ -111,6 +115,7 @@ class _BioSyncHUDState extends State<BioSyncHUD> with SingleTickerProviderStateM
     final double hpRatio = (widget.hp / widget.maxHp).clamp(0.0, 1.0);
     final double oxRatio = (widget.oxygenLevel / 100.0).clamp(0.0, 1.0);
     final double toxRatio = (widget.toxinLevel / 100.0).clamp(0.0, 1.0);
+    final double stRatio = (widget.stamina / widget.maxStamina).clamp(0.0, 1.0);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -175,8 +180,10 @@ class _BioSyncHUDState extends State<BioSyncHUD> with SingleTickerProviderStateM
           Row(
             children: [
               _buildMetabolicBar("OXYGEN", oxRatio, Colors.greenAccent),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               _buildMetabolicBar("TOXINS", toxRatio, Colors.deepPurpleAccent),
+              const SizedBox(width: 8),
+              _buildMetabolicBar("STAMINA", stRatio, Colors.orangeAccent),
             ],
           ),
         ],
