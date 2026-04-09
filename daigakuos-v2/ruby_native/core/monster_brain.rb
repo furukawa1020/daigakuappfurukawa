@@ -79,12 +79,12 @@ class MonsterBrain
     (1.0 - probability).clamp(0.1, 1.0)
   end
 
-  def self.decide_action(raid_state, entropy)
+  def self.decide_action(raid_state, toxin_load)
     mode = raid_state[:behavior_mode] || :grazing
     mode_info = BEHAVIOR_MODES[mode]
     
     # Inherit base patterns
-    base_action = ActionPatterns.select_action(raid_state[:current_phase], entropy)
+    base_action = ActionPatterns.select_action(raid_state[:current_phase], toxin_load)
     
     # 🧬 Behavioral Overrides & Contextual Naming
     case mode
