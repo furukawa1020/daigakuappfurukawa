@@ -26,8 +26,8 @@ class Ecosystem
     state[:environment][:toxins] = [new_toxins - neutralization, 0.0].max.clamp(0.0, MAX_TOXINS)
     state[:environment][:oxygen] = [new_oxygen - (new_toxins / 20.0), 0.0].max.clamp(0.0, MAX_OXYGEN)
 
-    # 🌑 Global Entropy Impact
-    state[:global_entropy] = (state[:environment][:toxins] / MAX_TOXINS).clamp(0.0, 1.0)
+    # 🧪 Biological Toxin Load Impact
+    state[:toxin_load] = (state[:environment][:toxins] / MAX_TOXINS).clamp(0.0, 1.0)
     
     state
   end
