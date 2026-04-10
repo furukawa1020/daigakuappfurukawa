@@ -57,6 +57,8 @@ def process_command(line)
   
   case request[:command]
   when 'get_status'
+    # Inject live biological notes into every status refresh for HUD sync
+    state[:field_notes] = Moko::Bio::FieldObserver.generate_report(state)
     state
   when 'process_damage'
     # ⚖️ Dynamic Combat Calculation
