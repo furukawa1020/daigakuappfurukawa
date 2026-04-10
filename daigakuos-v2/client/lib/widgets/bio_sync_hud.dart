@@ -78,6 +78,7 @@ class BioSyncHUD extends StatefulWidget {
   final double toxinLevel;  // Phase 52
   final int stamina;        // Phase 53
   final int maxStamina;     // Phase 53
+  final String? fieldNotes; // Phase 60
 
   const BioSyncHUD({
     super.key,
@@ -89,6 +90,7 @@ class BioSyncHUD extends StatefulWidget {
     required this.toxinLevel,
     required this.stamina,
     required this.maxStamina,
+    this.fieldNotes,
   });
 
   @override
@@ -171,10 +173,33 @@ class _BioSyncHUDState extends State<BioSyncHUD> with SingleTickerProviderStateM
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildStatInfo("ORDER", widget.orderLevel, Colors.amberAccent),
-              _buildStatInfo("CHAOS", widget.chaosLevel, Colors.redAccent),
+              _buildStatInfo("METABOLIC SYNC", widget.orderLevel, Colors.amberAccent),
+              _buildStatInfo("TOXIN LOAD", widget.chaosLevel, Colors.redAccent),
             ],
           ),
+          const SizedBox(height: 12),
+          // Phase 60: Field Observer Terminal
+          if (widget.fieldNotes != null)
+            Container(
+              height: 80,
+              width: double.infinity,
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.white10),
+              ),
+              child: SingleChildScrollView(
+                child: Text(
+                  widget.fieldNotes!,
+                  style: GoogleFonts.shareTechMono(
+                    fontSize: 9, 
+                    color: const Color(0xFFB5EAD7), 
+                    height: 1.4
+                  ),
+                ),
+              ),
+            ),
           const SizedBox(height: 12),
           // Phase 52: Metabolic Depth
           Row(
