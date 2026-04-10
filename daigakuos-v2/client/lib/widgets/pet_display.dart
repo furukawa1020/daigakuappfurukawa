@@ -22,8 +22,14 @@ class PetDisplay extends ConsumerWidget {
     });
 
     final petState = ref.watch(petProvider);
+    final worldStatus = ref.watch(worldStatusProvider).value;
+    final raidPhysics = worldStatus?.activeRaid?.physics;
     
-    return GestureDetector(
+    // Determine visual transforms from Ruby Bio-Physics
+    final double scaleX = (raidPhysics?['scale_x'] ?? 1.0).toDouble();
+    final double scaleY = (raidPhysics?['scale_y'] ?? 1.0).toDouble();
+    final double rotation = (raidPhysics?['rotation'] ?? 0.0).toDouble();
+    final List<dynamic>? segments = raidPhysics?['segments'];
       onTap: () {
         ref.read(hapticsProvider.notifier).lightImpact();
         _showRandomMessage(context, petState, ref);
@@ -31,14 +37,21 @@ class PetDisplay extends ConsumerWidget {
       child: MokoCard(
         child: Row(
           children: [
-            Text(
-              petState.emoji,
-              style: const TextStyle(fontSize: 56),
-            ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(
-              duration: 2.seconds, 
-              begin: const Offset(0.9, 0.9), 
-              end: const Offset(1.1, 1.1)
-            ),
+            Transform(
+              alignment: Alignment.bottomCenter,
+              transform: Matrix4.identity()
+                ..scale(scaleX, scaleY)
+                ..rotateZ(rotation),
+              child: Text(
+                petState.emoji,
+                style: const TextStyle(fontSize: 56),
+              ),
+            ).animate(onPlay: (c) => c.repeat(reverse: true)).shimmer(duration: 3.seconds, color: Colors.white10),
+            
+            // Render Biological Sinew for Eastern Dragons
+            if (segments != null && segments.isNotEmpty)
+              _SinuousBody(segments: segments.cast<num>()),
+
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -186,4 +199,51 @@ class _EvolutionDialogState extends State<_EvolutionDialog> {
       ),
     );
   }
+}
+class _SinuousBody extends StatelessWidget {
+  final List<num> segments;
+  const _SinuousBody({required this.segments});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 40,
+      height: 60,
+      child: CustomPainterWidget(
+        painter: _DragonSinewPainter(segments),
+      ),
+    );
+  }
+}
+
+class _DragonSinewPainter extends CustomPainter {
+  final List<num> segments;
+  _DragonSinewPainter(this.segments);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFFFFB7B2).withOpacity(0.6)
+      ..strokeWidth = 3.0
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final path = Path();
+    path.moveTo(size.width / 2, size.height / 2 + segments[0]);
+    
+    for (int i = 1; i < segments.length; i++) {
+       path.lineTo(size.width / 2 + (i * 6), size.height / 2 + segments[i]);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+class CustomPainterWidget extends StatelessWidget {
+  final CustomPainter painter;
+  const CustomPainterWidget({super.key, required this.painter});
+  @override
+  Widget build(BuildContext context) => CustomPaint(painter: painter);
 }
