@@ -167,8 +167,9 @@ class WorldStatus {
   final String? gimmickName;
   final Map<String, dynamic>? monsterState; 
   final double oxygenLevel; // Phase 52
-  final double toxinLevel;  // Phase 52
   final double monsterHunger; // Phase 52
+  final String? fieldNotes;    // Phase 60
+  final int metabolicSync;    // Phase 58
 
   WorldStatus({
     required this.weather,
@@ -183,6 +184,8 @@ class WorldStatus {
     this.oxygenLevel = 50.0,
     this.toxinLevel = 0.0,
     this.monsterHunger = 0.0,
+    this.fieldNotes,
+    this.metabolicSync = 50,
   });
 
   factory WorldStatus.fromJson(Map<String, dynamic> json) {
@@ -201,6 +204,8 @@ class WorldStatus {
       oxygenLevel: (env['oxygen'] ?? 50.0).toDouble(),
       toxinLevel: (state['toxin_load'] ?? (env['toxins'] ?? 0.0) / 100.0).toDouble(),
       monsterHunger: (raid['hunger'] ?? 0.0).toDouble(),
+      fieldNotes: json['field_notes'],
+      metabolicSync: json['user']?['metabolic_sync'] ?? 50,
     );
   }
 }
@@ -246,8 +251,10 @@ final worldStatusProvider = FutureProvider<WorldStatus>((ref) async {
     startedAt: DateTime.now(),
     activeRaid: GlobalRaid.fromJson(raid),
     oxygenLevel: (env['oxygen'] ?? 50.0).toDouble(),
-    toxinLevel: (env['toxins'] ?? 0.0).toDouble(),
+    toxinLevel: (response['toxin_load'] ?? (env['toxins'] ?? 0.0) / 100.0).toDouble(),
     monsterHunger: (raid['hunger'] ?? 0.0).toDouble(),
+    fieldNotes: response['field_notes'],
+    metabolicSync: response['user']?['metabolic_sync'] ?? 50,
   );
 });
 
