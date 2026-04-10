@@ -31,7 +31,7 @@ class User {
   final Map<String, dynamic> statusEffects;
   final double chaosLevel; // Phase 48
   final double orderLevel; // Phase 48
-  final int neuralResonance; // Phase 48
+  final int metabolicSync; // Phase 58 (Replaced neuralResonance)
 
   User({
     required this.deviceId,
@@ -61,7 +61,7 @@ class User {
     required this.statusEffects,
     required this.chaosLevel,
     required this.orderLevel,
-    required this.neuralResonance,
+    required this.metabolicSync,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -93,7 +93,7 @@ class User {
       statusEffects: Map<String, dynamic>.from(json['status_effects'] ?? {}),
       chaosLevel: (json['chaos_level'] ?? 0.0).toDouble(),
       orderLevel: (json['order_level'] ?? 0.0).toDouble(),
-      neuralResonance: json['neural_resonance'] ?? 50,
+      metabolicSync: json['metabolic_sync'] ?? json['neural_resonance'] ?? 50,
     );
   }
 }
@@ -127,16 +127,9 @@ class HuntingQuest {
   }
 }
 
-class GlobalRaid {
-  final String title;
-  final String image;
-  final int maxHp;
-  final int currentHp;
-  final double healthPercentage;
-  final List<dynamic> leaderboard;
-  final String? activeSkill;
-  final DateTime? skillEndsAt;
   final int currentPhase;
+  final Map<String, dynamic>? physics;   // Phase 56: Procedural Physics
+  final Map<String, dynamic>? bloodline; // Phase 58: Biological Traits
 
   GlobalRaid({
     required this.title,
@@ -148,6 +141,8 @@ class GlobalRaid {
     this.activeSkill,
     this.skillEndsAt,
     required this.currentPhase,
+    this.physics,
+    this.bloodline,
   });
 
   factory GlobalRaid.fromJson(Map<String, dynamic> json) {
@@ -161,6 +156,8 @@ class GlobalRaid {
       activeSkill: json['active_skill'],
       skillEndsAt: json['skill_ends_at'] != null ? DateTime.parse(json['skill_ends_at']) : null,
       currentPhase: json['current_phase'] ?? 1,
+      physics: json['physics'],
+      bloodline: json['bloodline'],
     );
   }
 }
@@ -202,7 +199,7 @@ class WorldStatus {
       gimmickName: env['gimmick_name'],
       monsterState: raid['monster_state'],
       oxygenLevel: (env['oxygen'] ?? 50.0).toDouble(),
-      toxinLevel: (env['toxins'] ?? 0.0).toDouble(),
+      toxinLevel: (state['toxin_load'] ?? (env['toxins'] ?? 0.0) / 100.0).toDouble(),
       monsterHunger: (raid['hunger'] ?? 0.0).toDouble(),
     );
   }
