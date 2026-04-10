@@ -22,7 +22,7 @@ module Moko
             DragonDynamics.new(state, bloodline).tick(dt)
           end
         else
-          PhysicsFrame.new(scale_x: 1.0, scale_y: 1.0, rotation: 0.0)
+          { scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }.freeze
         end
       end
     end
@@ -36,16 +36,17 @@ module Moko
       end
 
       def tick(dt)
-        x, v = @state[:x].to_f, @state[:v].to_f
+        x = @state[:x].to_f
+        v = @state[:v].to_f
 
-        # RK4 Integration
+        # RK4 Integration: Stable Harmonics
         k1_v = accel(x, v)
         k2_v = accel(x + v * dt / 2.0, v + k1_v * dt / 2.0)
         k3_v = accel(x + (v + k1_v * dt / 2.0) * dt / 2.0, v + k2_v * dt / 2.0)
         k4_v = accel(x + (v + k2_v * dt / 2.0) * dt, v + k3_v * dt)
 
         new_v = v + (dt / 6.0) * (k1_v + 2.0 * k2_v + 2.0 * k3_v + k4_v)
-        new_x = x + v * dt # Simple enough for coupled vars in this context
+        new_x = x + v * dt
         
         {
           x: new_x,
@@ -53,11 +54,14 @@ module Moko
           scale_x: (1.0 + new_x * 0.4).round(4),
           scale_y: (1.0 - new_x * 0.4).round(4),
           wobble_factor: (new_x.abs * 10).to_i
-        }
+        }.freeze
       end
 
       private
-      def accel(x, v) = -@k * x - @c * v
+      
+      def accel(x, v)
+        -@k * x - @c * v
+      end
     end
 
     class DragonDynamics
@@ -76,14 +80,14 @@ module Moko
           phase: phase,
           wing_angle: (Math.sin(phase) * 45.0).round(2),
           body_lift: (Math.sin(phase - 0.5) * 8.0).round(2)
-        }
+        }.freeze
       end
     end
 
     class EasternDragonDynamics
       def initialize(state, bloodline)
         @state = state || { 
-          points: Array.new(6) { |i| { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } },
+          points: Array.new(6) { { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } },
           time: 0.0 
         }
         # 🏮 Bio-Link: Joint stiffness and length constraints
@@ -115,15 +119,18 @@ module Moko
           time: @state[:time],
           segments: points.map { |p| p[:y].round(2) },
           curvature: (points[1][:y] - points[0][:y]).abs.round(2)
-        }
+        }.freeze
       end
 
       private
+      
       def satisfy_constraints(points)
         (0...(points.size - 1)).each do |i|
           p1, p2 = points[i], points[i+1]
           dx, dy = p2[:x] - p1[:x], p2[:y] - p1[:y]
           dist = Math.sqrt(dx*dx + dy*dy)
+          next if dist.zero?
+          
           diff = (@link_length - dist) / dist
           p2[:x] += dx * diff * 0.5
           p2[:y] += dy * diff * 0.5
