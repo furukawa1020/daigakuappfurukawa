@@ -28,7 +28,7 @@ def simulate_chronology!(state)
   Ecosystem.apply_metabolic_effects(state[:user], state[:environment])
   
   # 🩸 Apply Bloodline Biological Modifiers
-  BloodlineEngine.apply_biology(state[:raid], state[:raid]) # Applies bone_density etc. to stats
+  Moko::Bio::BloodlineEngine.apply_biology(state[:raid], state[:raid]) # Applies bone_density etc. to stats
   
   # 🧪 Run Bio-Physics Engine Tick
   # We use a delta-time of ~0.1s for simulation logic if not specified
@@ -36,14 +36,14 @@ def simulate_chronology!(state)
   monster_type = state[:raid][:title] || "Slime"
   
   state[:physics_state] ||= {}
-  state[:physics] = BioPhysics.calculate(monster_type, state[:physics_state], dt)
+  state[:physics] = Moko::Bio::PhysicsEngine.calculate(monster_type, state[:physics_state], state[:raid][:bloodline], dt)
   
   state[:user][:last_tick_at] = Time.now.to_i
 end
 
 def generate_field_notes(state)
   # Delegate to the specialized Naturalist module
-  FieldObserver.generate_report(state)
+  Moko::Bio::FieldObserver.generate_report(state)
 end
 
 def process_command(line)
