@@ -39,6 +39,18 @@ class LocalStore
           muscle_type: :balanced, 
           lung_capacity: 1.0,
           metabolic_rate: 1.0
+        },
+        physiology: {
+          neural: { conduction_velocity: 1.0, synaptic_stress: 0.0, reflex_latency: 0.0 },
+          cardiac: { pulse_rate: 60, blood_pressure_delta: 0.0, oxygen_saturation: 100.0 },
+          hormones: { adrenaline: 0.05, cortisol: 0.1, insulin: 0.5, metabolic_activator: 1.0 },
+          organ_stress: { neural: 0.0, cardiac: 0.0, hepatic: 0.0, renal: 0.0 }
+        },
+        metabolism: {
+          glucose: 100.0,
+          atp_reserves: 1.0,
+          lactate_level: 0.0,
+          efficiency: 1.0
         }
       },
       environment: {
