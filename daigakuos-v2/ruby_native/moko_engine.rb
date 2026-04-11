@@ -7,6 +7,9 @@ require_relative 'core/bio_physics'
 require_relative 'core/alchemist'
 require_relative 'core/bloodline_engine'
 require_relative 'core/field_observer'
+require_relative 'core/physiology'
+require_relative 'core/metabolism'
+require_relative 'core/homeostasis'
 require_relative 'storage/local_store'
 
 # 🚀 Moko Native Engine: Zero-Latency Logic Core
@@ -21,14 +24,23 @@ def simulate_chronology!(state)
   # 🌊 Run Ecosystem Tick (Rot & Oxygen)
   Ecosystem.tick(state, elapsed_hours)
   
-  # 🧬 Run Monster Bio Tick (Hunger & Alertness)
-  MonsterBrain.tick(state[:raid], elapsed_hours, state[:history] || [], state[:environment])
+  # 🫀 1. Physiology & Metabolic Simulation (Phase 61/62)
+  Moko::Bio::PhysiologyEngine.initialize_physiology(state[:raid])
+  Moko::Bio::MetabolismEngine.initialize_metabolism(state[:raid])
+  Moko::Bio::HomeostasisEngine.initialize_homeostasis(state[:raid])
   
-  # ⚖️ Apply Metabolic Effects
-  Ecosystem.apply_metabolic_effects(state[:user], state[:environment])
+  Moko::Bio::PhysiologyEngine.tick(state[:raid], state[:environment], elapsed_hours)
+  Moko::Bio::MetabolismEngine.tick(state[:raid], elapsed_hours)
+  Moko::Bio::HomeostasisEngine.tick(state[:raid], elapsed_hours)
   
-  # 🩸 Apply Bloodline Biological Modifiers
-  Moko::Bio::BloodlineEngine.apply_biology(state[:raid], state[:raid]) # Applies bone_density etc. to stats
+  # 🐉 Monster AI Evaluation (Biological Ecologist)
+  monster_action = Moko::Bio::BehavioralEcologist.decide_action(state[:raid], state[:toxin_load])
+  
+  # 🩸 2. Apply Bloodline Biological Modifiers
+  Moko::Bio::BloodlineEngine.apply_biology(state[:raid], state[:raid]) 
+  
+  # 🧠 3. Ecological Decision Engine
+  Moko::Bio::BehavioralEcologist.update_behavior!(state[:raid], state[:environment])
   
   # 🧪 Run Bio-Physics Engine Tick
   # We use a delta-time of ~0.1s for simulation logic if not specified
@@ -36,7 +48,7 @@ def simulate_chronology!(state)
   monster_type = state[:raid][:title] || "Slime"
   
   state[:physics_state] ||= {}
-  state[:physics] = Moko::Bio::PhysicsEngine.calculate(monster_type, state[:physics_state], state[:raid][:bloodline], dt)
+  state[:physics] = Moko::Bio::PhysicsEngine.calculate(monster_type, state[:physics_state], state[:raid], dt)
   
   state[:user][:last_tick_at] = Time.now.to_i
 end
