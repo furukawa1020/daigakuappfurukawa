@@ -39,8 +39,10 @@ begin
   physics = Moko::Bio::PhysicsEngine.calculate("Slime", { x: 0.0, v: 0.0 }, raid_state, 0.01)
   puts "   - Slime Physics (Jittered): #{physics.inspect}"
   
-  puts "\n4. Generating Deep Field Notes..."
-  report = Moko::Bio::FieldObserver.generate_report(raid_state)
+  # 4. Generating Deep Field Notes
+  # Wrap in the top-level state hierarchy expected by FieldObserver
+  state = { raid: raid_state, environment: raid_state[:environment], user: { metabolic_sync: 80, hp: 100 } }
+  report = Moko::Bio::FieldObserver.generate_report(state)
   puts report
   
   puts "\n✅ BIOLOGICAL SYNTHESIS VERIFIED. Engine is Stable and Granular."
