@@ -24,7 +24,9 @@ module Moko
           neural: DEFAULT_NEURAL.to_h,
           cardiac: DEFAULT_CARDIAC.to_h,
           hormones: DEFAULT_HORMONES.to_h,
-          organ_stress: { neural: 0.0, cardiac: 0.0, hepatic: 0.0, renal: 0.0 }
+          organ_stress: { neural: 0.0, cardiac: 0.0, hepatic: 0.0, renal: 0.0 },
+          cellular_age: 0.0,
+          mitochondrial_decay: 0.0
         }
       end
 
@@ -32,6 +34,15 @@ module Moko
         phys = raid_state[:physiology]
         hormones = phys[:hormones]
         stress = phys[:organ_stress]
+        
+        # ⏳ 0. Mitochondrial Decay (Aging Layer)
+        # Exertion accelerates cellular aging
+        phys[:cellular_age] += dt_hours
+        decay_rate = (hormones[:adrenaline] * 0.0001) + (phys[:organ_stress].values.sum * 0.00001)
+        phys[:mitochondrial_decay] = [phys[:mitochondrial_decay] + decay_rate * dt_hours, 0.5].min
+        
+        # Metabolic Activator is capped by decay
+        hormones[:metabolic_activator] = (1.0 - phys[:mitochondrial_decay]).round(4)
         
         # 🌪️ Environmental Stress Impacts
         toxin_ratio = (env_state[:toxins] || 0.0) / 100.0
