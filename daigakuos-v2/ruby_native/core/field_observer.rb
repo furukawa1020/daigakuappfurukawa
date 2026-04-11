@@ -48,11 +48,24 @@ module Moko
           notes << "● 警告: 代謝性アシドーシス。筋収縮力係数が #{homeo[:muscle_force].round(2)} まで抑制されている。"
         end
         
-        # 🧬 5. Morphological Insight
-        bone = bloodline[:bone_density] || 1.0
-        if bone > 1.2
-          notes << "● 形質: 骨密度の恒常的な増大を確認。物理外圧への適応個体。"
+        # 💉 5. Immunological Defense (Phase 63)
+        imm = raid[:immunology]
+        protection = (imm[:protection_factor] * 100).to_i
+        notes << "● 免疫系応答: 白血球活性 #{(imm[:leukocyte_activity] * 100).to_i}% / 抗体力価 #{imm[:antibody_titer].round(3)}"
+        notes << "↳ 遮断効率: 環境毒素の #{protection}% を細胞レベルで無効化中。"
+        
+        # 🧬 6. Epigenetic Shift Detection (Phase 63)
+        epi = raid[:epigenetics]
+        methyl = epi[:methylation].values.sum
+        if methyl > 0.1
+          notes << "● 遺伝子発現解析: DNAメチル化の進行を検地。環境ストレスによるエピジェネティックな形質固定が発生。"
+          notes << "↳ 特記: 代謝率調節遺伝子の発現が #{(epi[:methylation][:metabolic_rate] * 100).to_i}% 抑制されている。"
         end
+        
+        # ⏳ 7. Cellular Aging
+        age = raid[:physiology][:cellular_age] || 0.0
+        decay = (raid[:physiology][:mitochondrial_decay] * 100).to_i
+        notes << "● 生体時間: 累積細胞寿命 #{age.round(1)}h / ミトコンドリア劣化率 #{decay}%"
         
         notes.join("\n")
       end
