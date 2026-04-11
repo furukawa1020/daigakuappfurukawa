@@ -10,6 +10,8 @@ require_relative 'core/field_observer'
 require_relative 'core/physiology'
 require_relative 'core/metabolism'
 require_relative 'core/homeostasis'
+require_relative 'core/immunology'
+require_relative 'core/genetics'
 require_relative 'storage/local_store'
 
 # 🚀 Moko Native Engine: Zero-Latency Logic Core
@@ -24,19 +26,24 @@ def simulate_chronology!(state)
   # 🌊 Run Ecosystem Tick (Rot & Oxygen)
   Ecosystem.tick(state, elapsed_hours)
   
-  # 🫀 1. Physiology & Metabolic Simulation (Phase 61/62)
+  # 🫀 1. Physiology, Metabolism & Homeostasis (Phase 61/62)
   Moko::Bio::PhysiologyEngine.initialize_physiology(state[:raid])
   Moko::Bio::MetabolismEngine.initialize_metabolism(state[:raid])
   Moko::Bio::HomeostasisEngine.initialize_homeostasis(state[:raid])
+  Moko::Bio::ImmunologyEngine.initialize_immunology(state[:raid])
+  Moko::Bio::GeneticsEngine.initialize_genetics(state[:raid])
   
   Moko::Bio::PhysiologyEngine.tick(state[:raid], state[:environment], elapsed_hours)
   Moko::Bio::MetabolismEngine.tick(state[:raid], elapsed_hours)
   Moko::Bio::HomeostasisEngine.tick(state[:raid], elapsed_hours)
+  Moko::Bio::ImmunologyEngine.tick(state[:raid], state[:environment], elapsed_hours)
+  Moko::Bio::GeneticsEngine.tick(state[:raid], elapsed_hours)
   
   # 🐉 Monster AI Evaluation (Biological Ecologist)
   monster_action = Moko::Bio::BehavioralEcologist.decide_action(state[:raid], state[:toxin_load])
   
-  # 🩸 2. Apply Bloodline Biological Modifiers
+  # 🩸 2. Apply Phenotypic Biological Modifiers (Phase 63)
+  # Use the expressed Phenotype instead of the raw Bloodline
   Moko::Bio::BloodlineEngine.apply_biology(state[:raid], state[:raid]) 
   
   # 🧠 3. Ecological Decision Engine
