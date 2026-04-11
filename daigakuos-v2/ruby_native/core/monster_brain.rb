@@ -1,112 +1,94 @@
-# ruby_native/core/monster_brain.rb
-require_relative 'action_patterns'
+# frozen_string_literal: true
 
-class MonsterBrain
-  # 🍖 Biological Simulation: Hunger, Fatigue, Alertness
-  # 🧠 Predatory Pattern Matching: Markov-style focus prediction
+module Moko
+  module Bio
+    # 🧠 Behavioral Ecology: Neuro-Endocrine Decision Engine
+    # Behavior is an emergent property of hormonal state and metabolic reserves.
+    
+    class BehavioralEcologist
+      BEHAVIOR_MODES = {
+        grazing: { name: "安息", risk: 0.1, color: "green" },
+        hunting: { name: "追跡", risk: 0.5, color: "orange" },
+        starving: { name: "捕食本能", risk: 0.8, color: "red" },
+        enraged: { name: "過剰防衛", risk: 1.2, color: "purple" },
+        lethargic: { name: "代謝不全", risk: 0.05, color: "grey" }
+      }
 
-  BEHAVIOR_MODES = {
-    grazing: { name: "良好", risk: 0.1, color: "green" },
-    hunting: { name: "追跡", risk: 0.5, color: "orange" },
-    starving: { name: "捕食", risk: 0.8, color: "red" },
-    enraged: { name: "逆鱗", risk: 1.2, color: "purple" }
-  }
+      def self.tick(raid_state, elapsed_hours, user_sessions, env_state = {})
+        # This is now handled by the granular simulators in moko_engine
+        # But we use the resulting hormones to update the mode
+        update_behavior!(raid_state, env_state)
+        generate_field_notes(raid_state)
+        raid_state
+      end
 
-  def self.tick(raid_state, elapsed_hours, user_sessions, env_state = {})
-    # 🍖 Metabolism: Monster grows hungry and tired over time
-    hp_ratio = raid_state[:current_hp].to_f / raid_state[:max_hp]
-    
-    # Hunger: Increases based on elapsed time and lack of user focus
-    hunger_gain = 5.0 + (elapsed_hours * 10.0)
-    raid_state[:hunger] = [(raid_state[:hunger] || 0.0) + hunger_gain, 100.0].min
-    
-    # Fatigue: Decreases over time unless in active combat
-    fatigue_decay = elapsed_hours * 5.0
-    raid_state[:fatigue] = [(raid_state[:fatigue] || 0.0) - fatigue_decay, 0.0].max
-    
-    # 🧠 Predatory Prediction (Markov Chain)
-    current_hour = Time.now.hour
-    raid_state[:alertness] = calculate_alertness(current_hour, user_sessions)
-    
-    # 🧬 Update Behavioral Mode
-    update_behavior!(raid_state, env_state)
-    
-    raid_state
-  end
+      def self.update_behavior!(raid_state, env_state)
+        phys = raid_state[:physiology]
+        hormones = phys[:hormones]
+        metab = raid_state[:metabolism]
+        stress = phys[:organ_stress]
+        
+        # 🧪 1. Hormonal & Metabolic Thresholds
+        is_high_stress = hormones[:cortisol] > 0.7
+        is_adrenaline_surge = hormones[:adrenaline] > 0.6
+        is_hypoglycemic = metab[:glucose] < 30.0
+        is_exhausted = metab[:atp_reserves] < 0.2
+        
+        # 🧬 2. Behavioral State Machine
+        if is_exhausted || stress[:neural] > 0.8
+          raid_state[:behavior_mode] = :lethargic
+        elsif is_adrenaline_surge || is_high_stress
+          raid_state[:behavior_mode] = :enraged
+        elsif is_hypoglycemic
+          raid_state[:behavior_mode] = :starving
+        elsif raid_state[:alertness] > 0.6
+          raid_state[:behavior_mode] = :hunting
+        else
+          raid_state[:behavior_mode] = :grazing
+        end
 
-  def self.update_behavior!(raid_state, env_state)
-    toxins = env_state[:toxins] || 0.0
-    oxygen = env_state[:oxygen] || 0.0
-    hp_ratio = raid_state[:current_hp].to_f / raid_state[:max_hp]
-    
-    # Priority State Logic
-    if toxins > 80.0 || hp_ratio < 0.2
-      raid_state[:behavior_mode] = :enraged
-    elsif raid_state[:hunger] > 70.0
-      raid_state[:behavior_mode] = :starving
-    elsif raid_state[:alertness] > 0.6
-      raid_state[:behavior_mode] = :hunting
-    else
-      raid_state[:behavior_mode] = :grazing
+        # 🎭 Naturalist Naming System
+        raid_state[:display_name] = generate_scientific_title(raid_state)
+      end
+
+      def self.generate_scientific_title(raid_state)
+        base = raid_state[:title] || "Moko Wyvern"
+        phys = raid_state[:physiology]
+        
+        condition = if phys[:organ_stress][:neural] > 0.5 then "【神経衰弱】"
+                    elsif phys[:hormones][:adrenaline] > 0.7 then "【亢進状態】"
+                    elsif raid_state[:behavior_mode] == :lethargic then "【非活性】"
+                    else ""
+                    end
+        
+        "#{condition} #{base}"
+      end
+
+      def self.decide_action(raid_state, toxin_load)
+        mode = raid_state[:behavior_mode] || :grazing
+        mode_info = BEHAVIOR_MODES[mode]
+        
+        # Select base tactical pattern
+        base_action = ActionPatterns.select_action(raid_state[:current_phase], toxin_load)
+        
+        # 🧬 Physiological Overrides
+        case mode
+        when :enraged
+          base_action.merge(name: "激高: #{base_action[:name]}", damage_mult: 1.5)
+        when :lethargic
+          base_action.merge(name: "虚脱: #{base_action[:name]}", damage_mult: 0.4)
+        when :starving
+          base_action.merge(name: "捕食行動", damage_mult: 1.2)
+        else
+          base_action
+        end
+      end
+
+      private
+
+      def self.generate_field_notes(raid_state)
+        # Delegated to FieldObserver, but could trigger specific notes here
+      end
     end
-
-    # 🎭 Meta-programming: Generate Procedural Title
-    raid_state[:display_name] = generate_title(raid_state, toxins, oxygen)
-  end
-
-  def self.generate_title(raid_state, toxins, oxygen)
-    base_name = "Moko Wyvern"
-    prefix = if toxins > 60.0 then "死を纏う" 
-             elsif oxygen > 80.0 then "浄化されし"
-             elsif raid_state[:behavior_mode] == :starving then "飢えた"
-             else ""
-             end
-    
-    trait = if toxins > 80.0 then "【深毒】"
-            elsif oxygen > 80.0 then "【秩序】"
-            elsif raid_state[:behavior_mode] == :enraged then "【逆鱗】"
-            else ""
-            end
-            
-    "#{prefix}#{trait} #{base_name}"
-  end
-
-  def self.calculate_alertness(hour, sessions)
-    return 0.1 if sessions.nil? || sessions.empty?
-    # Simple Markov: P(Focus | Hour)
-    focus_history = sessions.select { |s| s[:started_at] && DateTime.parse(s[:started_at]).hour == hour }
-    probability = focus_history.count / 7.0 
-    (1.0 - probability).clamp(0.1, 1.0)
-  end
-
-  def self.decide_action(raid_state, toxin_load)
-    mode = raid_state[:behavior_mode] || :grazing
-    mode_info = BEHAVIOR_MODES[mode]
-    
-    # Inherit base patterns
-    base_action = ActionPatterns.select_action(raid_state[:current_phase], toxin_load)
-    
-    # 🧬 Behavioral Overrides & Contextual Naming
-    case mode
-    when :enraged
-      action = ActionPatterns::ACTIONS[:chaos_breath].merge(
-        name: "【#{mode_info[:name]}】極限の滅魂ブレス",
-        damage_mult: 1.5
-      )
-    when :starving
-      action = ActionPatterns::ACTIONS[:data_void].merge(
-        name: "【#{mode_info[:name]}】魂の捕食",
-        damage_mult: 1.2
-      )
-    when :hunting
-      action = base_action.merge(
-        name: "【#{mode_info[:name]}】予測された打撃",
-        damage_mult: 1.1
-      )
-    else
-      action = base_action.merge(name: "【#{mode_info[:name]}】#{base_action[:name]}")
-    end
-    
-    action
   end
 end
