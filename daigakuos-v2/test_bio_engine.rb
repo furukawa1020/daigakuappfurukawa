@@ -11,8 +11,13 @@ require_relative 'ruby_native/core/genetics'
 
 puts "🔬 Testing Moko::Bio: THE GENETIC & IMMUNOLOGICAL FRONTIER..."
 
-# Debug: Verify class presence
-puts "🧬 GeneticsEngine Methods: #{Moko::Bio::GeneticsEngine.methods(false).grep(/tick/)}"
+# 🔍 Namespace Inspection
+puts "DEBUG: Moko::Bio constants: #{Moko::Bio.constants}"
+if defined?(Moko::Bio::GeneticsEngine)
+  puts "DEBUG: GeneticsEngine methods: #{Moko::Bio::GeneticsEngine.singleton_methods(false)}"
+else
+  puts "DEBUG: GeneticsEngine is NOT DEFINED"
+end
 
 begin
   # 1. Initialize Ultimate State
@@ -36,20 +41,21 @@ begin
   Moko::Bio::MetabolismEngine.tick(raid_state, dt)
   Moko::Bio::HomeostasisEngine.tick(raid_state, dt)
   Moko::Bio::ImmunologyEngine.tick(raid_state, raid_state[:environment], dt)
-  Moko::Bio::GeneticsEngine.tick(raid_state, dt)
+  
+  puts "DEBUG: About to call GeneticsEngine.tick..."
+  ::Moko::Bio::GeneticsEngine.tick(raid_state, dt)
   
   puts "   - Immune Activation: #{(raid_state[:immunology][:leukocyte_activity] * 100).to_i}%"
   puts "   - Antibody Titer: #{raid_state[:immunology][:antibody_titer].round(4)}"
   puts "   - DNA Methylation (Total): #{raid_state[:epigenetics][:methylation].values.sum.round(6)}"
   
   puts "\n2. Testing Epigenetic Phenotype Expression..."
-  Moko::Bio::GeneticsEngine.tick(raid_state, 5.0) 
+  ::Moko::Bio::GeneticsEngine.tick(raid_state, 5.0) 
   pheno = raid_state[:phenotype]
   puts "   - Expressed Metabolic Rate: #{pheno[:metabolic_rate]}"
   
   puts "\n3. Generating Ultimate Field Notes..."
   state = { raid: raid_state, environment: raid_state[:environment], user: { metabolic_sync: 80, hp: 100 } }
-  # Ensure Homeostatic modifiers are present for observer
   state[:homeostatic_modifiers] = raid_state[:homeostatic_modifiers]
   
   report = Moko::Bio::FieldObserver.generate_report(state)
