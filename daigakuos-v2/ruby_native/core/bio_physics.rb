@@ -3,35 +3,52 @@
 module Moko
   module Bio
     # 🧬 High-Precision Data-Driven Bio-Physics System
-    # Mathematically linked to Bloodline traits.
+    # Mathematically linked to Physiology and Bloodline traits.
     
     # ⚖️ Immutable Data Objects for Performance
     PhysicsFrame = Struct.new(:scale_x, :scale_y, :rotation, :notes, keyword_init: true)
 
     class PhysicsEngine
-      def self.calculate(monster_type, state, bloodline, dt)
+      def self.calculate(monster_type, state, raid_state, dt)
         dt = dt.to_f.clamp(0.001, 0.1)
+        bloodline = raid_state[:bloodline]
+        phys = raid_state[:physiology] || PhysiologyEngine.initialize_physiology(raid_state)
+        homeo = raid_state[:homeostatic_modifiers] || { muscle_force: 1.0, reaction_speed: 1.0 }
         
-        case monster_type.to_s.downcase
+        # 🧠 Neural Factor: Nerve conduction velocity affects responsiveness
+        # Low conduction causes jerky/laggy integration or jitter
+        neural_latency = 1.0 - (phys[:neural][:conduction_velocity] || 1.0)
+        jitter = (rand - 0.5) * neural_latency * 0.1
+        
+        # Adjust dt slightly based on reaction speed (Signal delay)
+        effective_dt = dt * homeo[:reaction_speed]
+        
+        physics_output = case monster_type.to_s.downcase
         when /slime/
-          SlimeDynamics.new(state, bloodline).tick(dt)
+          SlimeDynamics.new(state, bloodline, homeo[:muscle_force]).tick(effective_dt)
         when /dragon/
           if monster_type.to_s.downcase.include?('eastern')
-            EasternDragonDynamics.new(state, bloodline).tick(dt)
+            EasternDragonDynamics.new(state, bloodline, homeo[:muscle_force]).tick(effective_dt)
           else
-            DragonDynamics.new(state, bloodline).tick(dt)
+            DragonDynamics.new(state, bloodline, homeo[:muscle_force]).tick(effective_dt)
           end
         else
-          { scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }.freeze
+          { scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
         end
+        
+        # Apply Neural Jitter / signal noise
+        physics_output.transform_values do |v|
+          v.is_a?(Numeric) ? (v + jitter).round(4) : v
+        end.freeze
       end
     end
 
     class SlimeDynamics
-      def initialize(state, bloodline)
+      def initialize(state, bloodline, force_mult = 1.0)
         @state = state || { x: 0.0, v: 0.0 }
         # 🧪 Bio-Link: Stiffness (k) and Damping (c) are derived from Bone Density and Muscle Type
-        @k = 20.0 * (bloodline[:bone_density] || 1.0)
+        # ⚖️ Homeo-Link: pH Acidosis reduces muscle force mult (@k)
+        @k = 20.0 * (bloodline[:bone_density] || 1.0) * force_mult
         @c = (bloodline[:muscle_type] == :tonic ? 3.0 : 1.5)
       end
 
@@ -51,10 +68,10 @@ module Moko
         {
           x: new_x,
           v: new_v,
-          scale_x: (1.0 + new_x * 0.4).round(4),
-          scale_y: (1.0 - new_x * 0.4).round(4),
+          scale_x: (1.0 + new_x * 0.4),
+          scale_y: (1.0 - new_x * 0.4),
           wobble_factor: (new_x.abs * 10).to_i
-        }.freeze
+        }
       end
 
       private
@@ -65,11 +82,12 @@ module Moko
     end
 
     class DragonDynamics
-      def initialize(state, bloodline)
+      def initialize(state, bloodline, force_mult = 1.0)
         @state = state || { phase: 0.0 }
         # 🌬️ Bio-Link: Flap frequency derived from Muscle Type & Lung Capacity
+        # ⚖️ Homeo-Link: pH Acidosis reduces flap rate
         base_freq = (bloodline[:muscle_type] == :twitch ? 7.0 : 4.0)
-        @freq = base_freq * (bloodline[:lung_capacity] || 1.0)
+        @freq = base_freq * (bloodline[:lung_capacity] || 1.0) * force_mult
       end
 
       def tick(dt)
@@ -80,19 +98,19 @@ module Moko
           phase: phase,
           wing_angle: (Math.sin(phase) * 45.0).round(2),
           body_lift: (Math.sin(phase - 0.5) * 8.0).round(2)
-        }.freeze
+        }
       end
     end
 
     class EasternDragonDynamics
-      def initialize(state, bloodline)
+      def initialize(state, bloodline, force_mult = 1.0)
         @state = state || { 
-          points: Array.new(6) { { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } },
+          points: Array.new(6) { |i| { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } },
           time: 0.0 
         }
         # 🏮 Bio-Link: Joint stiffness and length constraints
         @link_length = 25.0 * (bloodline[:bone_density] || 1.0)
-        @tension = (bloodline[:muscle_type] == :tonic ? 0.95 : 0.8)
+        @tension = (bloodline[:muscle_type] == :tonic ? 0.95 : 0.8) * force_mult
       end
 
       def tick(dt)
@@ -119,7 +137,7 @@ module Moko
           time: @state[:time],
           segments: points.map { |p| p[:y].round(2) },
           curvature: (points[1][:y] - points[0][:y]).abs.round(2)
-        }.freeze
+        }
       end
 
       private
