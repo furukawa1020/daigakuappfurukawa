@@ -12,16 +12,16 @@ require_relative 'ruby_native/core/sensory'
 require_relative 'ruby_native/core/chronobiology'
 require_relative 'ruby_native/core/skeleton'
 require_relative 'ruby_native/core/anatomy'
+require_relative 'ruby_native/core/germline'
 
-puts "🔬 Testing Moko::Bio: THE STRUCTURAL & ANATOMIC FRONTIER..."
+puts "🔬 Testing Moko::Bio: THE SUCCESSION SAGA (Phase 66)..."
 
 begin
-  # 1. Initialize High-Fidelity State
+  # 1. Initialize Parent state
   raid_state = { 
-    title: "Test Wyvern", 
-    display_name: "Test Wyvern",
-    bloodline: { bone_density: 0.8, muscle_type: :twitch, metabolic_rate: 1.2 }, 
-    environment: { toxins: 20, oxygen: 80 } 
+    title: "Parent Wyvern", 
+    bloodline: { bone_density: 1.0, muscle_type: :balanced, metabolic_rate: 1.0, lung_capacity: 1.0 }, 
+    environment: { toxins: 90, oxygen: 50 } 
   }
   
   Moko::Bio::PhysiologyEngine.initialize_physiology(raid_state)
@@ -33,31 +33,37 @@ begin
   Moko::Bio::ChronobiologyEngine.initialize_chrono(raid_state)
   Moko::Bio::SkeletonEngine.initialize_skeleton(raid_state)
   Moko::Bio::AnatomyEngine.initialize_anatomy(raid_state)
+  Moko::Bio::GermlineEngine.initialize_germline(raid_state)
   
-  puts "\n1. Simulating High Mechanical Load..."
-  # High velocity physics
-  velocity = 15.0
-  Moko::Bio::SkeletonEngine.tick(raid_state, velocity, 1.0)
+  puts "\n1. Simulating Parental Stress & Germline Damage..."
+  # High cortisol leads to high methylation
+  raid_state[:physiology][:hormones][:cortisol] = 0.9
+  Moko::Bio::GeneticsEngine.tick(raid_state, 10.0)
+  Moko::Bio::GermlineEngine.tick(raid_state, 10.0)
   
-  puts "   - Bone Stress Level: #{raid_state[:skeleton][:stress_level].round(4)}"
-  puts "   - Fractures: #{raid_state[:skeleton][:fractures].inspect}"
+  parent_meth = raid_state[:epigenetics][:methylation].values.sum
+  puts "   - Parent DNA Methylation Total: #{parent_meth.round(4)}"
+  puts "   - Parent Germline Health: #{raid_state[:germline][:gamete_health].round(4)}"
   
-  puts "\n2. Testing Physics Limp Feedback (RK4 Asymmetry)..."
-  # Slime physics with fracture bias
-  physics = Moko::Bio::PhysicsEngine.calculate("Slime", { x: 5.0, v: 0.0 }, raid_state, 0.01)
-  puts "   - Physics with Limp Bias: #{physics.is_a?(Hash) ? 'Calculated' : 'Error'}"
+  puts "\n2. Triggering SUCCESSION (The Rebirth Event)..."
+  Moko::Bio::BloodlineEngine.rebirth!(raid_state)
   
-  puts "\n3. Testing Tissue Infiltration & Anatomy..."
-  Moko::Bio::AnatomyEngine.tick(raid_state, 1.0)
-  puts "   - Connective Elasticity: #{raid_state[:anatomy][:connective][:elasticity]}"
-  puts "   - Muscular Peak Power: #{raid_state[:anatomy][:muscular][:peak_power]}"
+  puts "   - Offspring Cellular Age: #{raid_state[:physiology][:cellular_age]}"
+  puts "   - Generation Count: #{raid_state[:epigenetics][:generation_count]}"
   
-  puts "\n4. Generating Ultimate Field Notes..."
+  child_meth = raid_state[:epigenetics][:methylation].values.sum
+  puts "   - Inherited Methylation (Epigenetic Burden): #{child_meth.round(4)}"
+  
+  puts "\n3. Checking Congenital Defects..."
+  hepatic_fibro = raid_state[:physiology][:fibrosis][:hepatic]
+  puts "   - Inherited Hepatic Fibrosis: #{hepatic_fibro.round(4)} (Congenital)"
+  
+  puts "\n4. Generating Succession Field Notes..."
   state = { raid: raid_state, environment: raid_state[:environment], user: { metabolic_sync: 80, hp: 100 } }
   report = Moko::Bio::FieldObserver.generate_report(state)
   puts report
   
-  puts "\n✅ STRUCTURAL & ANATOMIC FRONTIER VERIFIED. Engine is Rigid yet Fragile."
+  puts "\n✅ SUCCESSION SAGA VERIFIED. The lineage carries the history of its ancestors."
 rescue => e
   puts "\n❌ TEST FAILED: [#{e.class}] #{e.message}"
   puts e.backtrace[0..5].join("\n")
