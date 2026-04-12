@@ -54,19 +54,29 @@ module Moko
         notes << "● 免疫系応答: 白血球活性 #{(imm[:leukocyte_activity] * 100).to_i}% / 抗体力価 #{imm[:antibody_titer].round(3)}"
         notes << "↳ 遮断効率: 環境毒素の #{protection}% を細胞レベルで無効化中。"
         
-        # 🧬 6. Epigenetic Shift & Fibrosis (Phase 63/64)
+        # 🧬 6. Epigenetic Shift & Lineage Audit (Phase 63-66)
         epi = raid[:epigenetics]
+        ger = raid[:germline]
         fibro = raid[:physiology][:fibrosis]
         methyl = epi[:methylation].values.sum
+        
+        notes << "● 家系監査: 第 #{epi[:generation_count]} 世代個体"
+        
         if methyl > 0.1 || fibro.values.sum > 0.05
           notes << "● 変性解析: 恒久的な組織変質を検知。"
-          notes << "↳ DNA メチル化率: #{methyl.round(3)} / 組織線維化指数: #{fibro.values.sum.round(3)}"
-          if fibro[:neural] > 0.1
-            notes << "↳ 警戒: 神経線維化により、最大伝達速度が制限されている。"
+          notes << "↳ 累積エピジェネティック負荷: #{methyl.round(3)} / 組織線維化指数: #{fibro.values.sum.round(3)}"
+          if epi[:methylation].values.any? { |v| v > 0.1 }
+            notes << "↳ 特記: 祖先から引き継がれた「負の形質フラグメント」を検知。"
           end
         end
         
-        # 📡 7. Sensory Perception Noise (Phase 64)
+        # 🥚 7. Germline Integrity (Phase 66)
+        notes << "● 生殖細胞監査: 継承整合性 #{(ger[:gamete_health] * 100).to_i}%"
+        if ger[:gamete_health] < 0.7
+          notes << "↳ 警告: 遺伝情報の劣化を検知。次世代に先天的な欠陥が受け継がれるリスクあり。"
+        end
+        
+        # 📡 8. Sensory Perception Noise (Phase 64)
         sen = raid[:sensory]
         conduction = phys[:neural][:conduction_velocity]
         jitter = (1.0 - conduction) * 0.5
@@ -74,26 +84,10 @@ module Moko
           notes << "● 知覚異常: 入力信号のジッター値 #{jitter.round(2)}。外界認識にノイズが混入中。"
         end
         
-        # ⛓️ 7. Anatomic & Structural Audit (Phase 65)
+        # ⛓️ 9. Anatomic & Structural Audit (Phase 65)
         skl = raid[:skeleton]
         ana = raid[:anatomy]
         notes << "● 構造完全性: 骨格強度 #{(skl[:integrity] * 100).to_i}% / 結合組織弾性 #{ana[:connective][:elasticity].round(2)}"
-        
-        if skl[:fractures].any?
-          notes << "● 警告: 骨格系に構造的破綻（骨折）を確認。力学的バイアスによる運動障害が発生中。"
-        end
-        
-        load_status = skl[:stress_level] > 1.0 ? "臨界" : "許容範囲"
-        notes << "↳ 骨格負荷: #{load_status} / 筋組織出力係数: #{ana[:muscular][:peak_power].round(2)}"
-        
-        # ⏳ 8. Chronobiology & Aging (Phase 64/65)
-        chr = raid[:chrono]
-        age = phys[:cellular_age] || 0.0
-        decay = (phys[:mitochondrial_decay] * 100).to_i
-        night_status = raid[:is_sleeping] ? "【深睡眠 / 組織修復中】" : "活性化状態"
-        
-        notes << "● バイオリズム: 体内時刻 #{chr[:internal_hour].to_i}:00 / #{night_status}"
-        notes << "● 生体時間: 累積細胞寿命 #{age.round(1)}h / ミトコンドリア劣化率 #{decay}%"
         
         notes.join("\n")
       end
