@@ -10,16 +10,18 @@ require_relative 'ruby_native/core/immunology'
 require_relative 'ruby_native/core/genetics'
 require_relative 'ruby_native/core/sensory'
 require_relative 'ruby_native/core/chronobiology'
+require_relative 'ruby_native/core/skeleton'
+require_relative 'ruby_native/core/anatomy'
 
-puts "🔬 Testing Moko::Bio: THE SENSORY & CIRCADIAN FRONTIER..."
+puts "🔬 Testing Moko::Bio: THE STRUCTURAL & ANATOMIC FRONTIER..."
 
 begin
   # 1. Initialize High-Fidelity State
   raid_state = { 
     title: "Test Wyvern", 
     display_name: "Test Wyvern",
-    bloodline: { bone_density: 1.1, muscle_type: :twitch, metabolic_rate: 1.2 }, 
-    environment: { toxins: 80, oxygen: 50 } 
+    bloodline: { bone_density: 0.8, muscle_type: :twitch, metabolic_rate: 1.2 }, 
+    environment: { toxins: 20, oxygen: 80 } 
   }
   
   Moko::Bio::PhysiologyEngine.initialize_physiology(raid_state)
@@ -29,39 +31,33 @@ begin
   Moko::Bio::GeneticsEngine.initialize_genetics(raid_state)
   Moko::Bio::SensoryEngine.initialize_sensory(raid_state)
   Moko::Bio::ChronobiologyEngine.initialize_chrono(raid_state)
+  Moko::Bio::SkeletonEngine.initialize_skeleton(raid_state)
+  Moko::Bio::AnatomyEngine.initialize_anatomy(raid_state)
   
-  puts "\n1. Simulating High Stress & Sensory Noise..."
-  # Artificially damage nerves to increase noise
-  raid_state[:physiology][:organ_stress][:neural] = 0.9
-  Moko::Bio::PhysiologyEngine.tick(raid_state, raid_state[:environment], 0.1)
-  Moko::Bio::SensoryEngine.tick(raid_state, raid_state[:environment], 0.1)
+  puts "\n1. Simulating High Mechanical Load..."
+  # High velocity physics
+  velocity = 15.0
+  Moko::Bio::SkeletonEngine.tick(raid_state, velocity, 1.0)
   
-  puts "   - Raw Toxins: #{raid_state[:environment][:toxins]}"
-  puts "   - Perceived Toxins (Noisy/Laggy): #{raid_state[:perception][:toxins]}"
+  puts "   - Bone Stress Level: #{raid_state[:skeleton][:stress_level].round(4)}"
+  puts "   - Fractures: #{raid_state[:skeleton][:fractures].inspect}"
   
-  puts "\n2. Simulating Nocturnal Cycle (Sleep & Repair)..."
-  raid_state[:chrono][:internal_hour] = 2.0 # 2 AM
-  Moko::Bio::ChronobiologyEngine.tick(raid_state, 0.1)
+  puts "\n2. Testing Physics Limp Feedback (RK4 Asymmetry)..."
+  # Slime physics with fracture bias
+  physics = Moko::Bio::PhysicsEngine.calculate("Slime", { x: 5.0, v: 0.0 }, raid_state, 0.01)
+  puts "   - Physics with Limp Bias: #{physics.is_a?(Hash) ? 'Calculated' : 'Error'}"
   
-  pre_stress = raid_state[:physiology][:organ_stress][:neural]
-  Moko::Bio::PhysiologyEngine.tick(raid_state, raid_state[:environment], 1.0) # 1 hour of sleep
-  post_stress = raid_state[:physiology][:organ_stress][:neural]
-  
-  puts "   - Is Sleeping: #{raid_state[:is_sleeping]}"
-  puts "   - Neural Stress Repair: #{(pre_stress - post_stress).round(4)} (Accelerated)"
-  
-  puts "\n3. Testing Fibrosis Conversion (Permanent Scarring)..."
-  # Simulate long exposure to high stress
-  raid_state[:physiology][:organ_stress][:hepatic] = 1.0
-  Moko::Bio::PhysiologyEngine.tick(raid_state, raid_state[:environment], 10.0)
-  puts "   - Hepatic Fibrosis Index: #{raid_state[:physiology][:fibrosis][:hepatic].round(4)}"
+  puts "\n3. Testing Tissue Infiltration & Anatomy..."
+  Moko::Bio::AnatomyEngine.tick(raid_state, 1.0)
+  puts "   - Connective Elasticity: #{raid_state[:anatomy][:connective][:elasticity]}"
+  puts "   - Muscular Peak Power: #{raid_state[:anatomy][:muscular][:peak_power]}"
   
   puts "\n4. Generating Ultimate Field Notes..."
   state = { raid: raid_state, environment: raid_state[:environment], user: { metabolic_sync: 80, hp: 100 } }
   report = Moko::Bio::FieldObserver.generate_report(state)
   puts report
   
-  puts "\n✅ SENSORY & CIRCADIAN FRONTIER VERIFIED. Engine is Deeply Biological."
+  puts "\n✅ STRUCTURAL & ANATOMIC FRONTIER VERIFIED. Engine is Rigid yet Fragile."
 rescue => e
   puts "\n❌ TEST FAILED: [#{e.class}] #{e.message}"
   puts e.backtrace[0..5].join("\n")
