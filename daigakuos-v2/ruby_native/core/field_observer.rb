@@ -74,7 +74,19 @@ module Moko
           notes << "● 知覚異常: 入力信号のジッター値 #{jitter.round(2)}。外界認識にノイズが混入中。"
         end
         
-        # ⏳ 8. Chronobiology & Aging (Phase 64)
+        # ⛓️ 7. Anatomic & Structural Audit (Phase 65)
+        skl = raid[:skeleton]
+        ana = raid[:anatomy]
+        notes << "● 構造完全性: 骨格強度 #{(skl[:integrity] * 100).to_i}% / 結合組織弾性 #{ana[:connective][:elasticity].round(2)}"
+        
+        if skl[:fractures].any?
+          notes << "● 警告: 骨格系に構造的破綻（骨折）を確認。力学的バイアスによる運動障害が発生中。"
+        end
+        
+        load_status = skl[:stress_level] > 1.0 ? "臨界" : "許容範囲"
+        notes << "↳ 骨格負荷: #{load_status} / 筋組織出力係数: #{ana[:muscular][:peak_power].round(2)}"
+        
+        # ⏳ 8. Chronobiology & Aging (Phase 64/65)
         chr = raid[:chrono]
         age = phys[:cellular_age] || 0.0
         decay = (phys[:mitochondrial_decay] * 100).to_i
