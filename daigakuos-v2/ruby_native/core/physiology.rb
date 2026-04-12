@@ -24,7 +24,12 @@ module Moko
           neural: DEFAULT_NEURAL.to_h,
           cardiac: DEFAULT_CARDIAC.to_h,
           hormones: DEFAULT_HORMONES.to_h,
-          organ_stress: { neural: 0.0, cardiac: 0.0, hepatic: 0.0, renal: 0.0 },
+          organ_stress: { 
+            neural: 0.0, cardiac: 0.0, hepatic: 0.0, renal: 0.0 
+          },
+          fibrosis: { # Permanent Damage Layer (Phase 64)
+            neural: 0.0, cardiac: 0.0, hepatic: 0.0, renal: 0.0 
+          },
           cellular_age: 0.0,
           mitochondrial_decay: 0.0
         }
@@ -54,13 +59,30 @@ module Moko
         # Adrenaline decays slowly unless triggered (triggered by damage or high chaos)
         hormones[:adrenaline] = [hormones[:adrenaline] - (0.2 * dt_hours), 0.05].max
         
-        # 2. Organ Decay (Long-term impact of toxins and stress)
-        stress[:hepatic] = [stress[:hepatic] + (toxin_ratio * 0.05 * dt_hours) - (0.01 * dt_hours), 0.0].max
-        stress[:neural] = [stress[:neural] + (hormones[:cortisol] * 0.02 * dt_hours), 0.0].max
+        # 2. Organ Decay & Repair (Phase 64: Chrono-linked)
+        # Toxin-induced stress
+        stress[:hepatic] = [stress[:hepatic] + (toxin_ratio * 0.05 * dt_hours), 1.0].min
+        stress[:neural] = [stress[:neural] + (hormones[:cortisol] * 0.02 * dt_hours), 1.0].min
+        
+        # Repair logic: Depends on Sleep/Rest multiplier
+        # (Requires ChronobiologyEngine to be required in moko_engine)
+        repair_mult = raid_state[:is_sleeping] ? 4.0 : 0.5
+        repair_rate = 0.01 * repair_mult * dt_hours
+        
+        [:neural, :cardiac, :hepatic, :renal].each do |organ|
+          stress[organ] = [stress[organ] - repair_rate, 0.0].max
+          
+          # 💎 2b. Fibrosis Conversion: If stress > 0.8, some becomes permanent
+          if stress[organ] > 0.8
+            conversion = (stress[organ] - 0.8) * 0.01 * dt_hours
+            phys[:fibrosis][organ] = [phys[:fibrosis][organ] + conversion, 1.0].min
+          end
+        end
         
         # 3. Functional Impact (Signal conduction)
-        # Neural conduction drops as toxins and neural stress accumulate
-        phys[:neural][:conduction_velocity] = (1.0 - (toxin_ratio * 0.3) - (stress[:neural] * 0.4)).clamp(0.2, 1.0).round(3)
+        # Actual capacity is restricted by Fibrosis
+        neural_perf = (1.0 - toxin_ratio * 0.3 - stress[:neural] * 0.4 - phys[:fibrosis][:neural])
+        phys[:neural][:conduction_velocity] = neural_perf.clamp(0.1, 1.0).round(3)
         phys[:neural][:reflex_latency] = (1.0 - phys[:neural][:conduction_velocity]).round(3)
         
         # 4. Cardiac Output
