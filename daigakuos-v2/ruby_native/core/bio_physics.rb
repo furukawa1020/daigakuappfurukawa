@@ -25,16 +25,23 @@ module Moko
         
         physics_output = case monster_type.to_s.downcase
         when /slime/
-          SlimeDynamics.new(state, bloodline, homeo[:muscle_force]).tick(effective_dt)
+          SlimeDynamics.new(state, bloodline, raid_state, homeo[:muscle_force]).tick(effective_dt)
         when /dragon/
           if monster_type.to_s.downcase.include?('eastern')
-            EasternDragonDynamics.new(state, bloodline, homeo[:muscle_force]).tick(effective_dt)
+            EasternDragonDynamics.new(state, bloodline, raid_state, homeo[:muscle_force]).tick(effective_dt)
           else
-            DragonDynamics.new(state, bloodline, homeo[:muscle_force]).tick(effective_dt)
+            DragonDynamics.new(state, bloodline, raid_state, homeo[:muscle_force]).tick(effective_dt)
           end
         else
           { scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
         end
+        
+        # Track velocity magnitude for Skeleton load calculations
+        raid_state[:physics_velocity] = case monster_type.to_s.downcase
+                                        when /slime/ then physics_output[:v]
+                                        when /dragon/ then 3.0 # Approx
+                                        else 0.0
+                                        end
         
         # Apply Neural Jitter / signal noise
         physics_output.transform_values do |v|
@@ -44,12 +51,21 @@ module Moko
     end
 
     class SlimeDynamics
-      def initialize(state, bloodline, force_mult = 1.0)
+      def initialize(state, bloodline, raid_state, force_mult = 1.0)
         @state = state || { x: 0.0, v: 0.0 }
-        # 🧪 Bio-Link: Stiffness (k) and Damping (c) are derived from Bone Density and Muscle Type
-        # ⚖️ Homeo-Link: pH Acidosis reduces muscle force mult (@k)
-        @k = 20.0 * (bloodline[:bone_density] || 1.0) * force_mult
+        
+        # 🦴 Structural Link (Phase 65)
+        ana = raid_state[:anatomy] || { connective: { elasticity: 1.0 } }
+        skl = raid_state[:skeleton] || { integrity: 1.0, fractures: [] }
+        
+        # Stiffness is reduced by Connective Tissue damage and Fractures
+        base_k = 20.0 * (bloodline[:bone_density] || 1.0) * force_mult
+        @k = base_k * ana[:connective][:elasticity] * skl[:integrity]
+        
         @c = (bloodline[:muscle_type] == :tonic ? 3.0 : 1.5)
+        
+        # Limping Bias: Fracture creates asymmetrical spring force
+        @limp_bias = skl[:fractures].any? ? 0.3 : 0.0
       end
 
       def tick(dt)
@@ -77,7 +93,9 @@ module Moko
       private
       
       def accel(x, v)
-        -@k * x - @c * v
+        # Apply limp bias (Asymmetric recovery force)
+        bias = x > 0 ? (1.0 + @limp_bias) : (1.0 - @limp_bias)
+        -@k * x * bias - @c * v
       end
     end
 
