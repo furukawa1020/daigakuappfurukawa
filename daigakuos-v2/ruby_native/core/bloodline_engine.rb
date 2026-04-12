@@ -67,6 +67,37 @@ module Moko
         bloodline[:lung_capacity] = (bloodline[:lung_capacity] + (rand - 0.5) * 0.05).clamp(0.5, 2.0).round(3)
         bloodline[:muscle_type] = [:twitch, :tonic, :balanced].sample if rand < 0.02
       end
+
+      # 🥚 Rebirth Event (Phase 66)
+      # Resets the physical vessel while evolving the genetic lineage.
+      def self.rebirth!(raid_state)
+        # 1. Reset Physiology & Metabolism
+        raid_state[:physiology][:cellular_age] = 0.0
+        raid_state[:physiology][:mitochondrial_decay] = 0.0
+        raid_state[:physiology][:organ_stress].transform_values! { 0.0 }
+        raid_state[:physiology][:hormones] = PhysiologyEngine::DEFAULT_HORMONES.to_h
+        
+        raid_state[:metabolism][:atp_reserves] = 1.0
+        raid_state[:metabolism][:glucose] = 100.0
+        raid_state[:metabolism][:last_metabolic_state] = :stable
+        
+        # 2. Flush Immunology (Innate immunity remains, specific antibodies clear)
+        raid_state[:immunology][:antibody_titer] = 0.0
+        raid_state[:immunology][:leukocyte_activity] = 0.1
+        
+        # 3. Structural Reset (Skeleton integrity returns, but stress is purged)
+        raid_state[:skeleton][:stress_level] = 0.0
+        raid_state[:skeleton][:integrity] = 1.0
+        raid_state[:skeleton][:fractures] = []
+        
+        # 4. Evolve Genetic Blueprint
+        GeneticsEngine.recombine!(raid_state)
+        
+        # 5. Mutate Germline for the new life
+        GermlineEngine.initialize_germline(raid_state)
+        
+        raid_state
+      end
     end
   end
 end
