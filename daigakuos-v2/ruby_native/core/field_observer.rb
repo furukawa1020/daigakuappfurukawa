@@ -54,17 +54,33 @@ module Moko
         notes << "● 免疫系応答: 白血球活性 #{(imm[:leukocyte_activity] * 100).to_i}% / 抗体力価 #{imm[:antibody_titer].round(3)}"
         notes << "↳ 遮断効率: 環境毒素の #{protection}% を細胞レベルで無効化中。"
         
-        # 🧬 6. Epigenetic Shift Detection (Phase 63)
+        # 🧬 6. Epigenetic Shift & Fibrosis (Phase 63/64)
         epi = raid[:epigenetics]
+        fibro = raid[:physiology][:fibrosis]
         methyl = epi[:methylation].values.sum
-        if methyl > 0.1
-          notes << "● 遺伝子発現解析: DNAメチル化の進行を検地。環境ストレスによるエピジェネティックな形質固定が発生。"
-          notes << "↳ 特記: 代謝率調節遺伝子の発現が #{(epi[:methylation][:metabolic_rate] * 100).to_i}% 抑制されている。"
+        if methyl > 0.1 || fibro.values.sum > 0.05
+          notes << "● 変性解析: 恒久的な組織変質を検知。"
+          notes << "↳ DNA メチル化率: #{methyl.round(3)} / 組織線維化指数: #{fibro.values.sum.round(3)}"
+          if fibro[:neural] > 0.1
+            notes << "↳ 警戒: 神経線維化により、最大伝達速度が制限されている。"
+          end
         end
         
-        # ⏳ 7. Cellular Aging
-        age = raid[:physiology][:cellular_age] || 0.0
-        decay = (raid[:physiology][:mitochondrial_decay] * 100).to_i
+        # 📡 7. Sensory Perception Noise (Phase 64)
+        sen = raid[:sensory]
+        conduction = phys[:neural][:conduction_velocity]
+        jitter = (1.0 - conduction) * 0.5
+        if jitter > 0.1
+          notes << "● 知覚異常: 入力信号のジッター値 #{jitter.round(2)}。外界認識にノイズが混入中。"
+        end
+        
+        # ⏳ 8. Chronobiology & Aging (Phase 64)
+        chr = raid[:chrono]
+        age = phys[:cellular_age] || 0.0
+        decay = (phys[:mitochondrial_decay] * 100).to_i
+        night_status = raid[:is_sleeping] ? "【深睡眠 / 組織修復中】" : "活性化状態"
+        
+        notes << "● バイオリズム: 体内時刻 #{chr[:internal_hour].to_i}:00 / #{night_status}"
         notes << "● 生体時間: 累積細胞寿命 #{age.round(1)}h / ミトコンドリア劣化率 #{decay}%"
         
         notes.join("\n")
