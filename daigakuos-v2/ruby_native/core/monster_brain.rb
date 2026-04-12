@@ -27,15 +27,19 @@ module Moko
         hormones = phys[:hormones]
         metab = raid_state[:metabolism]
         stress = phys[:organ_stress]
+        perception = raid_state[:perception] || { toxins: 0.0, oxygen: 50.0 }
         
-        # 🧪 1. Hormonal & Metabolic Thresholds
-        is_high_stress = hormones[:cortisol] > 0.7
+        # 🧪 1. Hormonal & Perceptual Thresholds
+        # Note: Brain uses perceived toxins, which may be noisy/laggy
+        is_high_stress = hormones[:cortisol] > 0.7 || perception[:toxins] > 70.0
         is_adrenaline_surge = hormones[:adrenaline] > 0.6
         is_hypoglycemic = metab[:glucose] < 30.0
         is_exhausted = metab[:atp_reserves] < 0.2
         
-        # 🧬 2. Behavioral State Machine
-        if is_exhausted || stress[:neural] > 0.8
+        # 🧬 2. Behavioral State Machine (Phase 64: Added Sleep)
+        if raid_state[:is_sleeping]
+          raid_state[:behavior_mode] = :lethargic
+        elsif is_exhausted || stress[:neural] > 0.8
           raid_state[:behavior_mode] = :lethargic
         elsif is_adrenaline_surge || is_high_stress
           raid_state[:behavior_mode] = :enraged
