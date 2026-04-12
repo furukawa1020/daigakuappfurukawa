@@ -41,12 +41,29 @@ module Moko
         raid_state
       end
 
-      # Genetic refresh mechanic (Phase 63 Rebirth)
+      # 🧬 Advanced Genetic Recombination (Phase 66)
       def self.recombine!(raid_state)
         epi = raid_state[:epigenetics]
+        ger = raid_state[:germline] || { gamete_health: 1.0 }
+        
         epi[:generation_count] += 1
-        # Some methylation persists (Epigenetic inheritance)
-        epi[:methylation].transform_values! { |v| v * 0.5 } 
+        
+        # 🧪 1. Epigenetic Persistence
+        # 30% of parent's methylation markers are 'locked' into the offspring
+        epi[:methylation].transform_values! { |v| (v * 0.3).round(4) }
+        
+        # 🧱 2. Congenital Defects
+        # If parental gamete health was poor, the child starts with organ scars
+        if ger[:gamete_health] < 0.6
+          defect_load = (1.0 - ger[:gamete_health]) * 0.2
+          raid_state[:physiology][:fibrosis].transform_values! { |v| [v + defect_load, 0.5].min }
+        end
+        
+        # 🧬 3. Reset Phenotype
+        # Full phenotypic recalculation will happen on next tick
+        raid_state[:phenotype] = nil
+        
+        raid_state
       end
     end
   end
