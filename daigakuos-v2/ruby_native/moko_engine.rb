@@ -16,6 +16,7 @@ require_relative 'core/sensory'
 require_relative 'core/chronobiology'
 require_relative 'core/skeleton'
 require_relative 'core/anatomy'
+require_relative 'core/germline'
 require_relative 'storage/local_store'
 
 # 🚀 Moko Native Engine: Zero-Latency Logic Core
@@ -40,6 +41,7 @@ def simulate_chronology!(state)
   Moko::Bio::ChronobiologyEngine.initialize_chrono(state[:raid])
   Moko::Bio::SkeletonEngine.initialize_skeleton(state[:raid])
   Moko::Bio::AnatomyEngine.initialize_anatomy(state[:raid])
+  Moko::Bio::GermlineEngine.initialize_germline(state[:raid])
   
   Moko::Bio::PhysiologyEngine.tick(state[:raid], state[:environment], elapsed_hours)
   Moko::Bio::MetabolismEngine.tick(state[:raid], elapsed_hours)
@@ -50,6 +52,7 @@ def simulate_chronology!(state)
   Moko::Bio::ChronobiologyEngine.tick(state[:raid], elapsed_hours)
   Moko::Bio::SkeletonEngine.tick(state[:raid], state[:raid][:physics_velocity], elapsed_hours)
   Moko::Bio::AnatomyEngine.tick(state[:raid], elapsed_hours)
+  Moko::Bio::GermlineEngine.tick(state[:raid], elapsed_hours)
   
   # 🐉 Monster AI Evaluation (Biological Ecologist)
   monster_action = Moko::Bio::BehavioralEcologist.decide_action(state[:raid], state[:toxin_load])
