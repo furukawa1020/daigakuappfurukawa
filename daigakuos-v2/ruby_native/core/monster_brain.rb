@@ -29,14 +29,17 @@ module Moko
         stress = phys[:organ_stress]
         perception = raid_state[:perception] || { toxins: 0.0, oxygen: 50.0 }
         
-        # 🧪 1. Hormonal & Perceptual Thresholds
+        # 🧪 1. Hormonal & Perceptual & Microbial Thresholds
         # Note: Brain uses perceived toxins, which may be noisy/laggy
-        is_high_stress = hormones[:cortisol] > 0.7 || perception[:toxins] > 70.0
+        mic = raid_state[:microbiome] || { neuroactive_metabolites: { irritability: 0.0, calmness: 0.1 } }
+        metabolites = mic[:neuroactive_metabolites]
+        
+        is_high_stress = hormones[:cortisol] > 0.7 || perception[:toxins] > 70.0 || metabolites[:irritability] > 0.5
         is_adrenaline_surge = hormones[:adrenaline] > 0.6
         is_hypoglycemic = metab[:glucose] < 30.0
         is_exhausted = metab[:atp_reserves] < 0.2
         
-        # 🧬 2. Behavioral State Machine (Phase 64: Added Sleep)
+        # 🧬 2. Behavioral State Machine (Phase 68: Added Gut-Brain Axis)
         if raid_state[:is_sleeping]
           raid_state[:behavior_mode] = :lethargic
         elsif is_exhausted || stress[:neural] > 0.8
@@ -45,7 +48,7 @@ module Moko
           raid_state[:behavior_mode] = :enraged
         elsif is_hypoglycemic
           raid_state[:behavior_mode] = :starving
-        elsif raid_state[:alertness] > 0.6
+        elsif raid_state[:alertness] > 0.6 && metabolites[:calmness] < 0.05
           raid_state[:behavior_mode] = :hunting
         else
           raid_state[:behavior_mode] = :grazing
