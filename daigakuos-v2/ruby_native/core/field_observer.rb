@@ -78,7 +78,17 @@ module Moko
         jitter = (1.0 - cond) * 0.5
         notes << "● 知覚異常: 入力信号のジッター値 #{jitter.round(2)}。外界認識にノイズ混入中。" if jitter > 0.1
 
-        # ⛓️ 9. Structural Audit
+        # 🦠 9. Microbial & Gut-Brain Audit (Phase 68)
+        mic = raid[:microbiome] || {}
+        metabolites = mic[:neuroactive_metabolites] || { irritability: 0.0, calmness: 0.1 }
+        
+        notes << "● 微生物叢監査: 多様性整合性 #{(mic[:flora_diversity].to_f * 100).to_i}% / 共生比率 #{(mic[:symbiotic_ratio].to_f * 100).to_i}%"
+        if (mic[:endotoxin_level] || 0.0) > 0.4
+          notes << "● 警告: 腸内細菌叢の乱れ（Dysbiosis）により、神経毒性を検知。暴走リスク増大中。"
+        end
+        notes << "↳ 向精神代謝産物: 鎮静係数 #{metabolites[:calmness].round(3)} / 易刺激性 #{metabolites[:irritability].round(3)}"
+        
+        # ⛓️ 10. Anatomic & Structural Audit (Phase 65)
         skl = raid[:skeleton] || {}
         ana = raid[:anatomy]  || {}
         con = (ana[:anatomy]&.dig(:connective, :elasticity) rescue nil) ||
