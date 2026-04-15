@@ -8,6 +8,7 @@ module Moko
     class Orchestrator
       # Strict execution order — biologically motivated
       TICK_ORDER = [
+        :MicrobiomeEngine,
         :PhysiologyEngine,
         :MetabolismEngine,
         :HomeostasisEngine,
@@ -25,6 +26,15 @@ module Moko
       # Fills in any missing keys without overwriting existing live data.
       # ──────────────────────────────────────────────
       def self.ensure_state!(raid_state)
+        # Microbiome (Phase 68)
+        raid_state[:microbiome] ||= {}
+        mic = raid_state[:microbiome]
+        mic[:flora_diversity] ||= 1.0
+        mic[:symbiotic_ratio] ||= 0.8
+        mic[:endotoxin_level] ||= 0.0
+        mic[:fermentation_rate] ||= 1.0
+        mic[:neuroactive_metabolites] ||= { irritability: 0.0, calmness: 0.1 }
+
         raid_state[:bloodline] ||= {
           bone_density: 1.0, muscle_type: :balanced,
           lung_capacity: 1.0, metabolic_rate: 1.0
@@ -126,6 +136,7 @@ module Moko
 
         errors = []
 
+        safe_tick(errors, :Microbiome) { MicrobiomeEngine.tick(raid_state, elapsed_hours) }
         safe_tick(errors, :Physiology) { PhysiologyEngine.tick(raid_state, env_state, elapsed_hours) }
         safe_tick(errors, :Metabolism) { MetabolismEngine.tick(raid_state, elapsed_hours) }
         safe_tick(errors, :Homeostasis){ HomeostasisEngine.tick(raid_state, elapsed_hours) }
