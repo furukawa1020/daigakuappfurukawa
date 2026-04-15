@@ -142,6 +142,36 @@ rescue => e
 end
 
 # ────────────────────────────────────────────
+# TEST 6: Microbiome & Gut-Brain Axis
+# ────────────────────────────────────────────
+puts "\n[TEST 6] Microbiome & Gut-Brain Axis (Dysbiosis & Behavior)..."
+begin
+  rs = LocalStore.initial_state[:raid]
+  env = { toxins: 100.0, pH: 6.5 } # Acidic and very toxic
+  
+  # Run for 20 simulated hours to cause microbial shift
+  20.times { Moko::Bio::Orchestrator.tick(rs, env, 1.0, 0.0) }
+  
+  mic = rs[:microbiome]
+  metabolites = mic[:neuroactive_metabolites]
+  
+  puts "   Flora Diversity: #{(mic[:flora_diversity] * 100).to_i}%"
+  puts "   Endotoxin Level: #{mic[:endotoxin_level].round(4)}"
+  puts "   Irritability:    #{metabolites[:irritability].round(4)}"
+  
+  # Run behavior update
+  Moko::Bio::BehavioralEcologist.update_behavior!(rs, env)
+  puts "   Behavior Mode:   #{rs[:behavior_mode]}"
+  
+  raise "Should be Enraged" unless rs[:behavior_mode] == :enraged
+  puts "   ✅ Microbiome & Gut-Brain Axis PASSED."
+rescue => e
+  puts "   ❌ FAILED: #{e.message}"
+  puts "      #{e.backtrace.first}"
+  errors_found += 1
+end
+
+# ────────────────────────────────────────────
 puts "\n#{'=' * 50}"
 if errors_found == 0
   puts "✅ ALL TESTS PASSED. Engine is production-ready."
