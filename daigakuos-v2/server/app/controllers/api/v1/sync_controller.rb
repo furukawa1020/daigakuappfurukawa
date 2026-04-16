@@ -13,6 +13,18 @@ class Api::V1::SyncController < ApplicationController
     render json: { success: true, payload: UserSerializer.new(user).to_hash }, status: :ok
   end
 
+  def insights
+    user = User.find_by!(device_id: params.require(:device_id))
+    insights = InsightService.new(user).generate_focus_insights
+    render json: { success: true, insights: insights }, status: :ok
+  end
+
+  def update_role
+    user = User.find_by!(device_id: params.require(:device_id))
+    user.update!(role: params.require(:role))
+    render json: { success: true, role: user.role }, status: :ok
+  end
+
   private
 
   # Strong Parameters: structurally verified data

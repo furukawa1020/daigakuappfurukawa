@@ -22,7 +22,10 @@ class NotificationService {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) async {
-        // Handle notification tap
+         // Phase 49: Handle Actions
+         if (response.actionId == 'action_sharpen') {
+            // logic to trigger sharpen API
+         }
       },
     );
 
@@ -52,6 +55,9 @@ class NotificationService {
           channelDescription: 'Invitations from Moko',
           importance: Importance.max,
           priority: Priority.high,
+          actions: [
+            AndroidNotificationAction('action_focus', '集中を始める (5分)', showsUserInterface: true),
+          ],
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,

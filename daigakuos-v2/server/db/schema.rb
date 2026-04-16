@@ -10,7 +10,34 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
+ActiveRecord::Schema[7.1].define(version: 2026_04_07_232406) do
+  create_table "activities", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "activity_type"
+    t.json "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_activities_on_user_id"
+  end
+
+  create_table "global_raids", force: :cascade do |t|
+    t.string "title"
+    t.integer "max_hp"
+    t.integer "current_hp"
+    t.string "status"
+    t.json "participants_data"
+    t.datetime "starts_at"
+    t.datetime "ends_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "active_skill"
+    t.datetime "skill_ends_at"
+    t.integer "current_phase"
+    t.string "active_gimmick"
+    t.datetime "gimmick_ends_at"
+    t.text "part_durabilities"
+  end
+
   create_table "goal_nodes", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "title"
@@ -21,6 +48,30 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["user_id"], name: "index_goal_nodes_on_user_id"
+  end
+
+  create_table "hunting_quests", force: :cascade do |t|
+    t.string "target_monster"
+    t.integer "difficulty"
+    t.integer "required_minutes"
+    t.text "reward_pool"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "moko_expeditions", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "name"
+    t.integer "difficulty"
+    t.integer "required_focus_minutes"
+    t.float "progress"
+    t.string "status"
+    t.integer "monster_hp"
+    t.json "rewards"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_moko_expeditions_on_user_id"
   end
 
   create_table "moko_items", force: :cascade do |t|
@@ -43,6 +94,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_moko_templates_on_code"
+  end
+
+  create_table "parties", force: :cascade do |t|
+    t.string "name"
+    t.integer "leader_id"
+    t.string "passcode"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "party_memberships", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "party_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_party_memberships_on_party_id"
+    t.index ["user_id"], name: "index_party_memberships_on_user_id"
   end
 
   create_table "reminders", force: :cascade do |t|
@@ -68,6 +136,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "social_events", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.string "event_type"
+    t.json "metadata"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_social_events_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "device_id"
     t.integer "level"
@@ -78,11 +155,35 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_22_011244) do
     t.datetime "last_sync_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "username"
+    t.json "whisper"
+    t.string "moko_mood"
+    t.json "materials"
+    t.integer "role"
+    t.datetime "last_skill_used_at"
+    t.text "boss_archive"
+    t.text "passive_buffs"
+    t.text "inventory"
+    t.integer "current_sharpness"
+    t.integer "max_sharpness"
+    t.datetime "last_sharpened_at"
+    t.integer "hp"
+    t.integer "max_hp"
+    t.integer "stamina"
+    t.integer "max_stamina"
+    t.text "meal_buffs"
+    t.text "status_effects"
     t.index ["device_id"], name: "index_users_on_device_id"
+    t.index ["username"], name: "index_users_on_username"
   end
 
+  add_foreign_key "activities", "users"
   add_foreign_key "goal_nodes", "users"
+  add_foreign_key "moko_expeditions", "users"
   add_foreign_key "moko_items", "users"
+  add_foreign_key "party_memberships", "parties"
+  add_foreign_key "party_memberships", "users"
   add_foreign_key "reminders", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "social_events", "users"
 end

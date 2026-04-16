@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DaigakuAPP | Admin Portal</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #8a2be2;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --accent: #38bdf8;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      margin: 0;
+      display: flex;
+    }
+    .sidebar {
+      width: 250px;
+      height: 100vh;
+      background: #000;
+      padding: 20px;
+      border-right: 1px solid #334155;
+    }
+    .sidebar h1 { font-size: 1.5rem; color: var(--primary); margin-bottom: 2rem; }
+    .sidebar a { display: block; color: var(--text-dim); text-decoration: none; padding: 10px; border-radius: 8px; margin-bottom: 5px; transition: 0.3s; }
+    .sidebar a:hover { color: var(--text); background: #1e293b; }
+    .sidebar a.active { color: var(--text); background: var(--primary); }
+    
+    .main { flex: 1; padding: 40px; overflow-y: auto; }
+    .card { background: var(--card); border-radius: 16px; padding: 24px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    .btn { background: var(--primary); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-block; font-weight: 600; border: none; cursor: pointer; }
+    .btn-outline { border: 1px solid var(--primary); color: var(--primary); background: transparent; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th { text-align: left; color: var(--text-dim); border-bottom: 1px solid #334155; padding: 12px; }
+    td { padding: 12px; border-bottom: 1px solid #1e293b; }
+    .flash { padding: 10px; background: #10b981; border-radius: 8px; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h1>MokoAdmin</h1>
+    <a href="/admin" class="active">Templates</a>
+    <a href="/web/dashboard">Public Site</a>
+  </div>
+  <div class="main">
+    <% if notice %>
+      <div class="flash"><%= notice %></div>
+    <% end %>
+    <div class="card">
+      <%= yield %>
+    </div>
+  </div>
+</body>
+</html>

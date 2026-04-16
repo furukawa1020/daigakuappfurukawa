@@ -1,0 +1,28 @@
+<h2><%= @moko_template.new_record? ? "New" : "Edit" %> Moko Template</h2>
+
+<%= form_with(model: [:admin, @moko_template], local: true) do |f| %>
+  <div style="margin-bottom: 20px;">
+    <%= f.label :name, style: "display: block; margin-bottom: 5px; color: var(--text-dim);" %>
+    <%= f.text_field :name, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;" %>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <%= f.label :rarity, style: "display: block; margin-bottom: 5px; color: var(--text-dim);" %>
+    <%= f.select :rarity, ['Common', 'Rare', 'Epic', 'Legendary'], {}, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;" %>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <%= f.label :evolution_stage, style: "display: block; margin-bottom: 5px; color: var(--text-dim);" %>
+    <%= f.number_field :evolution_stage, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;" %>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <%= f.label :description, style: "display: block; margin-bottom: 5px; color: var(--text-dim);" %>
+    <%= f.text_area :description, rows: 4, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white;" %>
+  </div>
+
+  <div style="margin-top: 30px;">
+    <%= f.submit "Save Template", class: "btn" %>
+    <%= link_to "Cancel", admin_moko_templates_path, style: "margin-left: 20px; color: var(--text-dim);" %>
+  </div>
+<% end %>

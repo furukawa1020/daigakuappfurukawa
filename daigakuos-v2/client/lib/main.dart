@@ -41,6 +41,26 @@ import 'widgets/stat_item.dart';
 import 'widgets/quick_start_button.dart';
 import 'stats_screen.dart';
 import 'tree_screen.dart';
+import 'moko_dictionary_screen.dart';
+import 'screens/social_screen.dart';
+import 'widgets/live_feed_widget.dart';
+import 'widgets/raid_hp_bar.dart';
+import 'widgets/skill_action_button.dart';
+import 'widgets/sharpness_gauge.dart';
+import 'widgets/quick_item_pouch.dart';
+import 'widgets/vitality_hud.dart';
+import 'widgets/bio_sync_hud.dart';
+
+import 'services/native_command_listener.dart';
+import 'services/api_service.dart';
+import 'services/ruby_engine_service.dart';
+import 'widgets/chat_overlay.dart';
+import 'widgets/party_widget.dart';
+import 'screens/boss_archive_screen.dart';
+import 'screens/quest_board_screen.dart';
+import 'screens/blacksmith_screen.dart';
+import 'screens/canteen_screen.dart';
+import 'screens/combination_screen.dart';
 
 // -----------------------------------------------------------------------------
 // 1. Models & State
@@ -114,6 +134,12 @@ final _router = GoRouter(
     GoRoute(path: '/shop', builder: (context, state) => const ShopScreen()),
     GoRoute(path: '/stats', builder: (context, state) => const StatsScreen()),
     GoRoute(path: '/tree', builder: (context, state) => const TreeScreen()),
+    GoRoute(path: '/server_dictionary', builder: (context, state) => const MokoDictionaryScreen()),
+    GoRoute(path: '/social', builder: (context, state) => const SocialScreen()),
+    GoRoute(path: '/quest_board', builder: (context, state) => const QuestBoardScreen()),
+    GoRoute(path: '/blacksmith', builder: (context, state) => const BlacksmithScreen()),
+    GoRoute(path: '/canteen', builder: (context, state) => const CanteenScreen()),
+    GoRoute(path: '/combination', builder: (context, state) => const CombinationScreen()),
   ],
 );
 
@@ -121,7 +147,11 @@ void main() async { // Async main
   WidgetsFlutterBinding.ensureInitialized(); // Ensure binding
   await NotificationService().init(); // Init notifications
 
-  // Schedule daily 9 PM summary (fire-and-forget on startup)
+  // Start Native Ruby Engine Sidecar
+  final rubyEngine = RubyEngineService();
+  await rubyEngine.init();
+
+  // Schedule daily 9 PM summary
   DatabaseHelper().getUserStats().then((stats) {
     NotificationService().scheduleDailySummary(
       todayXP: ((stats['dailyPoints'] as double?) ?? 0.0).toInt(),
@@ -129,17 +159,22 @@ void main() async { // Async main
     );
   });
 
+  // Native Bridge Init
+  ApiService.getDeviceId().then((deviceId) {
+    NativeCommandListener.init(deviceId);
+  });
+
   runApp(const ProviderScope(child: DaigakuAPPApp()));
 }
 
-class DaigakuAPPApp extends StatefulWidget {
+class DaigakuAPPApp extends ConsumerStatefulWidget {
   const DaigakuAPPApp({super.key});
 
   @override
-  State<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
+  ConsumerState<DaigakuAPPApp> createState() => _DaigakuAPPAppState();
 }
 
-class _DaigakuAPPAppState extends State<DaigakuAPPApp> with WidgetsBindingObserver {
+class _DaigakuAPPAppState extends ConsumerState<DaigakuAPPApp> with WidgetsBindingObserver {
   
   @override
   void initState() {
@@ -158,14 +193,17 @@ class _DaigakuAPPAppState extends State<DaigakuAPPApp> with WidgetsBindingObserv
     if (state == AppLifecycleState.paused) {
       // Schedule invitation when app goes to background
       NotificationService().scheduleMokoInvitation();
+      // Kill ruby sidecar on pause to save energy on mobile
+      RubyEngineService().dispose();
     } else if (state == AppLifecycleState.resumed) {
-      // Cancel when app comes back
+      // Cancel notifications and restart Ruby engine
       NotificationService().cancelAll();
+      RubyEngineService().init();
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final activeTheme = ref.watch(themeProvider);
     final themeNotifier = ref.read(themeProvider.notifier);
 
@@ -199,6 +237,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   void initState() {
     super.initState();
     _resetIdleTimer();
+    _connectRealTime();
+    _startPolling();
+  }
+
+  void _connectRealTime() {
+    // Phase 53: Now handled by the persistent RubyEngineService
+  }
+
+  void _startPolling() {
+    Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (mounted) {
+        ref.invalidate(globalRaidProvider);
+        ref.invalidate(worldStatusProvider);
+        ref.invalidate(partyProvider);
+      } else {
+        timer.cancel();
+      }
+    });
   }
 
   @override
@@ -285,6 +341,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               centerTitle: false,
               backgroundColor: Colors.transparent,
             actions: [
+                IconButton(
+                  icon: const Icon(Icons.public, color: Color(0xFF6366F1)),
+                  onPressed: () {
+                    ref.read(hapticsProvider.notifier).lightImpact();
+                    context.push('/social');
+                  },
+                ),
                 IconButton(
                   icon: const Icon(Icons.bar_chart, color: Colors.brown),
                   onPressed: () => context.push('/stats'),
@@ -587,7 +650,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ).animate().fadeIn().slideY(begin: 0.2, end: 0),
 
                     const SizedBox(height: 16),
+
+                    // Server Moko Discovery UI
+                    GestureDetector(
+                      onTap: () {
+                        ref.read(hapticsProvider.notifier).heavyImpact();
+                        context.push('/server_dictionary');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [Colors.purple.shade300, Colors.blue.shade300]),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [BoxShadow(color: Colors.purple.withOpacity(0.3), blurRadius: 10, offset: const Offset(0,4))],
+                        ),
+                        child: Row(
+                          children: [
+                            const Text("☁️", style: TextStyle(fontSize: 40)),
+                            const SizedBox(width: 16),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text("Moko Dictionary", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
+                                  Text("サーバーから新しいモコの種類を確認！", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+                          ],
+                        ),
+                      ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.2, end: 0),
+                    ),
                     
+                    const SizedBox(height: 16),
+                    const LiveFeedWidget(),
                     const SizedBox(height: 32),
                     
                     // "No-Pressure" One-Tap Start Section
@@ -660,7 +757,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       ),
                                     ),
                                   ).animate().scale(curve: Curves.elasticOut, duration: 800.ms),
-                                ),
+                                )
                               else
                                 MokoCard(
                                   padding: const EdgeInsets.all(24),
@@ -1157,7 +1254,45 @@ class _NowScreenState extends ConsumerState<NowScreen> with TickerProviderStateM
                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                            decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
                            child: Text(taskTitle ?? "DaigakuAPP 実行中...", style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold)),
-                         )
+                         ),
+                         // Phase 53: Living Ecosystem & Vitality HUD
+                         Consumer(builder: (context, ref, _) {
+                            final world = ref.watch(worldStatusProvider).value;
+                            final userData = ref.watch(userProvider).value;
+                            if (world == null || userData == null) return const SizedBox(height: 10, child: LinearProgressIndicator());
+                            
+                            return BioSyncHUD(
+                              orderLevel: userData.orderLevel,
+                              chaosLevel: userData.chaosLevel,
+                              hp: userData.hp,
+                              maxHp: userData.maxHp,
+                              stamina: userData.stamina,
+                              maxStamina: userData.maxStamina,
+                              oxygenLevel: world.oxygenLevel,
+                              toxinLevel: world.toxinLevel,
+                            );
+                         }),
+                         const SizedBox(height: 12),
+                         
+                         // Phase 34: Moko Card
+                         const MokoCard(),
+                         
+                         // Phase 37: Raid HP Bar
+                         const RaidHPBar(),
+                         
+                         // Phase 41: Skill Action Button
+                         const SkillActionButton(),
+                         
+                         // Phase 42: Quick Item Pouch
+                         const QuickItemPouch(),
+                         
+                         const SizedBox(height: 12),
+                         // Preparation Row
+                         _buildMetaRow(context),
+
+                         const SizedBox(height: 12),
+                         // Phase 39: Party Widget
+                         const PartyWidget(),
                        ],
                      ),
                    ),
@@ -1462,7 +1597,7 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
         if (_selectedNodeId != null) {
           await DatabaseHelper().completeNode(_selectedNodeId!);
           // Bonus Coins for completing a planned task
-          await ref.read(currencyProvider.notifier).addCoins(10, type: CurrencyType.moko);
+          await ref.read(currencyProvider.notifier).addMokoCoins(10);
         }
 
         // 4. Reset Providers
@@ -1511,8 +1646,11 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
   Widget build(BuildContext context) {
     final session = ref.read(sessionProvider);
     final mins = session?.durationMinutes ?? 0;
+    final worldStatus = ref.watch(worldStatusProvider).asData?.value;
+    final raidBuff = worldStatus?.raidBuff ?? 1.0;
+    
     final previewXP = (30.0 * mins * (_focusRating / 3.0) *
-        (ref.read(locationBonusProvider) == LocationBonus.campus ? 1.5 : 1.0)).toStringAsFixed(0);
+        (ref.read(locationBonusProvider) == LocationBonus.campus ? 1.5 : 1.0) * raidBuff).toStringAsFixed(0);
 
     return Scaffold(
       body: Stack(
@@ -1592,6 +1730,51 @@ class _FinishScreenState extends ConsumerState<FinishScreen> {
                       ],
                     ),
                   ).animate().fadeIn().slideY(begin: 0.2, end: 0),
+
+                  const SizedBox(height: 16),
+                  
+                  // ── Phase 37: Global Raid Damage Card ──────────────────────
+                  Consumer(builder: (context, ref, _) {
+                    final raid = ref.watch(globalRaidProvider).asData?.value;
+                    if (raid == null) return const SizedBox.shrink();
+                    
+                    final damage = mins * 10;
+                    
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E293B),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+                        boxShadow: [BoxShadow(color: Colors.red.withOpacity(0.1), blurRadius: 10)],
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.bolt, color: Colors.redAccent, size: 32)
+                            .animate(onPlay: (c) => c.repeat()).shake(hz: 3, duration: 1.seconds),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "GLOBAL RAID DAMAGE",
+                                  style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                                ),
+                                Text(
+                                  "ボスに $damage ダメージ！",
+                                  style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text("⚔️", style: const TextStyle(fontSize: 24))
+                            .animate().scale(delay: 500.ms, curve: Curves.elasticOut),
+                        ],
+                      ),
+                    ).animate().fadeIn(delay: 400.ms).slideX(begin: 0.2, end: 0);
+                  }),
 
                   const SizedBox(height: 16),
                   

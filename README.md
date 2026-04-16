@@ -1,128 +1,59 @@
-# University app (Daigakuapp) - インストールガイド
+# DaigakuOS - Unified Focus Platform (Flutter + Rails)
 
-このプロジェクトは、**Jetpack Compose**と**Room Database**で構築されたネイティブAndroidアプリケーションです。
-
-## 前提条件
-- **Android Studio** (Hedgehog以降を推奨)
-- **Androidデバイス** (Android 8.0 Oreo / API 26以上)
-- **USBケーブル** (実機デバッグ用)
-
-## 実機へのインストール方法
-
-このプロジェクトはゼロから生成されたため、Gradle WrapperとSDK依存関係をダウンロードするためにAndroid Studioで初期化する必要があります。
-
-1. **Android Studioを開きます**。
-2. **Open**を選択し、以下のパスに移動します：
-   `c:\Users\hatake\OneDrive\画像\デスクトップ\.vscode\daigakuOSfurukawa`
-3. **Gradle Sync**が完了するまで待ちます。
-   - *注意：Android StudioがGradleプラグインの更新やSDK 34のダウンロードを求める場合があります。これらを承諾してください。*
-4. Androidスマートフォンで**USBデバッグを有効**にします：
-   - 設定 > 端末情報 > 「ビルド番号」を7回タップ。
-   - 設定 > システム > 開発者向けオプション > 「USBデバッグ」を有効化。
-5. USBケーブルで**スマートフォンを接続**します。
-   - スマートフォン画面の「USBデバッグを許可」プロンプトを承諾します。
-6. Android Studioのツールバーのドロップダウンメニューからデバイスを選択します。
-7. 緑色の**Run**ボタン(▶)をクリックします。
-
-## トラブルシューティング
-
-### "SDK Location not found"
-プロジェクトルートに`local.properties`ファイルを作成し、SDKへのパスを記述します：
-```properties
-sdk.dir=C:\\Users\\hatake\\AppData\\Local\\Android\\Sdk
-```
-(通常、Android Studioが自動的に行います)。
-
-### "ジオフェンシングが動作しない"
-- プロンプトが表示されたら、**「常に許可」**の位置情報権限を付与してください。
-- ジオフェンシングは、境界を越えて実際に移動する（または移動をシミュレートする）必要があります。
+このプロジェクトは、**Flutter** (マルチプラットフォーム・クライアント) と **Ruby on Rails** (中央同期サーバー) で構築された、プレミアムな集中・習慣化プラットフォームです。旧ネイティブ版から完全に移行し、単一のコードベースで高度なゲーミフィケーションを提供します。
 
 ## アーキテクチャ
 
-### システムアーキテクチャ図
+### システム構成 🚀
 
-```mermaid
-graph TB
-    subgraph "UI Layer"
-        HomeScreen[🏠 HomeScreen]
-        NowScreen[⏱️ NowScreen]
-        FinishScreen[✅ FinishScreen]
-        StatsScreen[📊 StatsScreen]
-        TreeScreen[🌳 TreeScreen]
-        SettingsScreen[⚙️ SettingsScreen]
-    end
-    
-    subgraph "ViewModel Layer"
-        HomeVM[HomeViewModel]
-        NowVM[NowViewModel]
-        FinishVM[FinishViewModel]
-        StatsVM[StatsViewModel]
-        TreeVM[TreeViewModel]
-        SettingsVM[SettingsViewModel]
-    end
-    
-    subgraph "Domain Layer"
-        UseCases[UseCases]
-        PointCalc[PointCalculator]
-        Repo[Repository Interface]
-    end
-    
-    subgraph "Data Layer"
-        RepoImpl[Repository Implementation]
-        AppDB[(Room Database)]
-        DAOs[DAOs]
-        Entities[Entities]
-    end
-    
-    subgraph "Utils & Services"
-        GeoManager[📍 GeofenceManager]
-        GeoBroadcast[GeofenceBroadcastReceiver]
-    end
-    
-    subgraph "DI"
-        Hilt[🔧 Hilt Module]
-    end
-    
-    HomeScreen --> HomeVM
-    NowScreen --> NowVM
-    FinishScreen --> FinishVM
-    StatsScreen --> StatsVM
-    TreeScreen --> TreeVM
-    SettingsScreen --> SettingsVM
-    
-    HomeVM --> UseCases
-    NowVM --> UseCases
-    FinishVM --> UseCases
-    StatsVM --> UseCases
-    TreeVM --> UseCases
-    SettingsVM --> UseCases
-    
-    UseCases --> Repo
-    UseCases --> PointCalc
-    
-    Repo --> RepoImpl
-    RepoImpl --> AppDB
-    AppDB --> DAOs
-    DAOs --> Entities
-    
-    NowVM --> GeoManager
-    GeoManager --> GeoBroadcast
-    
-    Hilt -.provides.-> UseCases
-    Hilt -.provides.-> RepoImpl
-    Hilt -.provides.-> GeoManager
-    
-    style HomeScreen fill:#4F46E5
-    style NowScreen fill:#EC4899
-    style AppDB fill:#10B981
-    style GeoManager fill:#F59E0B
+- **Frontend (Client)**: `daigakuos-v2/client` (Flutter)
+  - **State Management**: Riverpod (v3 API) / Hooks
+  - **Database**: SQLite (sqflite) によるローカルファースト設計
+  - **Animation**: flutter_animate によるリッチなユーザー体験
+  - **Navigation**: GoRouter による宣言的ルーティング
+
+- **Backend (Server)**: `daigakuos-v2/server` (Ruby on Rails)
+  - **API**: RESTful API (JSON)
+  - **Real-time**: ActionCable によるグローバルレイドのリアルタイム同期
+  - **Logic**: モコ図鑑の配信、ランキング計算、グローバル統計
+
+## 主要機能
+
+1.  **集中タイマー (NowScreen)**
+    - 集中時間、グレード評価（S/A/B/C）、報酬計算ロジック。
+    - キャンパス内ボーナス（1.5倍）、自宅警備ボーナス（1.2倍）の自動適用。
+2.  **モコ・コレクション (Moko Collection)**
+    - 累計集中時間に基づいたガチャシステム。
+    - 60分ごとに1枚のガチャチケットを獲得。
+3.  **ペット成長システム (Pet Evolution)**
+    - 累計時間に応じてペット（モコ）が進化。
+    - 卵 -> ベビー -> コモコ -> ティーン -> おとな -> マスター。
+4.  **グローバル・レイド (Global Raid)**
+    - 全ユーザーで協力して巨大なボスに立ち向かう。
+    - セッションで獲得したXPがそのままボスへの攻撃力に。
+5.  **実績システム (Achievements)**
+    - 50種類以上の実績メダル。
+    - 解除時のリッチなエフェクトとギャラリー表示。
+
+## セットアップガイド
+
+### 1. Flutterクライアント
+```bash
+cd daigakuos-v2/client
+flutter pub get
+flutter run
 ```
 
-### レイヤー構成
+### 2. Railsサーバー
+```bash
+cd daigakuos-v2/server
+bundle install
+rails db:migrate
+rails s
+```
+*※ クライアントがエミュレータの場合は `ApiService.dart` の `baseUrl` が `10.0.2.2:3000` を指していることを確認してください。*
 
-- **Domain**: `PointCalculator.kt` (あなたの計算式に基づいてスコアを計算)
-- **Data**: `AppDatabase` (Room), `GeofenceManager` (位置情報)
-- **UI**: Jetpack Compose (`HomeScreen`, `NowScreen`)
+## メンテナンス情報
 
-## ライセンス
-プライベート / 個人使用 (Furukawa専用)
+- **バックアップ**: レガシーなネイティブAndroidプロジェクトは `native_android_backup.zip` にアーカイブされています。
+- **ライセンス**: プライベート / 個人使用 (Furukawa専用)

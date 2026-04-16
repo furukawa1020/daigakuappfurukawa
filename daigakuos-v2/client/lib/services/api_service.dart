@@ -10,7 +10,7 @@ class ApiService {
   // Use http://127.0.0.1:3000 for iOS Simulator and Windows Desktop.
   static String get baseUrl {
     if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/v1';
+      return 'http://10.103.176.253:3000/api/v1';
     } else {
       return 'http://127.0.0.1:3000/api/v1';
     }
@@ -70,5 +70,201 @@ class ApiService {
       print('Sync Push Error: $e');
       return false;
     }
+  }
+
+  static Future<List<dynamic>> fetchMokoDictionary() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/mokos'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return data['payload'] as List<dynamic>;
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Fetch Dictionary Error: $e');
+      return [];
+    }
+  }
+
+  static Future<List<dynamic>> fetchRankings() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/rankings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as List<dynamic>;
+      }
+      return [];
+    } catch (e) {
+      print('Fetch Rankings Error: $e');
+      return [];
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchGlobalStats() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/analytics'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('Fetch Global Stats Error: $e');
+      return {};
+    }
+  }
+
+  static Future<Map<String, dynamic>?> fetchRaidStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/raid/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      print('Fetch Raid Error: $e');
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>> fetchWorldStatus() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/world/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer daigaku_secret_token'
+        },
+      );
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print('Fetch World Error: $e');
+      return {};
+    }
+  Future<bool> updateRole(String deviceId, String role) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/sync/update_role'),
+      body: {'device_id': deviceId, 'role': role},
+    );
+    return response.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>> useSkill(String deviceId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/use'),
+      body: {'device_id': deviceId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Skill failed';
+      throw Exception(error);
+    }
+  }
+
+  // Phase 43: Monster Hunter Loop
+  Future<Map<String, dynamic>> fetchQuests(String deviceId) async {
+    final response = await http.get(Uri.parse('$baseUrl/quests?device_id=$deviceId'));
+    return jsonDecode(response.body);
+  }
+
+  Future<bool> startQuest(String deviceId, int questId) async {
+    final response = await http.post(Uri.parse('$baseUrl/quests/$questId/start'), body: {'device_id': deviceId});
+    return response.statusCode == 200;
+  }
+
+  Future<Map<String, dynamic>> fetchBlacksmith(String deviceId) async {
+    final response = await http.get(Uri.parse('$baseUrl/blacksmith?device_id=$deviceId'));
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> craftItem(String deviceId, String itemId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/blacksmith/craft'),
+      body: {'device_id': deviceId, 'item_id': itemId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Crafting failed';
+      throw Exception(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> sharpen(String deviceId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/sharpen'),
+      body: {'device_id': deviceId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Sharpening failed';
+      throw Exception(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> heal(String deviceId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/heal'),
+      body: {'device_id': deviceId},
+    );
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      final error = jsonDecode(response.body)['error'] ?? 'Healing failed';
+      throw Exception(error);
+    }
+  }
+
+  Future<Map<String, dynamic>> eat(String deviceId, String mealId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/eat'),
+      body: {'device_id': deviceId, 'meal_id': mealId},
+    );
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> combine(String deviceId, String itemId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/combine'),
+      body: {'device_id': deviceId, 'item_id': itemId},
+    );
+    return jsonDecode(response.body);
+  }
+
+  Future<Map<String, dynamic>> useItem(String deviceId, String itemId) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/skills/use_item'),
+      body: {'device_id': deviceId, 'item_id': itemId},
+    );
+    return jsonDecode(response.body);
   }
 }

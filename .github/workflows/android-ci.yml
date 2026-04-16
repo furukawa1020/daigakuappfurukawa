@@ -30,40 +30,42 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'stable'
+        cache: true
 
     - name: Validate Gradle wrapper
       uses: gradle/wrapper-validation-action@v2
+      with:
+        min-wrapper-count: 1
+        paths: |
+          daigakuos-v2/client/android
 
-    - name: Run unit tests
-      run: ./gradlew test --no-daemon
+    - name: Install Flutter dependencies
+      working-directory: daigakuos-v2/client
+      run: flutter pub get
+
+    - name: Run Flutter tests
+      working-directory: daigakuos-v2/client
+      run: flutter test
 
     - name: Build debug APK
-      run: ./gradlew assembleDebug --no-daemon
-
-    - name: Run lint checks
-      run: ./gradlew lint --no-daemon
+      working-directory: daigakuos-v2/client
+      run: flutter build apk --debug
 
     - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
-        path: app/build/outputs/apk/debug/*.apk
+        path: daigakuos-v2/client/build/app/outputs/flutter-apk/app-debug.apk
         retention-days: 30
-
-    - name: Upload lint results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: lint-results
-        path: app/build/reports/lint-results-*.html
-        retention-days: 7
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
         name: test-results
-        path: app/build/reports/tests/
+        path: daigakuos-v2/client/build/reports/
         retention-days: 7

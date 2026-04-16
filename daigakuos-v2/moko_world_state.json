@@ -1,0 +1,24 @@
+{
+  "user": {
+    "username": "Native_Hunter",
+    "hp": 100,
+    "max_hp": 100,
+    "stamina": 100,
+    "max_stamina": 100,
+    "streak": 7,
+    "coins": 500,
+    "role": "dps",
+    "order_level": 0.5,
+    "chaos_level": 0.2,
+    "neural_resonance": 85,
+    "status_effects": {}
+  },
+  "raid": {
+    "title": "Moko Wyvern",
+    "max_hp": 1000000,
+    "current_hp": 999500,
+    "current_phase": 1,
+    "status": "active"
+  },
+  "global_entropy": 0.3
+}

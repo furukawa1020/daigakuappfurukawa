@@ -4,13 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 enum MokoThemePreset { classic, midnight, strawberry, ocean, lavender }
 
-final themeProvider = StateNotifierProvider<ThemeNotifier, MokoThemePreset>((ref) {
-  return ThemeNotifier();
-});
+final themeProvider = NotifierProvider<ThemeNotifier, MokoThemePreset>(ThemeNotifier.new);
 
-class ThemeNotifier extends StateNotifier<MokoThemePreset> {
-  ThemeNotifier() : super(MokoThemePreset.classic) {
+class ThemeNotifier extends Notifier<MokoThemePreset> {
+  @override
+  MokoThemePreset build() {
     _loadTheme();
+    return MokoThemePreset.classic;
   }
 
   Future<void> _loadTheme() async {

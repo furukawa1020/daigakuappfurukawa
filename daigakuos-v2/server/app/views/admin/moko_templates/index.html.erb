@@ -1,0 +1,28 @@
+<div style="display: flex; justify-content: space-between; align-items: center;">
+  <h2>Moko Templates</h2>
+  <%= link_to "New Template", new_admin_moko_template_path, class: "btn" %>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Rarity</th>
+      <th>Stage</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @moko_templates.each do |t| %>
+      <tr>
+        <td><strong><%= t.name %></strong></td>
+        <td><span style="color: var(--accent);"><%= t.rarity %></span></td>
+        <td>Lv. <%= t.evolution_stage %></td>
+        <td>
+          <%= link_to "Edit", edit_admin_moko_template_path(t), style: "color: var(--accent); text-decoration: none; margin-right: 10px;" %>
+          <%= button_to "Delete", admin_moko_template_path(t), method: :delete, data: { confirm: "Are you sure?" }, style: "background: transparent; border: none; color: #ef4444; cursor: pointer;" %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

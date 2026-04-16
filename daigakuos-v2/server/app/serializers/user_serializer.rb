@@ -14,8 +14,32 @@ class UserSerializer
         streak: user.streak,
         coins: user.coins,
         rest_days: user.rest_days,
+        whisper: user.whisper,
+        moko_mood: user.moko_mood,
+        materials: user.materials || {},
+        role: user.role,
+        can_use_skill: user.can_use_skill?,
+        skill_cooldown: user.skill_cooldown_remaining,
+        current_sharpness: user.current_sharpness,
+        max_sharpness: user.max_sharpness,
+        sharpness_color: user.sharpness_color,
+        hp: user.hp,
+        max_hp: user.max_hp,
+        stamina: user.stamina,
+        max_stamina: user.max_stamina,
+        inventory: user.inventory || {},
+        boss_archive: user.boss_archive || {},
+        passive_buffs: user.passive_buffs || {},
+        chaos_level: user.chaos_level,
+        order_level: user.order_level,
+        neural_resonance: user.neural_resonance,
         last_sync_at: user.last_sync_at
       },
+      active_buffs: FocusSynergyService.calculate_buffs(user),
+      vfx_hints: VfxHintService.determine_hints(user),
+      active_expedition: user.moko_expeditions.active.first&.as_json(only: [:name, :difficulty, :progress, :required_focus_minutes, :monster_hp, :rewards]),
+      social_events: user.social_events.order(created_at: :desc).limit(5).map { |e| serialize_social_event(e) },
+      world_status: MokoWorldService.current_status,
       sessions: user.sessions.map { |s| serialize_session(s) },
       moko_items: user.moko_items.map { |m| serialize_moko(m) },
       goal_nodes: user.goal_nodes.map { |g| serialize_goal(g) }
@@ -49,6 +73,14 @@ class UserSerializer
       estimate: goal.estimate,
       completed: goal.completed,
       completed_at: goal.completed_at
+    }
+  end
+
+  def serialize_social_event(event)
+    {
+      type: event.event_type,
+      metadata: event.metadata,
+      occurred_at: event.created_at
     }
   end
 end

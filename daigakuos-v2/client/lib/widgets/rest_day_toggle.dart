@@ -4,13 +4,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Rest Day Provider
 /// Tracks whether today is marked as an intentional rest day
-final restDayProvider = StateNotifierProvider<RestDayNotifier, bool>((ref) {
-  return RestDayNotifier();
-});
+final restDayProvider = NotifierProvider<RestDayNotifier, bool>(RestDayNotifier.new);
 
-class RestDayNotifier extends StateNotifier<bool> {
-  RestDayNotifier() : super(false) {
+class RestDayNotifier extends Notifier<bool> {
+  @override
+  bool build() {
     _loadRestStatus();
+    return false;
   }
 
   Future<void> _loadRestStatus() async {

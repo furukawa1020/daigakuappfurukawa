@@ -1,0 +1,2 @@
+class HuntingQuest < ApplicationRecord
+end
