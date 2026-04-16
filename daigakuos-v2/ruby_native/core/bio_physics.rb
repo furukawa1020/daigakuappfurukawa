@@ -100,7 +100,7 @@ module Moko
     end
 
     class DragonDynamics
-      def initialize(state, bloodline, raid_state, force_mult = 1.0)
+      def initialize(state, bloodline, _raid_state, force_mult = 1.0)
         @state = state || {}
         @state[:phase] ||= 0.0
         # 🌬️ Bio-Link: Flap frequency derived from Muscle Type & Lung Capacity
@@ -122,7 +122,7 @@ module Moko
     end
 
     class EasternDragonDynamics
-      def initialize(state, bloodline, raid_state, force_mult = 1.0)
+      def initialize(state, bloodline, _raid_state, force_mult = 1.0)
         @state = state || {}
         @state[:time]   ||= 0.0
         @state[:points] ||= Array.new(6) { |i| { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } }
