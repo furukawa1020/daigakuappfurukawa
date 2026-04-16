@@ -32,13 +32,23 @@ class SyncService
 
   private
 
-        # Record a focus activity for the live feed
-        user.create_activity("focus_complete", { duration: s[:duration], points: s[:points] })
+  def sync_sessions(user, sessions_params)
+    sessions_params.each do |s|
+      session = user.sessions.find_or_initialize_by(started_at: s[:started_at])
+      session.update!(
+        ended_at: s[:ended_at],
+        duration: s[:duration],
+        points:   s[:points],
+        quality:  s[:quality]
+      )
 
-        # Phase 43: Monster Hunter Part Break Logic
-        PartBreakService.process_session!(user, session)
-      end
+      # Record a focus activity for the live feed
+      user.create_activity("focus_complete", { duration: s[:duration], points: s[:points] })
+
+      # Phase 43: Monster Hunter Part Break Logic
+      PartBreakService.process_session!(user, session)
     end
+  end
 
   def sync_moko_items(user, moko_params)
     moko_params.each do |m|
