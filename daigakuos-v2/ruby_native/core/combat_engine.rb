@@ -1,5 +1,6 @@
 # ruby_native/core/combat_engine.rb
 require_relative 'action_patterns'
+require_relative 'monster_brain'
 
 class CombatEngine
   # 🧬 Biological Metabolic Multipliers
@@ -35,9 +36,8 @@ class CombatEngine
     final_damage = 0 if (user_state[:stamina] || 0) <= 0
 
     # 🐉 Monster AI Evaluation (Biological Brain)
-    monster_action = MonsterBrain.decide_action(raid_state, toxin_load)
-    mode_info = MonsterBrain::BEHAVIOR_MODES[raid_state[:behavior_mode] || :grazing]
-    
+    monster_action = Moko::Bio::BehavioralEcologist.decide_action(raid_state, toxin_load)
+
     # Base Counter influenced by behavioral multi
     base_counter = monster_action[:base_damage] * (monster_action[:damage_mult] || 1.0)
     

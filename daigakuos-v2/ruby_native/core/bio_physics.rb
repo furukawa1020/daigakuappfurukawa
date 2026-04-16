@@ -100,8 +100,9 @@ module Moko
     end
 
     class DragonDynamics
-      def initialize(state, bloodline, force_mult = 1.0)
-        @state = state || { phase: 0.0 }
+      def initialize(state, bloodline, raid_state, force_mult = 1.0)
+        @state = state || {}
+        @state[:phase] ||= 0.0
         # 🌬️ Bio-Link: Flap frequency derived from Muscle Type & Lung Capacity
         # ⚖️ Homeo-Link: pH Acidosis reduces flap rate
         base_freq = (bloodline[:muscle_type] == :twitch ? 7.0 : 4.0)
@@ -121,11 +122,10 @@ module Moko
     end
 
     class EasternDragonDynamics
-      def initialize(state, bloodline, force_mult = 1.0)
-        @state = state || { 
-          points: Array.new(6) { |i| { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } },
-          time: 0.0 
-        }
+      def initialize(state, bloodline, raid_state, force_mult = 1.0)
+        @state = state || {}
+        @state[:time]   ||= 0.0
+        @state[:points] ||= Array.new(6) { |i| { x: i * 20.0, y: 0.0, px: i * 20.0, py: 0.0 } }
         # 🏮 Bio-Link: Joint stiffness and length constraints
         @link_length = 25.0 * (bloodline[:bone_density] || 1.0)
         @tension = (bloodline[:muscle_type] == :tonic ? 0.95 : 0.8) * force_mult
