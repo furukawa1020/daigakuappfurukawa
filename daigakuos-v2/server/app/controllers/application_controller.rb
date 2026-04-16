@@ -20,7 +20,12 @@ class ApplicationController < ActionController::API
 
   def valid_token?(token)
     # In production, this would use JWT.decode. Here we accept a static token to demonstrate proper request authorization architecture.
-    token == "daigaku_secret_token"
+    expected = ENV['API_SECRET_TOKEN']
+    return false unless expected.present?
+    # Use digest-based secure_compare to prevent timing attacks regardless of string length.
+    ActiveSupport::SecurityUtils.secure_compare(token, expected)
+  rescue ArgumentError
+    false
   end
 
   def render_internal_error(exception)

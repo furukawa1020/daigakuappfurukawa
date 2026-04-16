@@ -255,7 +255,7 @@
       received(data) {
         if (data.event === "sync_completed") {
           console.log("Live Update Received:", data);
-          const shortId = data.device.substring(0, 8);
+          const shortId = String(data.device || '').replace(/[^a-zA-Z0-9_]/g, '').substring(0, 8);
           
           // Show a beautiful live notification toast
           const toast = document.createElement('div');
@@ -270,7 +270,7 @@
           toast.style.zIndex = '9999';
           toast.style.fontWeight = 'bold';
           toast.style.transition = 'opacity 0.5s ease';
-          toast.innerHTML = `🔥 Live Activity: User ${shortId}... just synced!`;
+          toast.textContent = `🔥 Live Activity: User ${shortId}... just synced!`;
           
           document.body.appendChild(toast);
           
@@ -296,11 +296,20 @@
           party.style.zIndex = '10000';
           party.style.textAlign = 'center';
           party.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-          party.innerHTML = `
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🐾🎉🐾</div>
-            <div style="font-size: 1.5rem; font-weight: bold;">Moko Party Started!</div>
-            <div style="margin-top: 0.5rem;">${data.message}</div>
-          `;
+          const partyTitle = document.createElement('div');
+          partyTitle.style.fontSize = '3rem';
+          partyTitle.style.marginBottom = '1rem';
+          partyTitle.textContent = '🐾🎉🐾';
+          const partyHeading = document.createElement('div');
+          partyHeading.style.fontSize = '1.5rem';
+          partyHeading.style.fontWeight = 'bold';
+          partyHeading.textContent = 'Moko Party Started!';
+          const partyMsg = document.createElement('div');
+          partyMsg.style.marginTop = '0.5rem';
+          partyMsg.textContent = String(data.message || '');
+          party.appendChild(partyTitle);
+          party.appendChild(partyHeading);
+          party.appendChild(partyMsg);
           
           document.body.appendChild(party);
           
@@ -338,7 +347,7 @@
           toast.style.zIndex = '9999';
           toast.style.fontWeight = 'bold';
           toast.style.animation = 'popIn 0.3s ease-out';
-          toast.innerHTML = `🎁 ${data.message}`;
+          toast.textContent = `🎁 ${String(data.message || '')}`;
           document.body.appendChild(toast);
           setTimeout(() => {
             toast.style.opacity = '0';
@@ -379,7 +388,16 @@
             const entry = document.createElement('div');
             entry.className = 'raid-log-entry';
             entry.style.animation = 'fadeInLeft 0.3s ease-out';
-            entry.innerHTML = `<span style="color:white; font-weight:bold;">${data.attacker}</span> が強烈な一撃！ <span style="color:yellow;">-${data.damage} DMG</span>`;
+            const attackerSpan = document.createElement('span');
+            attackerSpan.style.color = 'white';
+            attackerSpan.style.fontWeight = 'bold';
+            attackerSpan.textContent = String(data.attacker || '');
+            const dmgSpan = document.createElement('span');
+            dmgSpan.style.color = 'yellow';
+            dmgSpan.textContent = `-${Number(data.damage || 0)} DMG`;
+            entry.appendChild(attackerSpan);
+            entry.appendChild(document.createTextNode(' が強烈な一撃！ '));
+            entry.appendChild(dmgSpan);
             logs.prepend(entry);
             if (logs.children.length > 3) logs.lastElementChild.remove();
           }
