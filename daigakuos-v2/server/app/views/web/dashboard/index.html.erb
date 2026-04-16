@@ -250,12 +250,17 @@
   <script>
     // Create WebSocket connection to ActionCable
     const consumer = ActionCable.createConsumer('ws://' + window.location.host + '/cable');
+
+    // Helper: safely set text content to prevent XSS when inserting dynamic values
+    function safeText(value) {
+      return String(value == null ? '' : value);
+    }
     
     consumer.subscriptions.create("LiveStatsChannel", {
       received(data) {
         if (data.event === "sync_completed") {
           console.log("Live Update Received:", data);
-          const shortId = data.device.substring(0, 8);
+          const shortId = safeText(data.device).substring(0, 8);
           
           // Show a beautiful live notification toast
           const toast = document.createElement('div');
@@ -270,7 +275,7 @@
           toast.style.zIndex = '9999';
           toast.style.fontWeight = 'bold';
           toast.style.transition = 'opacity 0.5s ease';
-          toast.innerHTML = `🔥 Live Activity: User ${shortId}... just synced!`;
+          toast.textContent = `🔥 Live Activity: User ${shortId}... just synced!`;
           
           document.body.appendChild(toast);
           
@@ -282,7 +287,7 @@
         } else if (data.type === "moko_party") {
           console.log("🎉 Moko Party Event!", data);
           
-          // Create a party announcement
+          // Create a party announcement using safe DOM construction to prevent XSS
           const party = document.createElement('div');
           party.style.position = 'fixed';
           party.style.top = '50%';
@@ -296,11 +301,24 @@
           party.style.zIndex = '10000';
           party.style.textAlign = 'center';
           party.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-          party.innerHTML = `
-            <div style="font-size: 3rem; margin-bottom: 1rem;">🐾🎉🐾</div>
-            <div style="font-size: 1.5rem; font-weight: bold;">Moko Party Started!</div>
-            <div style="margin-top: 0.5rem;">${data.message}</div>
-          `;
+
+          const emojiDiv = document.createElement('div');
+          emojiDiv.style.fontSize = '3rem';
+          emojiDiv.style.marginBottom = '1rem';
+          emojiDiv.textContent = '🐾🎉🐾';
+
+          const titleDiv = document.createElement('div');
+          titleDiv.style.fontSize = '1.5rem';
+          titleDiv.style.fontWeight = 'bold';
+          titleDiv.textContent = 'Moko Party Started!';
+
+          const msgDiv = document.createElement('div');
+          msgDiv.style.marginTop = '0.5rem';
+          msgDiv.textContent = safeText(data.message);
+
+          party.appendChild(emojiDiv);
+          party.appendChild(titleDiv);
+          party.appendChild(msgDiv);
           
           document.body.appendChild(party);
           
@@ -338,7 +356,7 @@
           toast.style.zIndex = '9999';
           toast.style.fontWeight = 'bold';
           toast.style.animation = 'popIn 0.3s ease-out';
-          toast.innerHTML = `🎁 ${data.message}`;
+          toast.textContent = `🎁 ${safeText(data.message)}`;
           document.body.appendChild(toast);
           setTimeout(() => {
             toast.style.opacity = '0';
@@ -350,8 +368,8 @@
           const eventEl = document.getElementById('world-event-name');
           const banner = document.getElementById('world-banner');
           
-          if (weatherEl) weatherEl.innerText = data.status.weather.toUpperCase();
-          if (eventEl) eventEl.innerText = data.status.event_name;
+          if (weatherEl) weatherEl.textContent = safeText(data.status.weather).toUpperCase();
+          if (eventEl) eventEl.textContent = safeText(data.status.event_name);
           
           // Flash effect
           banner.style.animation = 'pulse 1s ease-in-out';
@@ -372,14 +390,27 @@
           const container = document.getElementById('raid-boss-container');
 
           if (hpBar) hpBar.style.width = data.health_percentage + '%';
-          if (hpText) hpText.innerText = `${data.current_hp.toLocaleString()} / ${data.max_hp.toLocaleString()} HP`;
+          if (hpText) hpText.textContent = `${Number(data.current_hp).toLocaleString()} / ${Number(data.max_hp).toLocaleString()} HP`;
 
-          // Add log entry
+          // Add log entry using safe DOM construction to prevent XSS
           if (logs) {
             const entry = document.createElement('div');
             entry.className = 'raid-log-entry';
             entry.style.animation = 'fadeInLeft 0.3s ease-out';
-            entry.innerHTML = `<span style="color:white; font-weight:bold;">${data.attacker}</span> が強烈な一撃！ <span style="color:yellow;">-${data.damage} DMG</span>`;
+
+            const attackerSpan = document.createElement('span');
+            attackerSpan.style.color = 'white';
+            attackerSpan.style.fontWeight = 'bold';
+            attackerSpan.textContent = safeText(data.attacker);
+
+            const damageSpan = document.createElement('span');
+            damageSpan.style.color = 'yellow';
+            damageSpan.textContent = `-${safeText(data.damage)} DMG`;
+
+            entry.appendChild(attackerSpan);
+            entry.appendChild(document.createTextNode(' が強烈な一撃！ '));
+            entry.appendChild(damageSpan);
+
             logs.prepend(entry);
             if (logs.children.length > 3) logs.lastElementChild.remove();
           }
