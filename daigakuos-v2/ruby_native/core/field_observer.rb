@@ -63,8 +63,15 @@ module Moko
         if meth > 0.1 || fibro_sum > 0.05
           notes << "● 変性解析: 恒久的な組織変質を検知。"
           notes << "↳ エピジェネティック負荷: #{meth.round(3)} / 線維化指数: #{fibro_sum.round(3)}"
+          
+          # 🐚 Symbiotic Shell (Phase 69)
+          div = (mic[:flora_diversity] || 1.0)
+          if div > 0.8
+            notes << "↳ 共生シナジー: 健全な細菌叢が遺伝的ドリフトを約 50% 緩和中。"
+          end
+          
           if (epi[:methylation] || {}).values.any? { |v| v > 0.1 }
-            notes << "↳ 特記: 祖先由来の負の形質フラグメントを検知。"
+            notes << "↳ 特記: 祖先由来の負の形질フラグメントを検知。"
           end
         end
 
