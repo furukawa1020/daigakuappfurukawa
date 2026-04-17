@@ -26,8 +26,12 @@ module Moko
         bloodline = raid_state[:bloodline] || {}
         
         # 🧪 1. Epigenetic Drift (Methylation)
+        # Factor in Microbiome Diversity as a buffer (Phase 69)
+        mic = raid_state[:microbiome] || { flora_diversity: 1.0 }
+        buffer = mic[:flora_diversity] > 0.8 ? 0.5 : 1.0
+        
         GENES.each do |gene|
-          drift = (hormones[:cortisol] || 0.1) * 0.001 * dt_hours
+          drift = (hormones[:cortisol] || 0.1) * 0.001 * dt_hours * buffer
           epi[:methylation][gene] = [(epi[:methylation][gene] || 0.0) + drift, 1.0].min
         end
         
