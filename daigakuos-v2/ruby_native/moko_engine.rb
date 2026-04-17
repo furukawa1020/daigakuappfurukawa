@@ -115,6 +115,24 @@ def process_command(line)
     end
     result
 
+  when 'use_item'
+    item = request[:item]
+    mic = state[:raid][:microbiome]
+    
+    case item
+    when 'probiotic_brew'
+      mic[:flora_diversity] = [mic[:flora_diversity] + 0.3, 1.0].min
+      mic[:symbiotic_ratio] = [mic[:symbiotic_ratio] + 0.2, 1.0].min
+      LocalStore.save_state(state)
+      { success: true, message: "微生物叢の整合性が改善しました🐾" }
+    when 'prebiotic_fiber'
+      mic[:endotoxin_level] = [mic[:endotoxin_level] - 0.3, 0.0].max
+      LocalStore.save_state(state)
+      { success: true, message: "腸内毒素が中和されました🍵" }
+    else
+      { success: false, message: "使用できないアイテムです" }
+    end
+
   when 'rebirth'
     Moko::Bio::BloodlineEngine.rebirth!(state[:raid])
     LocalStore.save_state(state)
