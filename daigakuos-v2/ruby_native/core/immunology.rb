@@ -48,8 +48,12 @@ module Moko
         
         # ⚖️ 5. Shielding Effect
         # Immune system 'screens' toxins to protect organs
-        # Final toxin impact is reduced by immune activity and antibodies
-        imm[:protection_factor] = (imm[:leukocyte_activity] * 0.5 + imm[:antibody_titer] * 0.5).clamp(0.0, 0.9)
+        # 🦠 Microbial Synergy (Phase 69): Symbiotic ratio boosts barrier protection
+        mic = raid_state[:microbiome] || { symbiotic_ratio: 0.8 }
+        microbial_bonus = (mic[:symbiotic_ratio] * 0.5 + 0.6) # 0.8 to 1.1 multiplier
+        
+        base_protection = (imm[:leukocyte_activity] * 0.5 + imm[:antibody_titer] * 0.5)
+        imm[:protection_factor] = (base_protection * microbial_bonus).clamp(0.0, 0.95)
         
         raid_state
       end
