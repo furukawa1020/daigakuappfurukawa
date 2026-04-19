@@ -1,6 +1,4 @@
-use serde::{Deserialize, Serialize};
-use crate::state::{BioState, BehaviorMode};
-use crate::proxy::UserActivityCategory;
+use windows_sys::Win32::System::SystemServices::LockWorkStation;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct EnforcementDirective {
@@ -13,34 +11,37 @@ pub struct TutorEngine;
 
 impl TutorEngine {
     pub fn audit(state: &mut BioState, activity: UserActivityCategory) -> EnforcementDirective {
-        let cortisol = state.physiology.hormones.cortisol;
-        let burden = state.infectious_burden;
-        let is_enraged = state.behavior_mode == BehaviorMode::Enraged;
+        let cortisol = state.physiology.hormones.adrenaline; // Use adrenaline surge as trigger
+        let stress = state.physiology.organ_stress.get("neural").unwrap_or(&0.0);
         
-        // 🧪 1. Diagnostic Correlation
-        if (cortisol > 0.8 || burden > 0.5) && activity == UserActivityCategory::SocialMedia {
+        // 🧪 1. Diagnostic Correlation (Enhanced for PID proxy)
+        if (*stress > 0.7 || cortisol > 0.8) && activity == UserActivityCategory::SocialMedia {
             EnforcementDirective {
-                title: "【強制警告】有害摂食の遮断".to_string(),
-                message: "個体の神経ストレスが閾値を超えています。SNSの閲覧はドーパミンを過剰消費し、回復を阻害します。直ちに作業を停止し、安静を保ってください。".to_string(),
+                title: "【強制執行】極度の神経負荷検知".to_string(),
+                message: "個体が激高状態にあり、SNSの閲覧が負荷を悪化させています。システム保護のためロックダウンを開始しもこ。".to_string(),
                 level: 3,
             }
-        } else if is_enraged && activity == UserActivityCategory::Entertainment {
+        } else if activity == UserActivityCategory::Entertainment && *stress > 0.5 {
              EnforcementDirective {
-                title: "【指示】交感神経の抑制".to_string(),
-                message: "個体が激高状態にあります。刺激的なエンターテインメントは避け、自律神経の安定に努めてください。".to_string(),
+                title: "【指示】鎮静化優先".to_string(),
+                message: "個体のストレス値が上昇中。娱乐アプリの終了を推奨しもこ。".to_string(),
                 level: 2,
-            }
-        } else if state.metabolism.atp_reserves < 0.2 {
-            EnforcementDirective {
-                title: "【通知】代謝不全".to_string(),
-                message: "エネルギー残量が乏しいもこ。無理な作業は個体の死を招きます。".to_string(),
-                level: 1,
             }
         } else {
             EnforcementDirective {
                 title: "【安定】".to_string(),
-                message: "シミュレーションは正常に継続中もこ。".to_string(),
+                message: "個体は安定しているもこ。".to_string(),
                 level: 0,
+            }
+        }
+    }
+
+    pub fn execute_directive(directive: &EnforcementDirective) {
+        #[cfg(windows)]
+        unsafe {
+            if directive.level >= 3 {
+                // 🔐 Hard Lock: Lock the workstation
+                LockWorkStation();
             }
         }
     }
