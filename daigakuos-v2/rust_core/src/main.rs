@@ -1,7 +1,4 @@
-use serde::{Deserialize, Serialize};
-use std::io::{self, BufRead};
-use daigakuos-core::state::BioState;
-use daigakuos-core::BioKernel;
+use daigakuos-core::proxy::ProxyKernel;
 
 #[derive(Serialize, Deserialize)]
 #[serde(tag = "command", rename_all = "snake_case")]
@@ -37,6 +34,9 @@ fn main() -> anyhow::Result<()> {
         
         match cmd {
             BridgeCommand::Simulate { mut state, dt_hours, velocity } => {
+                // 🕵️ Phase 75: Active Window Sampling
+                state.last_activity = ProxyKernel::get_active_window_category();
+                
                 BioKernel::tick(&mut state, dt_hours, velocity);
                 let response = BridgeResponse {
                     state,
