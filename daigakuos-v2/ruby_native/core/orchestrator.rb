@@ -128,6 +128,14 @@ module Moko
         raid_state[:physics_velocity] ||= 0.0
         raid_state[:behavior_mode]    ||= :grazing
 
+        # Environment (required by Microbiome, Homeostasis, Anatomy, Germline)
+        raid_state[:environment] ||= {}
+        env = raid_state[:environment]
+        env[:toxins]    ||= 0.0
+        env[:oxygen]    ||= 50.0
+        env[:pH]        ||= 7.4
+        env[:body_temp] ||= 38.5
+
         raid_state
       end
 
@@ -136,6 +144,10 @@ module Moko
       # ──────────────────────────────────────────────
       def self.tick(raid_state, env_state, elapsed_hours, physics_velocity = 0.0)
         ensure_state!(raid_state)
+
+        # Sync external environment values (toxins, oxygen, etc.) into raid_state
+        # so that modules reading raid_state[:environment] see current values.
+        raid_state[:environment].merge!(env_state) if env_state.is_a?(Hash) && !env_state.empty?
 
         raid_state[:physics_velocity] = physics_velocity
 

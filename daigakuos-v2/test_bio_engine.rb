@@ -14,6 +14,8 @@ require_relative 'ruby_native/core/chronobiology'
 require_relative 'ruby_native/core/skeleton'
 require_relative 'ruby_native/core/anatomy'
 require_relative 'ruby_native/core/germline'
+require_relative 'ruby_native/core/monster_brain'
+require_relative 'ruby_native/core/microbiome'
 require_relative 'ruby_native/core/orchestrator'
 require_relative 'ruby_native/storage/local_store'
 
@@ -149,8 +151,9 @@ begin
   rs = LocalStore.initial_state[:raid]
   env = { toxins: 100.0, pH: 6.5 } # Acidic and very toxic
   
-  # Run for 20 simulated hours to cause microbial shift
-  20.times { Moko::Bio::Orchestrator.tick(rs, env, 1.0, 0.0) }
+  # Run for 10 simulated hours to cause microbial shift and cortisol-driven stress
+  # (20+ hours leads to metabolic exhaustion/lethargic which masks the gut-brain effect)
+  10.times { Moko::Bio::Orchestrator.tick(rs, env, 1.0, 0.0) }
   
   mic = rs[:microbiome]
   metabolites = mic[:neuroactive_metabolites]

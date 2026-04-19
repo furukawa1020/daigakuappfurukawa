@@ -38,7 +38,8 @@ module Moko
         # This will be used as a multiplier in BioPhysics
         raid_state[:homeostatic_modifiers] = {
           muscle_force: (1.0 - (IDEAL_PH - env[:pH]).abs * 2.0).clamp(0.4, 1.2),
-          reaction_speed: (1.0 - (IDEAL_TEMP - env[:body_temp]).abs * 0.05).clamp(0.5, 1.1)
+          reaction_speed: (1.0 - (IDEAL_TEMP - env[:body_temp]).abs * 0.05).clamp(0.5, 1.1),
+          oxygen_efficiency: raid_state.dig(:homeostatic_modifiers, :oxygen_efficiency) || 1.0
         }
         
         raid_state
