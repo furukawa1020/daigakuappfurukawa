@@ -69,5 +69,53 @@ impl BioKernel {
         
         let base_protection = state.immunology.leukocyte_activity * 0.4 + avg_antibody_level * 0.6;
         state.immunology.protection_factor = (base_protection * microbial_bonus).clamp(0.0, 0.95);
+
+        // 6. Cognition: Behavioral Mode Selection (Phase 73)
+        Self::update_behavior(state);
+    }
+
+    pub fn update_behavior(state: &mut state::BioState) {
+        let h = &state.physiology.hormones;
+        let m = &state.metabolism;
+        let stress = &state.physiology.organ_stress;
+        let metabs = &state.microbiome.neuroactive_metabolites;
+        let burden = state.infectious_burden;
+        
+        let is_high_stress = h.cortisol > 0.7 || metabs.irritability > 0.5 || burden > 0.4;
+        let is_adrenaline_surge = h.adrenaline > 0.6;
+        let is_hypoglycemic = m.glucose < 30.0;
+        let is_exhausted = m.atp_reserves < 0.2;
+        
+        state.behavior_mode = if state.is_sleeping {
+            state::BehaviorMode::Lethargic
+        } else if is_exhausted || stress.get("neural").unwrap_or(&0.0) > &0.8 || burden > 0.6 {
+            state::BehaviorMode::Lethargic
+        } else if is_adrenaline_surge || is_high_stress {
+            state::BehaviorMode::Enraged
+        } else if is_hypoglycemic {
+            state::BehaviorMode::Starving
+        } else if state.alert_level > 0.6 && metabs.calmness < 0.05 {
+            state::BehaviorMode::Hunting
+        } else {
+            state::BehaviorMode::Grazing
+        };
+
+        state.display_name = Self::generate_scientific_title(state);
+    }
+
+    fn generate_scientific_title(state: &state::BioState) -> String {
+        let prefix = if state.infectious_burden > 0.4 {
+            "【発熱・衰弱】"
+        } else if state.physiology.organ_stress.get("neural").unwrap_or(&0.0) > &0.5 {
+            "【神経衰弱】"
+        } else if state.physiology.hormones.adrenaline > 0.7 {
+            "【亢進状態】"
+        } else if state.behavior_mode == state::BehaviorMode::Lethargic {
+            "【非活性】"
+        } else {
+            ""
+        };
+
+        format!("{} {}", prefix, state.title).trim().to_string()
     }
 }
