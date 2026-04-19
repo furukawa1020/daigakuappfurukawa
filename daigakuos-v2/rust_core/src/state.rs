@@ -1,4 +1,6 @@
 use crate::ecology::SpatialGrid;
+use crate::proxy::UserActivityCategory;
+use crate::tutor::EnforcementDirective;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -15,6 +17,8 @@ pub struct BioState {
     pub title: String,
     pub display_name: String,
     pub behavior_mode: BehaviorMode,
+    pub last_activity: UserActivityCategory,
+    pub directive: EnforcementDirective,
     pub is_sleeping: bool,
     pub alert_level: f32,
     pub current_hp: f32,
