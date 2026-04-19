@@ -1,4 +1,4 @@
-# DaigakuOS - Focus Platform (Flutter + Rails)
+# DaigakunoiikangiOS - Focus Platform (Flutter + Rails)
 @
 このプロジェクトは、**Flutter** (マルチプラットフォーム・クライアント) と **Ruby on Rails** (中央同期サーバー) で構築された、プレミアムな集中・習慣化プラットフォームです。旧ネイティブ版から完全に移行し、単一のコードベースで高度なゲーミフィケーションを提供します。！！
 ※まだまだ調整中です
