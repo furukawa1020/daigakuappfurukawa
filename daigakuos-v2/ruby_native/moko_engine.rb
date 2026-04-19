@@ -87,14 +87,21 @@ def process_command(line)
 
   when 'process_damage'
     duration    = request[:duration] || 0
-    base_damage = duration * 10
-    result = CombatEngine.calculate_damage(
-      state[:user], state[:raid], base_damage, state[:toxin_load]
-    )
-    state[:user].merge!(result)
-    state[:raid][:current_hp] = [state[:raid][:current_hp] - result[:damage], 0].max
+    base_damage = (duration * 10).to_f
+    
+    # 🧬 Rust Native Combat Resolution
+    result = Moko::Bio::RustBridge.process_damage(state[:raid], base_damage)
+    
+    unless result
+      # 🧪 Ruby Fallback
+      combat_res = CombatEngine.calculate_damage(state[:user], state[:raid], base_damage, state[:toxin_load])
+      state[:user].merge!(combat_res)
+      state[:raid][:current_hp] = [state[:raid][:current_hp] - combat_res[:damage], 0].max
+      result = combat_res
+    end
+    
     LocalStore.save_state(state)
-    result.merge(status: state[:raid][:status], boss_hp: state[:raid][:current_hp])
+    { status: state[:raid][:status], boss_hp: state[:raid][:current_hp] }.merge(result)
 
   when 'update_chaos'
     state[:user][:chaos_level] = request[:chaos].to_f
@@ -141,7 +148,12 @@ def process_command(line)
     end
 
   when 'rebirth'
-    Moko::Bio::BloodlineEngine.rebirth!(state[:raid])
+    # 🧬 Rust Native Genetic Recombined Succession
+    unless Moko::Bio::RustBridge.rebirth(state[:raid])
+      # 🧪 Ruby Fallback
+      Moko::Bio::BloodlineEngine.rebirth!(state[:raid])
+    end
+    
     LocalStore.save_state(state)
     { success: true, generation: state[:raid][:epigenetics][:generation_count] }
 

@@ -74,6 +74,12 @@ class LocalStore
           internal_hour: 12.0, melatonin_level: 0.1,
           cycle_type: :diurnal, alertness: 1.0
         },
+        ecology: {
+          width: 64, height: 64,
+          oxygen: [50.0] * 4096,
+          toxins: [0.0] * 4096,
+          rot: [0.0] * 4096
+        },
         skeleton: {
           stress_level: 0.0, fractures: [], integrity: 1.0, calcium_reserves: 1.0
         },
