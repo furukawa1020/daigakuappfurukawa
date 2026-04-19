@@ -172,6 +172,46 @@ rescue => e
 end
 
 # ────────────────────────────────────────────
+# TEST 7: Pathogenic Warfare & Immune Memory
+# ────────────────────────────────────────────
+puts "\n[TEST 7] Pathogen Bloom & Adaptive Memory (Immune Legacy)..."
+begin
+  rs = LocalStore.initial_state[:raid]
+  # Trigger Virus V1 bloom with high toxins
+  env = { toxins: 100.0, pH: 7.4, weather: 'sunny' }
+  
+  puts "   Stage 1: Pathogen Bloom (10 hours)..."
+  10.times { Moko::Bio::Orchestrator.tick(rs, env, 1.0, 0.0) }
+  
+  virus_load = rs.dig(:infections, :moko_virus_v1) || 0.0
+  burden     = rs[:infectious_burden] || 0.0
+  puts "   Virus V1 Load:   #{(virus_load * 100).to_i}%"
+  puts "   Scientific Title: #{rs[:display_name]}"
+  raise "Title should include Fever" unless rs[:display_name].include?("発熱")
+
+  puts "   Stage 2: Adaptive Response (30 hours)..."
+  30.times { Moko::Bio::Orchestrator.tick(rs, { toxins: 0.0, pH: 7.4 }, 1.0, 0.0) }
+  
+  antibody = rs.dig(:immunology, :antibody_vault, :moko_virus_v1) || 0.0
+  virus_final = rs.dig(:infections, :moko_virus_v1) || 0.0
+  puts "   Antibody Titer:  #{(antibody * 100).to_i}%"
+  puts "   Final Virus:     #{(virus_final * 100).to_i}% (Target: < 10%)"
+  raise "Virus not cleared" if virus_final > 0.1
+
+  puts "   Stage 3: Hereditary Transfer (Rebirth)..."
+  Moko::Bio::BloodlineEngine.rebirth!(rs)
+  child_antibody = rs.dig(:immunology, :antibody_vault, :moko_virus_v1) || 0.0
+  puts "   Child Antibody:  #{(child_antibody * 100).to_i}% (Target: ~50% of parent)"
+  raise "Antibody not inherited" if child_antibody == 0
+  
+  puts "   ✅ Pathogenic Warfare & Immune Memory PASSED."
+rescue => e
+  puts "   ❌ FAILED: #{e.message}"
+  puts "      #{e.backtrace.first}"
+  errors_found += 1
+end
+
+# ────────────────────────────────────────────
 puts "\n#{'=' * 50}"
 if errors_found == 0
   puts "✅ ALL TESTS PASSED. Engine is production-ready."
