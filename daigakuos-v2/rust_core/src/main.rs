@@ -16,6 +16,9 @@ enum BridgeCommand {
     Rebirth { 
         encrypted_state: String 
     },
+    Bootstrap {
+        state: BioState
+    },
 }
 
 #[derive(Serialize, Deserialize)]
