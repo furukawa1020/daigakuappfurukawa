@@ -7,9 +7,12 @@
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
-    origins "*"
+    # Restrict to known client origins. In production, set the ALLOWED_ORIGINS
+    # environment variable to a comma-separated list of permitted origins.
+    allowed = ENV.fetch("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://10.0.2.2:3000").split(",").map(&:strip)
+    origins(*allowed)
 
-    resource "*",
+    resource "/api/*",
       headers: :any,
       methods: [:get, :post, :put, :patch, :delete, :options, :head]
   end

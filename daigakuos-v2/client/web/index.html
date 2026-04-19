@@ -19,6 +19,17 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
+  <!-- Content-Security-Policy: Flutter web requires 'unsafe-inline' and 'unsafe-eval'
+       because the compiled output uses inline scripts and dynamic code evaluation.
+       These directives cannot be removed without breaking the Flutter runtime. -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                 script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:;
+                 style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+                 font-src 'self' https://fonts.gstatic.com;
+                 img-src 'self' data: blob:;
+                 connect-src 'self' ws: wss:;
+                 worker-src 'self' blob:;">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">

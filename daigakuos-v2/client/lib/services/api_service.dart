@@ -16,6 +16,16 @@ class ApiService {
     }
   }
 
+  // NOTE: In production this token should be obtained from a secure authentication
+  // flow (e.g. OAuth2 / JWT login) and stored in secure storage, not hardcoded here.
+  // The static token below is intentional for this prototype only.
+  static const String _authToken = 'daigaku_secret_token';
+
+  static Map<String, String> get _authHeaders => {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer $_authToken',
+  };
+
   static Future<String> getDeviceId() async {
     final prefs = await SharedPreferences.getInstance();
     String? deviceId = prefs.getString('device_id');
@@ -52,10 +62,7 @@ class ApiService {
 
       final response = await http.post(
         Uri.parse('$baseUrl/sync/push'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer daigaku_secret_token'
-        },
+        headers: _authHeaders,
         body: jsonEncode(payload),
       );
 
@@ -76,10 +83,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/mokos'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer daigaku_secret_token'
-        },
+        headers: _authHeaders,
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -98,10 +102,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/rankings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer daigaku_secret_token'
-        },
+        headers: _authHeaders,
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as List<dynamic>;
@@ -117,10 +118,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/analytics'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer daigaku_secret_token'
-        },
+        headers: _authHeaders,
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
@@ -136,10 +134,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/raid/status'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer daigaku_secret_token'
-        },
+        headers: _authHeaders,
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
@@ -155,10 +150,7 @@ class ApiService {
     try {
       final response = await http.get(
         Uri.parse('$baseUrl/world/status'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer daigaku_secret_token'
-        },
+        headers: _authHeaders,
       );
       if (response.statusCode == 200) {
         return jsonDecode(response.body) as Map<String, dynamic>;
@@ -168,10 +160,13 @@ class ApiService {
       print('Fetch World Error: $e');
       return {};
     }
+  }
+
   Future<bool> updateRole(String deviceId, String role) async {
     final response = await http.post(
       Uri.parse('$baseUrl/sync/update_role'),
-      body: {'device_id': deviceId, 'role': role},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId, 'role': role}),
     );
     return response.statusCode == 200;
   }
@@ -179,7 +174,8 @@ class ApiService {
   Future<Map<String, dynamic>> useSkill(String deviceId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/skills/use'),
-      body: {'device_id': deviceId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId}),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -191,24 +187,35 @@ class ApiService {
 
   // Phase 43: Monster Hunter Loop
   Future<Map<String, dynamic>> fetchQuests(String deviceId) async {
-    final response = await http.get(Uri.parse('$baseUrl/quests?device_id=$deviceId'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/quests?device_id=$deviceId'),
+      headers: _authHeaders,
+    );
     return jsonDecode(response.body);
   }
 
   Future<bool> startQuest(String deviceId, int questId) async {
-    final response = await http.post(Uri.parse('$baseUrl/quests/$questId/start'), body: {'device_id': deviceId});
+    final response = await http.post(
+      Uri.parse('$baseUrl/quests/$questId/start'),
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId}),
+    );
     return response.statusCode == 200;
   }
 
   Future<Map<String, dynamic>> fetchBlacksmith(String deviceId) async {
-    final response = await http.get(Uri.parse('$baseUrl/blacksmith?device_id=$deviceId'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/blacksmith?device_id=$deviceId'),
+      headers: _authHeaders,
+    );
     return jsonDecode(response.body);
   }
 
   Future<Map<String, dynamic>> craftItem(String deviceId, String itemId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/blacksmith/craft'),
-      body: {'device_id': deviceId, 'item_id': itemId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId, 'item_id': itemId}),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -221,7 +228,8 @@ class ApiService {
   Future<Map<String, dynamic>> sharpen(String deviceId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/skills/sharpen'),
-      body: {'device_id': deviceId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId}),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -234,7 +242,8 @@ class ApiService {
   Future<Map<String, dynamic>> heal(String deviceId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/skills/heal'),
-      body: {'device_id': deviceId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId}),
     );
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
@@ -247,7 +256,8 @@ class ApiService {
   Future<Map<String, dynamic>> eat(String deviceId, String mealId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/skills/eat'),
-      body: {'device_id': deviceId, 'meal_id': mealId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId, 'meal_id': mealId}),
     );
     return jsonDecode(response.body);
   }
@@ -255,7 +265,8 @@ class ApiService {
   Future<Map<String, dynamic>> combine(String deviceId, String itemId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/skills/combine'),
-      body: {'device_id': deviceId, 'item_id': itemId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId, 'item_id': itemId}),
     );
     return jsonDecode(response.body);
   }
@@ -263,7 +274,8 @@ class ApiService {
   Future<Map<String, dynamic>> useItem(String deviceId, String itemId) async {
     final response = await http.post(
       Uri.parse('$baseUrl/skills/use_item'),
-      body: {'device_id': deviceId, 'item_id': itemId},
+      headers: _authHeaders,
+      body: jsonEncode({'device_id': deviceId, 'item_id': itemId}),
     );
     return jsonDecode(response.body);
   }
