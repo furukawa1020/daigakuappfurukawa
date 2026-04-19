@@ -3,11 +3,14 @@ pub mod physics;
 pub mod ecology;
 pub mod combat;
 pub mod genetics;
+pub mod proxy;
+pub mod tutor;
 
 use state::{BioState};
 use physics::PhysicsEngine;
 use combat::CombatKernel;
 use genetics::GeneticEngine;
+use tutor::TutorEngine;
 
 pub struct BioKernel;
 
@@ -19,7 +22,11 @@ impl BioKernel {
         let (_local_o2, local_toxins) = state.ecology.sample_at(0, 0); 
         state.environment.toxins = local_toxins;
 
-        // 2. Neuro-Endocrine & Aging
+        // 2. Behavioral Audit (Phase 75)
+        // Note: activity is updated in main.rs before tick
+        state.directive = TutorEngine::audit(state, state.last_activity.clone());
+
+        // 3. Neuro-Endocrine & Aging
         let efficiency = state.metabolism.efficiency;
         state.physiology.tick_aging(efficiency, dt_hours);
         state.physiology.hormones.transition(dt_hours);
