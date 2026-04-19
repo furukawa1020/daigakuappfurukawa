@@ -14,12 +14,13 @@ module Moko
         @active ||= File.exist?(RUST_BINARY) || File.exist?("#{RUST_BINARY}.exe")
       end
 
-      def self.simulate_tick(raid_state, elapsed_hours)
+      def self.simulate_tick(raid_state, elapsed_hours, velocity)
         return false unless active?
         
         request = {
           state: raid_state,
-          dt_hours: elapsed_hours.to_f
+          dt_hours: elapsed_hours.to_f,
+          velocity: velocity.to_f
         }
         
         # Call the Rust kernel binary

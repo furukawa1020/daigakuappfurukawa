@@ -1,8 +1,23 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum BehaviorMode {
+    Grazing,
+    Hunting,
+    Starving,
+    Enraged,
+    Lethargic,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct BioState {
+    pub title: String,
+    pub display_name: String,
+    pub behavior_mode: BehaviorMode,
+    pub is_sleeping: bool,
+    pub alert_level: f32,
     pub physiology: Physiology,
     pub metabolism: Metabolism,
     pub immunology: Immunology,

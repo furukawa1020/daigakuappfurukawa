@@ -46,9 +46,9 @@ def simulate_chronology!(state)
   )
   physics_velocity = state[:raid][:physics_velocity] || 0.0
 
-  # 🧬 Phase 71: Rust Delegation with Ruby Fallback
-  # First, try to use the high-performance Rust core
-  unless Moko::Bio::RustBridge.simulate_tick(state[:raid], elapsed_hours)
+  # 🧬 Phase 71/72: Rust Delegation with Ruby Fallback
+  # First, try to use the high-performance Rust core (coupled with physics)
+  unless Moko::Bio::RustBridge.simulate_tick(state[:raid], elapsed_hours, physics_velocity)
     # 🧪 Fallback to pure-Ruby orchestration if Rust bridge is inactive/failed
     Moko::Bio::Orchestrator.tick(state[:raid], state[:environment], elapsed_hours, physics_velocity)
   end
