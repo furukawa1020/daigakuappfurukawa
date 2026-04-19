@@ -107,6 +107,3 @@ fn main() -> anyhow::Result<()> {
 
     Ok(())
 }
-
-    Ok(())
-}
