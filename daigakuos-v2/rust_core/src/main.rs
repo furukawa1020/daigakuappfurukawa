@@ -25,6 +25,8 @@ enum BridgeCommand {
 struct BridgeResponse {
     encrypted_state: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    state: Option<BioState>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     result: Option<serde_json::Value>,
     message: String,
 }
@@ -37,6 +39,16 @@ fn main() -> anyhow::Result<()> {
         let cmd: BridgeCommand = serde_json::from_str(&line)?;
         
         match cmd {
+            BridgeCommand::Bootstrap { state } => {
+                let re_encrypted = SovereignVault::seal(&serde_json::to_string(&state)?);
+                let response = BridgeResponse {
+                    encrypted_state: re_encrypted,
+                    state: Some(state),
+                    result: None,
+                    message: "Vault bootstrap successful 🔐".to_string(),
+                };
+                println!("{}", serde_json::to_string(&response)?);
+            },
             BridgeCommand::Simulate { encrypted_state, dt_hours, velocity } => {
                 let decrypted = match SovereignVault::unseal(&encrypted_state) {
                     Ok(s) => s,
@@ -54,6 +66,7 @@ fn main() -> anyhow::Result<()> {
                 let re_encrypted = SovereignVault::seal(&serde_json::to_string(&state)?);
                 let response = BridgeResponse {
                     encrypted_state: re_encrypted,
+                    state: Some(state),
                     result: None,
                     message: "Simulation tick successful 🦀".to_string(),
                 };
@@ -68,6 +81,7 @@ fn main() -> anyhow::Result<()> {
                 let re_encrypted = SovereignVault::seal(&serde_json::to_string(&state)?);
                 let response = BridgeResponse {
                     encrypted_state: re_encrypted,
+                    state: Some(state),
                     result: Some(serde_json::to_value(res)?),
                     message: "Damage processed natively 🦀".to_string(),
                 };
@@ -82,6 +96,7 @@ fn main() -> anyhow::Result<()> {
                 let re_encrypted = SovereignVault::seal(&serde_json::to_string(&next_state)?);
                 let response = BridgeResponse {
                     encrypted_state: re_encrypted,
+                    state: Some(next_state),
                     result: None,
                     message: "Genetically recombined natively 🧬".to_string(),
                 };
@@ -89,6 +104,9 @@ fn main() -> anyhow::Result<()> {
             }
         }
     }
+
+    Ok(())
+}
 
     Ok(())
 }
