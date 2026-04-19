@@ -46,18 +46,19 @@ def simulate_chronology!(state)
   )
   physics_velocity = state[:raid][:physics_velocity] || 0.0
 
-  # 🧬 Phase 71/72: Rust Delegation with Ruby Fallback
-  # First, try to use the high-performance Rust core (coupled with physics)
-  unless Moko::Bio::RustBridge.simulate_tick(state[:raid], elapsed_hours, physics_velocity)
-    # 🧪 Fallback to pure-Ruby orchestration if Rust bridge is inactive/failed
+  # 🧬 Phase 71/72/73: Rust Delegation with Ruby Fallback
+  # Rust handles Physiology, Pathogens, Immunology, and the Sovereign Brain (BehaviorMode/Title)
+  rust_success = Moko::Bio::RustBridge.simulate_tick(state[:raid], elapsed_hours, physics_velocity)
+  
+  unless rust_success
+    # 🧪 Fallback to pure-Ruby orchestration for physical logic
     Moko::Bio::Orchestrator.tick(state[:raid], state[:environment], elapsed_hours, physics_velocity)
+    # 🧠 Fallback to pure-Ruby brain logic
+    Moko::Bio::BehavioralEcologist.update_behavior!(state[:raid], state[:environment])
   end
 
-  # 🩸 Apply Phenotypic Biological Modifiers
+  # 🩸 Apply Phenotypic Biological Modifiers (Common logic)
   Moko::Bio::BloodlineEngine.apply_biology(state[:raid], state[:raid])
-
-  # 🧠 Behavioral Ecologist
-  Moko::Bio::BehavioralEcologist.update_behavior!(state[:raid], state[:environment])
 
   state[:user][:last_tick_at] = Time.now.to_i
 end
