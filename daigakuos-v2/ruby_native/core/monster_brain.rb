@@ -30,19 +30,19 @@ module Moko
         perception = raid_state[:perception] || { toxins: 0.0, oxygen: 50.0 }
         
         # 🧪 1. Hormonal & Perceptual & Microbial Thresholds
-        # Note: Brain uses perceived toxins, which may be noisy/laggy
         mic = raid_state[:microbiome] || { neuroactive_metabolites: { irritability: 0.0, calmness: 0.1 } }
-        metabolites = mic[:neuroactive_metabolites]
+        metabolites = mic[:neuroactive_metabolites] || { irritability: 0.0, calmness: 0.1 }
+        burden = raid_state[:infectious_burden] || 0.0
         
-        is_high_stress = hormones[:cortisol] > 0.7 || perception[:toxins] > 70.0 || metabolites[:irritability] > 0.5
+        is_high_stress = hormones[:cortisol] > 0.7 || perception[:toxins] > 70.0 || metabolites[:irritability] > 0.5 || burden > 0.4
         is_adrenaline_surge = hormones[:adrenaline] > 0.6
         is_hypoglycemic = metab[:glucose] < 30.0
         is_exhausted = metab[:atp_reserves] < 0.2
         
-        # 🧬 2. Behavioral State Machine (Phase 68: Added Gut-Brain Axis)
+        # 🧬 2. Behavioral State Machine (Phase 70: Added Pathogenic Stress)
         if raid_state[:is_sleeping]
           raid_state[:behavior_mode] = :lethargic
-        elsif is_exhausted || stress[:neural] > 0.8
+        elsif is_exhausted || stress[:neural] > 0.8 || burden > 0.6
           raid_state[:behavior_mode] = :lethargic
         elsif is_adrenaline_surge || is_high_stress
           raid_state[:behavior_mode] = :enraged
@@ -60,10 +60,12 @@ module Moko
 
       def self.generate_scientific_title(raid_state)
         base = raid_state[:title] || "Moko Wyvern"
-        phys = raid_state[:physiology]
+        phys = raid_state[:physiology] || {}
+        burden = raid_state[:infectious_burden] || 0.0
         
-        condition = if phys[:organ_stress][:neural] > 0.5 then "【神経衰弱】"
-                    elsif phys[:hormones][:adrenaline] > 0.7 then "【亢進状態】"
+        condition = if burden > 0.4 then "【発熱・衰弱】"
+                    elsif phys.dig(:organ_stress, :neural).to_f > 0.5 then "【神経衰弱】"
+                    elsif phys.dig(:hormones, :adrenaline).to_f > 0.7 then "【亢進状態】"
                     elsif raid_state[:behavior_mode] == :lethargic then "【非活性】"
                     else ""
                     end
