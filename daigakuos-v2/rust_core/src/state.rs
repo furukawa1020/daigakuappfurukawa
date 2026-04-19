@@ -1,5 +1,4 @@
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use crate::ecology::SpatialGrid;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "snake_case")]
@@ -18,6 +17,8 @@ pub struct BioState {
     pub behavior_mode: BehaviorMode,
     pub is_sleeping: bool,
     pub alert_level: f32,
+    pub current_hp: f32,
+    pub max_hp: f32,
     pub physiology: Physiology,
     pub metabolism: Metabolism,
     pub immunology: Immunology,
@@ -30,6 +31,7 @@ pub struct BioState {
     pub germline: Germline,
     pub chrono: Chrono,
     pub environment: Environment,
+    pub ecology: SpatialGrid,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
