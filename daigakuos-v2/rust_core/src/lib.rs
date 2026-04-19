@@ -1,17 +1,19 @@
 pub mod state;
+pub mod physics;
 
-use state::{BioState, Environment};
+use state::{BioState};
+use physics::PhysicsEngine;
 
 pub struct BioKernel;
 
 impl BioKernel {
-    pub fn tick(state: &mut BioState, dt_hours: f32) {
+    pub fn tick(state: &mut BioState, dt_hours: f32, velocity: f32) {
         // 1. Neuro-Endocrine & Aging (Phase 72)
         let efficiency = state.metabolism.efficiency;
         state.physiology.tick_aging(efficiency, dt_hours);
         state.physiology.hormones.transition(dt_hours);
         
-        // 2. Pathogen Bloom Logic (Modified to factor in immune protection)
+        // 2. Pathogen Bloom Logic
         let toxin_load = state.environment.toxins / 100.0;
         let protection = state.immunology.protection_factor;
         let effective_toxins = (toxin_load * (1.0 - protection)).max(0.0);
@@ -49,9 +51,15 @@ impl BioKernel {
         }
 
         // 4. Structural Mechanics (Phase 72)
-        // Placeholder velocity until physics.rs is wired in
-        let velocity = 1.0; 
-        state.skeleton.apply_stress(velocity, dt_hours);
+        //耦合物理負荷: 速度と骨格整合性からストレスを算出
+        let structural_integrity = state.skeleton.integrity;
+        let physics_load = PhysicsEngine::calculate_load(velocity, structural_integrity);
+        
+        // Apply stress using high-precision math
+        state.skeleton.stress_level = (state.skeleton.stress_level + physics_load * dt_hours).min(5.0);
+        if state.skeleton.stress_level > 2.0 && structural_integrity > 0.1 {
+            state.skeleton.integrity = (structural_integrity - 0.01 * dt_hours).max(0.1);
+        }
         
         // 5. Shielding & Synergy
         let microbial_bonus = state.microbiome.symbiotic_ratio * 0.5 + 0.6;
