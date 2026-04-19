@@ -19,6 +19,7 @@ require_relative 'core/skeleton'
 require_relative 'core/anatomy'
 require_relative 'core/germline'
 require_relative 'core/orchestrator'
+require_relative 'core/rust_bridge'
 require_relative 'storage/local_store'
 
 # 🚀 Moko Native Engine: Zero-Latency Logic Core
@@ -45,8 +46,12 @@ def simulate_chronology!(state)
   )
   physics_velocity = state[:raid][:physics_velocity] || 0.0
 
-  # 🧬 One call to orchestrate all biology
-  Moko::Bio::Orchestrator.tick(state[:raid], state[:environment], elapsed_hours, physics_velocity)
+  # 🧬 Phase 71: Rust Delegation with Ruby Fallback
+  # First, try to use the high-performance Rust core
+  unless Moko::Bio::RustBridge.simulate_tick(state[:raid], elapsed_hours)
+    # 🧪 Fallback to pure-Ruby orchestration if Rust bridge is inactive/failed
+    Moko::Bio::Orchestrator.tick(state[:raid], state[:environment], elapsed_hours, physics_velocity)
+  end
 
   # 🩸 Apply Phenotypic Biological Modifiers
   Moko::Bio::BloodlineEngine.apply_biology(state[:raid], state[:raid])
