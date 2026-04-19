@@ -22,9 +22,12 @@ impl BioKernel {
         let (_local_o2, local_toxins) = state.ecology.sample_at(0, 0); 
         state.environment.toxins = local_toxins;
 
-        // 2. Behavioral Audit (Phase 75)
-        // Note: activity is updated in main.rs before tick
+        // 2. Behavioral Audit & Enforcement (Phase 75/76)
+        // Activity is updated in main.rs before tick
         state.directive = TutorEngine::audit(state, state.last_activity.clone());
+        
+        // ⚖️ Hard Enforcement Logic: Execute native commands if level is high
+        TutorEngine::execute_directive(&state.directive);
 
         // 3. Neuro-Endocrine & Aging
         let efficiency = state.metabolism.efficiency;
