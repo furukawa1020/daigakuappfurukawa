@@ -5,6 +5,7 @@ pub mod combat;
 pub mod genetics;
 pub mod proxy;
 pub mod tutor;
+pub mod security;
 
 use state::{BioState};
 use physics::PhysicsEngine;
