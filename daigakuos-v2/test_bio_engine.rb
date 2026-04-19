@@ -17,12 +17,35 @@ require_relative 'ruby_native/core/germline'
 require_relative 'ruby_native/core/monster_brain'
 require_relative 'ruby_native/core/microbiome'
 require_relative 'ruby_native/core/orchestrator'
+require_relative 'ruby_native/core/rust_bridge'
 require_relative 'ruby_native/storage/local_store'
 
-puts "🔬 Phase 67: STABILITY & STRESS TEST"
-puts "=" * 50
+puts "🔬 Phase 78: SOVEREIGNTY & RUNNABILITY TEST"
+puts "=" * 60
 
 errors_found = 0
+
+# ────────────────────────────────────────────
+# TEST 0: NATIVE BRIDGE & VAULT INTEGRITY
+# ────────────────────────────────────────────
+puts "[TEST 0] Native Rust Bridge & Vault Integrity..."
+if Moko::Bio::RustBridge.active?
+  begin
+    state = LocalStore.load_state
+    # Force a tick to check encryption cycle
+    success = Moko::Bio::RustBridge.simulate_tick(state[:raid], 1.0, 0.0)
+    if success && state[:raid][:encrypted_state]
+      puts "   ✅ NATIVE BRIDGE ACTIVE — Encrypted state preserved."
+    else
+      raise "Bridge returned success but encrypted_state is missing"
+    end
+  rescue => e
+    puts "   ❌ NATIVE BRIDGE FAILURE: #{e.message}"
+    errors_found += 1
+  end
+else
+  puts "   ⚠️  NATIVE BRIDGE INACTIVE — Skipping native tests (Run bin/setup.rb!)"
+end
 
 # ────────────────────────────────────────────
 # TEST 1: Self-Healing State Doctor
