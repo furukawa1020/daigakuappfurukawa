@@ -144,3 +144,43 @@ pub struct Environment {
     pub ph: f32,
     pub weather: String,
 }
+
+impl HormoneState {
+    pub fn transition(&mut self, dt: f32) {
+        // Natural decay of adrenaline/cortisol
+        self.adrenaline = (self.adrenaline - 0.05 * dt).max(0.01);
+        self.cortisol = (self.cortisol - 0.02 * dt).max(0.01);
+    }
+}
+
+impl Skeleton {
+    pub fn apply_stress(&mut self, velocity: f32, dt: f32) {
+        let load = (velocity.powf(2.0) * 0.01).min(2.0);
+        self.stress_level = (self.stress_level + load * dt).min(5.0);
+        
+        // Fracture Check (Phase 65 logic)
+        if self.stress_level > 2.0 && self.integrity > 0.5 {
+            self.integrity = (self.integrity - 0.05 * dt).max(0.1);
+        }
+    }
+}
+
+impl Anatomy {
+    pub fn calculate_muscle_power(&self, adrenaline: f32) -> f32 {
+        let muscle_health = self.muscular.health;
+        let bonus = 1.0 + (adrenaline * 0.5);
+        (muscle_health * self.muscular.peak_power * bonus).min(5.0)
+    }
+}
+
+impl Physiology {
+    pub fn tick_aging(&mut self, metabolic_efficiency: f32, dt: f32) {
+        let stress_factor = self.hormones.cortisol * 2.0;
+        let aging_rate = (1.1 - metabolic_efficiency) + stress_factor;
+        self.cellular_age += aging_rate * dt;
+        
+        if self.cellular_age > 1000.0 {
+            self.mitochondrial_decay = (self.mitochondrial_decay + 0.0001 * dt).min(1.0);
+        }
+    }
+}
