@@ -7,6 +7,7 @@ use daigakuos_core::BioKernel;
 struct SimulationRequest {
     state: BioState,
     dt_hours: f32,
+    velocity: f32,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -23,7 +24,7 @@ fn main() -> anyhow::Result<()> {
         let request: SimulationRequest = serde_json::from_str(&line)?;
         
         let mut state = request.state;
-        BioKernel::tick(&mut state, request.dt_hours);
+        BioKernel::tick(&mut state, request.dt_hours, request.velocity);
         
         let response = SimulationResponse {
             state,
