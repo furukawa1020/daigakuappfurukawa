@@ -1,0 +1,71 @@
+name: Android CI/CD
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+        cache: true
+
+    - name: Validate Gradle wrapper
+      uses: gradle/actions/wrapper-validation@v4
+      with:
+        min-wrapper-count: 1
+        paths: |
+          daigakuos-v2/client/android
+
+    - name: Install Flutter dependencies
+      working-directory: daigakuos-v2/client
+      run: flutter pub get
+
+    - name: Run Flutter tests
+      working-directory: daigakuos-v2/client
+      run: flutter test
+
+    - name: Build debug APK
+      working-directory: daigakuos-v2/client
+      run: flutter build apk --debug
+
+    - name: Upload debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk
+        path: daigakuos-v2/client/build/app/outputs/flutter-apk/app-debug.apk
+        retention-days: 30
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: daigakuos-v2/client/build/reports/
+        retention-days: 7
