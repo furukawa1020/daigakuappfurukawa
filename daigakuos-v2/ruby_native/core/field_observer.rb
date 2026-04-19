@@ -46,13 +46,23 @@ module Moko
         muscle_force = (homeo[:muscle_force] || 1.0).round(2)
         notes << "● 警告: 代謝性アシドーシス。筋収縮力係数が #{muscle_force} まで抑制。" if ph < 7.1
 
-        # 💉 5. Immunological Defense
+        # 💉 5. Immunological Defense & Adaptive Memory (Phase 70)
         imm = raid[:immunology] || {}
+        vault = imm[:antibody_vault] || {}
         leuko   = (imm[:leukocyte_activity] || 0.0) * 100
-        titer   = (imm[:antibody_titer]     || 0.0).round(3)
+        burden  = (raid[:infectious_burden] || 0.0) * 100
         protect = ((imm[:protection_factor] || 0.0) * 100).to_i
-        notes << "● 免疫系応答: 白血球活性 #{leuko.to_i}% / 抗体力価 #{titer}"
-        notes << "↳ 遮断効率: 環境毒素の #{protect}% を細胞レベルで無効化中。"
+        
+        notes << "● 免疫系応答: 白血球活性 #{leuko.to_i}% / 遮断効率 #{protect}%"
+        if burden > 1.0
+          notes << "● 警告: 病原体負荷を確認。感染指数 #{(burden).to_i}%"
+        end
+        
+        if vault.any?
+          resistances = vault.map { |k, v| "#{k}: #{(v * 100).to_i}%" }.join(", ")
+          notes << "↳ 獲得免疫記憶: 既知病原体への抵抗力を展開中。"
+          notes << "↳#{resistances}"
+        end
 
         # 🧬 6. Epigenetic & Lineage Audit
         epi    = raid[:epigenetics] || {}
