@@ -34,6 +34,12 @@ class LocalStore
         current_phase: 1, status: 'active',
         hunger: 0.0, fatigue: 0.0, alertness: 0.0,
         behavior_mode: :grazing,
+        last_activity: :idle,
+        directive: {
+          title: '【待機】',
+          message: 'システム起動準備中もこ',
+          level: 0
+        },
         is_sleeping: false,
         physics_velocity: 0.0,
         bloodline: {
