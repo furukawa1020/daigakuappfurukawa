@@ -3,14 +3,20 @@ pub mod physics;
 pub mod ecology;
 pub mod combat;
 pub mod genetics;
+pub mod pathogen;
+pub mod metabolic;
+pub mod cardio_neuro;
 pub mod proxy;
 pub mod tutor;
 pub mod security;
 
-use state::{BioState};
+use state::BioState;
 use physics::PhysicsEngine;
 use combat::CombatKernel;
 use genetics::GeneticEngine;
+use pathogen::PathogenEngine;
+use metabolic::MetabolicEngine;
+use cardio_neuro::CardioNeuroEngine;
 use tutor::TutorEngine;
 
 pub struct BioKernel;
@@ -19,38 +25,37 @@ impl BioKernel {
     pub fn tick(state: &mut BioState, dt_hours: f32, velocity: f32) {
         // 1. Environmental & Ecological Tick (Spatial Grid)
         state.ecology.tick(dt_hours);
-        // Sample local toxins from the grid (Simplified)
-        let (_local_o2, local_toxins) = state.ecology.sample_at(0, 0); 
+        let (_local_o2, local_toxins) = state.ecology.sample_at(0, 0);
         state.environment.toxins = local_toxins;
 
-        // 2. Behavioral Audit & Enforcement (Phase 75/76)
-        // Activity is updated in main.rs before tick
+        // 2. Behavioral Audit & Enforcement
         state.directive = TutorEngine::audit(state, state.last_activity.clone());
-        
-        // ⚖️ Hard Enforcement Logic: Execute native commands if level is high
         TutorEngine::execute_directive(&state.directive);
 
-        // 3. Neuro-Endocrine & Aging
+        // 3. Pathogen Dynamics (infection growth, clearance, cytokine cascade)
+        PathogenEngine::tick(state, dt_hours);
+
+        // 4. Metabolic Cascade (ATP synthesis, glucose consumption, lactate)
+        MetabolicEngine::tick(state, dt_hours);
+
+        // 5. Cardio-Neural Coupling (HR, SpO2, conduction velocity, organ stress)
+        CardioNeuroEngine::tick(state, dt_hours);
+
+        // 6. Neuro-Endocrine Aging & Hormonal Decay
         let efficiency = state.metabolism.efficiency;
         state.physiology.tick_aging(efficiency, dt_hours);
         state.physiology.hormones.transition(dt_hours);
-        
-        // 3. Pathogens & Immunology
-        let protection = state.immunology.protection_factor;
-        let effective_toxins = (state.environment.toxins / 100.0 * (1.0 - protection)).max(0.0);
-        
-        // (Existing pathogen growth logic...)
-        // [OMITTED for brevity but logic is kept in actual file]
-        
-        // 4. Genetics & Mutation (Phase 74)
-        GeneticEngine::tick_mutation(state, dt_hours);
 
-        // 5. Structural Mechanics
+        // 7. Structural Mechanics (bone/skeleton stress from physics)
+        state.skeleton.apply_stress(velocity, dt_hours);
         let structural_integrity = state.skeleton.integrity;
         let physics_load = PhysicsEngine::calculate_load(velocity, structural_integrity);
         state.skeleton.stress_level = (state.skeleton.stress_level + physics_load * dt_hours).min(5.0);
-        
-        // 6. Cognition (Behavioral Mode Selection)
+
+        // 8. Genetics & Mutation
+        GeneticEngine::tick_mutation(state, dt_hours);
+
+        // 9. Behavioral Mode Selection (Cognition — must be last)
         Self::update_behavior(state);
     }
 
