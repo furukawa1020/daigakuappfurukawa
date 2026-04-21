@@ -1,25 +1,20 @@
 use serde::{Deserialize, Serialize};
 use crate::state::BioState;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PhysicsRequest {
-    pub monster_type: String,
-    pub velocity: f32,
-    pub dt: f32,
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PhysicsLoad {
+    pub load: f32,
 }
 
 pub struct PhysicsEngine;
 
 impl PhysicsEngine {
+    /// Structural load from velocity and skeletal integrity.
+    /// Returns a normalized load value [0.0, 1.0].
     pub fn calculate_load(velocity: f32, integrity: f32) -> f32 {
-        // High velocity with low structural integrity causes exponential load
-        let base_load = velocity.powf(1.8) * 0.02;
-        let integrity_penalty = if integrity < 0.6 { 2.0 - integrity } else { 1.0 };
-        base_load * integrity_penalty
-    }
-
-    pub fn apply_drag(velocity: &mut f32, drag_coeff: f32, dt: f32) {
-        let drag = *velocity * drag_coeff * dt;
-        *velocity = (*velocity - drag).max(0.0);
+        // Quadratic in velocity; fragile skeletons experience more load
+        let raw = velocity.powi(2) * 0.01;
+        let fragility_factor = 1.0 + (1.0 - integrity) * 2.0;
+        (raw * fragility_factor).min(2.0)
     }
 }
