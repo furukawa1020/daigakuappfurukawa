@@ -1,6 +1,4 @@
 use crate::state::{BioState, CardiacState, NeuralState};
-
-/// 🦀 Phase 79: Native Cardiac-Neural Coupling Engine
 /// Models the interaction between the autonomic nervous system,
 /// cardiac output, and neural conduction under stress/fatigue/infection.
 ///  - Heart Rate Variability (HRV) simulation
