@@ -9,6 +9,9 @@ pub mod cardio_neuro;
 pub mod proxy;
 pub mod tutor;
 pub mod security;
+pub mod circadian;
+pub mod homeostasis;
+pub mod microbiome;
 
 use state::BioState;
 use physics::PhysicsEngine;
@@ -18,27 +21,39 @@ use pathogen::PathogenEngine;
 use metabolic::MetabolicEngine;
 use cardio_neuro::CardioNeuroEngine;
 use tutor::TutorEngine;
+use circadian::CircadianEngine;
+use homeostasis::HomeostasisEngine;
+use microbiome::MicrobiomeEngine;
 
 pub struct BioKernel;
 
 impl BioKernel {
     pub fn tick(state: &mut BioState, dt_hours: f32, velocity: f32) {
-        // 1. Environmental & Ecological Tick (Spatial Grid)
+        // 1. Circadian Clock (drives sleep, melatonin, immune peaks)
+        CircadianEngine::tick(state, dt_hours);
+
+        // 2. Environmental & Ecological Tick (Spatial Grid)
         state.ecology.tick(dt_hours);
         let (_local_o2, local_toxins) = state.ecology.sample_at(0, 0);
         state.environment.toxins = local_toxins;
 
-        // 2. Behavioral Audit & Enforcement
+        // 3. Behavioral Audit & Enforcement
         state.directive = TutorEngine::audit(state, state.last_activity.clone());
         TutorEngine::execute_directive(&state.directive);
 
-        // 3. Pathogen Dynamics (infection growth, clearance, cytokine cascade)
+        // 4. Gut Microbiome (endotoxin, gut-brain axis, leaky gut)
+        MicrobiomeEngine::tick(state, dt_hours);
+
+        // 5. Pathogen Dynamics (infection growth, clearance, cytokine cascade)
         PathogenEngine::tick(state, dt_hours);
 
-        // 4. Metabolic Cascade (ATP synthesis, glucose consumption, lactate)
+        // 6. Homeostasis (pH, temperature)
+        HomeostasisEngine::tick(state, dt_hours);
+
+        // 7. Metabolic Cascade (ATP synthesis, glucose consumption, lactate)
         MetabolicEngine::tick(state, dt_hours);
 
-        // 5. Cardio-Neural Coupling (HR, SpO2, conduction velocity, organ stress)
+        // 8. Cardio-Neural Coupling (HR, SpO2, conduction velocity, organ stress)
         CardioNeuroEngine::tick(state, dt_hours);
 
         // 6. Neuro-Endocrine Aging & Hormonal Decay
