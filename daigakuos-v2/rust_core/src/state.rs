@@ -39,6 +39,7 @@ pub struct BioState {
     pub chrono: Chrono,
     pub environment: Environment,
     pub ecology: SpatialGrid,
+    pub homeostasis: Homeostasis,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -98,6 +99,8 @@ pub struct Microbiome {
     pub endotoxin_level: f32,
     pub fermentation_rate: f32,
     pub neuroactive_metabolites: NeuroactiveMetabolites,
+    pub butyrate_level: f32,
+    pub serotonin_precursor: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -159,6 +162,15 @@ pub struct Chrono {
     pub melatonin_level: f32,
     pub cycle_type: String,
     pub alertness: f32,
+    pub sleep_pressure: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Homeostasis {
+    pub body_temp: f32,
+    pub blood_ph: f32,
+    pub co2_partial: f32,
+    pub bicarbonate: f32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
